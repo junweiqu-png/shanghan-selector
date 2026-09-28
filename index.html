@@ -10,21 +10,45 @@
 <body>
 <main class="wrap">
   <header class="hero">
-    <div class="eyebrow">经典学习 · 方证比较 · 离线可用</div>
+    <div class="eyebrow">经典学习 · 脉证合参 · 离线可用</div>
     <h1>《伤寒论》方证辨识器</h1>
-    <p>逐项点击当前最明确的症状，系统按“核心证 + 兼证 − 反证”匹配经典方证，并给出条文线索与鉴别点。</p>
-    <div class="hero-note">不是自动诊断或处方器。结果只用于学习、整理症状和与专业医生沟通。</div>
+    <p>先选当前症状，再选择脉象特征，系统按“核心症状 + 兼证 + 关键脉象 − 反证”匹配经典方证。</p>
+    <div class="hero-note">不是自动诊断或处方器。结果用于经典学习、症状整理和与专业医生沟通。</div>
   </header>
-  <section class="danger"><b>先看红旗：</b> 胸痛或明显呼吸困难、意识改变/抽搐、严重脱水、呕血便血、持续剧烈腹痛、休克样四肢冰冷伴精神差、孕期重症、婴幼儿或高龄重症，应优先急诊/就医，不使用本页自行试方。</section>
-  <section class="panel">
-    <div class="section-head"><div><span class="step">1</span><h2>选择症状</h2></div><span id="selectedCount" class="count">已选 0 项</span></div>
-    <p class="hint">尽量选“现在确实存在”的症状；不确定的先不选。脉象、舌象暂不作为硬条件。</p>
-    <div id="groups"></div>
-    <div class="actions"><button id="calc">辨识候选方证</button><button class="secondary" id="clear">全部清空</button></div>
+
+  <section class="danger">
+    <b>先看红旗：</b> 胸痛或明显呼吸困难、意识改变/抽搐、严重脱水、呕血便血、持续剧烈腹痛、休克样四肢冰冷伴精神差、孕期重症、婴幼儿或高龄重症，应优先急诊/就医，不使用本页自行试方。
   </section>
-  <section class="panel"><div class="section-head"><div><span class="step">2</span><h2>候选方证</h2></div></div><div id="results" class="empty">尚未选择症状。</div></section>
-  <section class="panel compact"><h2>怎么理解结果</h2><div class="explain-grid"><div><b>核心证</b><p>该方证最有辨识度的线索，权重最高。</p></div><div><b>兼证</b><p>可加强支持，但单独出现不能定方。</p></div><div><b>反证</b><p>与该方证方向明显冲突，会显著扣分。</p></div><div><b>相近方</b><p>分数接近常提示信息不足、兼夹或病程阶段未明确。</p></div></div></section>
-  <footer>V0.2 · 纯静态网页 · 数据仅保存在当前浏览器内存，不上传健康信息。经典条文不同版本文字与标点可能略有差异。</footer>
+
+  <section class="panel">
+    <div class="section-head"><div><span class="step">1</span><h2>选择症状</h2></div><span id="selectedCount" class="count">症状已选 0 项</span></div>
+    <p class="hint">尽量只选“现在确实存在”的症状；不确定的先不选。</p>
+    <div id="groups"></div>
+  </section>
+
+  <section class="panel">
+    <div class="section-head"><div><span class="step">2</span><h2>选择脉象</h2></div><span id="pulseCount" class="count">脉象已选 0 项</span></div>
+    <p class="hint">脉象可组合选择，例如“浮 + 紧”“浮 + 缓”“弦 + 细”“沉 + 微”。不会用单一脉象直接定方。</p>
+    <div id="pulseGroups"></div>
+    <div class="actions"><button id="calc">脉证合参辨识</button><button class="secondary" id="clear">全部清空</button></div>
+  </section>
+
+  <section class="panel">
+    <div class="section-head"><div><span class="step">3</span><h2>候选方证</h2></div></div>
+    <div id="results" class="empty">请先选择症状，再结合脉象辨识。</div>
+  </section>
+
+  <section class="panel compact">
+    <h2>怎么理解结果</h2>
+    <div class="explain-grid">
+      <div><b>核心症状</b><p>该方证最有辨识度的症状，权重最高。</p></div>
+      <div><b>关键脉象</b><p>直接与方证或六经方向高度相关的脉象，作为高权重证据。</p></div>
+      <div><b>兼证/辅助脉象</b><p>可加强支持，但不能单独定方。</p></div>
+      <div><b>反证</b><p>与该方证方向明显冲突，会显著扣分。</p></div>
+    </div>
+  </section>
+
+  <footer>V0.3 · 症状 + 脉象合参 · 纯静态网页 · 数据仅保存在当前浏览器内存，不上传健康信息。经典条文不同版本文字与标点可能略有差异。</footer>
 </main>
 <script src="app.js"></script>
 </body>
