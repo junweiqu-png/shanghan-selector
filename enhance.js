@@ -19,3 +19,7 @@ document.getElementById('calc').onclick=()=>{ originalCalc(); attachClassicEvide
 renderGeneralClassics();
 linkifyClassicTerms(document.getElementById('generalClassics'));
 renderBookShelf();
+document.addEventListener('click',e=>{
+  const b=e.target.closest&&e.target.closest('.term-link');
+  if(b&&!b.dataset.bound){e.preventDefault();openTerm(b.dataset.term);}
+});
