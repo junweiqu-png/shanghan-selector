@@ -10,9 +10,9 @@
 <body>
 <main class="wrap">
   <header class="hero">
-    <div class="eyebrow">经典学习 · 脉证合参 · 离线可用</div>
+    <div class="eyebrow">经典学习 · 脉证合参 · 原文证据链</div>
     <h1>《伤寒论》方证辨识器</h1>
-    <p>先选当前症状，再选择脉象特征，系统按“核心症状 + 兼证 + 关键脉象 − 反证”匹配经典方证。</p>
+    <p>先选当前症状，再选择脉象特征，系统按“核心症状 + 兼证 + 关键脉象 − 反证”匹配经典方证，并展示支持该候选方的经典原文。</p>
     <div class="hero-note">不是自动诊断或处方器。结果用于经典学习、症状整理和与专业医生沟通。</div>
   </header>
 
@@ -39,17 +39,25 @@
   </section>
 
   <section class="panel compact">
+    <h2>脉法总则 · 古籍原文</h2>
+    <p class="hint">用于理解脉象的大方向，不直接作为某个方剂的单独处方依据。</p>
+    <div id="generalClassics" class="classics general-classics"></div>
+  </section>
+
+  <section class="panel compact">
     <h2>怎么理解结果</h2>
     <div class="explain-grid">
       <div><b>核心症状</b><p>该方证最有辨识度的症状，权重最高。</p></div>
       <div><b>关键脉象</b><p>直接与方证或六经方向高度相关的脉象，作为高权重证据。</p></div>
-      <div><b>兼证/辅助脉象</b><p>可加强支持，但不能单独定方。</p></div>
+      <div><b>经典证据链</b><p>优先列《伤寒论》直接条文，再列同书旁条或古代医家解释。</p></div>
       <div><b>反证</b><p>与该方证方向明显冲突，会显著扣分。</p></div>
     </div>
   </section>
 
-  <footer>V0.3 · 症状 + 脉象合参 · 纯静态网页 · 数据仅保存在当前浏览器内存，不上传健康信息。经典条文不同版本文字与标点可能略有差异。</footer>
+  <footer>V0.4 · 症状 + 脉象 + 经典原文证据链 · 纯静态网页。条文编号、异体字与标点在不同版本间可能有差异，页面以书名和原文为主要定位依据。</footer>
 </main>
 <script src="app.js"></script>
+<script src="sources.js"></script>
+<script src="enhance.js"></script>
 </body>
 </html>
