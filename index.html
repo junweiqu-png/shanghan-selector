@@ -10,9 +10,9 @@
 <body>
 <main class="wrap">
   <header class="hero">
-    <div class="eyebrow">经典学习 · 脉证合参 · 原文证据链</div>
+    <div class="eyebrow">经典学习 · 脉证合参 · 古籍词条互链</div>
     <h1>《伤寒论》方证辨识器</h1>
-    <p>先选当前症状，再选择脉象特征，系统按“核心症状 + 兼证 + 关键脉象 − 反证”匹配经典方证，并展示支持该候选方的经典原文。</p>
+    <p>先选症状与脉象，再查看候选方证。经典原文中的重要医学词会自动高亮，点击即可横向查看同一词在其他古籍中的原文用法。</p>
     <div class="hero-note">不是自动诊断或处方器。结果用于经典学习、症状整理和与专业医生沟通。</div>
   </header>
 
@@ -40,8 +40,14 @@
 
   <section class="panel compact">
     <h2>脉法总则 · 古籍原文</h2>
-    <p class="hint">用于理解脉象的大方向，不直接作为某个方剂的单独处方依据。</p>
+    <p class="hint">原文中的高亮关键词可以点击，查看同词在其他经典里的用法。</p>
     <div id="generalClassics" class="classics general-classics"></div>
+  </section>
+
+  <section class="panel compact">
+    <h2>经典医籍书架</h2>
+    <p class="hint">首批接入 17 部核心医籍。词条卡只摘代表性原文，同时保留“继续全文检索”，避免把少量摘录误当成全部证据。</p>
+    <div id="bookShelf" class="book-shelf"></div>
   </section>
 
   <section class="panel compact">
@@ -50,14 +56,17 @@
       <div><b>核心症状</b><p>该方证最有辨识度的症状，权重最高。</p></div>
       <div><b>关键脉象</b><p>直接与方证或六经方向高度相关的脉象，作为高权重证据。</p></div>
       <div><b>经典证据链</b><p>优先列《伤寒论》直接条文，再列同书旁条或古代医家解释。</p></div>
-      <div><b>反证</b><p>与该方证方向明显冲突，会显著扣分。</p></div>
+      <div><b>关键词互链</b><p>点击“恶寒、无汗、浮、沉、心下”等词，可横向查看多部古籍。</p></div>
     </div>
   </section>
 
-  <footer>V0.4 · 症状 + 脉象 + 经典原文证据链 · 纯静态网页。条文编号、异体字与标点在不同版本间可能有差异，页面以书名和原文为主要定位依据。</footer>
+  <footer>V0.5 · 症状 + 脉象 + 经典原文证据链 + 古籍关键词互链。条文编号、异体字与标点在不同版本间可能有差异，页面以书名和原文为主要定位依据。</footer>
 </main>
+
+<div id="termModal" class="term-modal" aria-hidden="true"><div id="termBody" class="term-dialog" role="dialog" aria-modal="true" aria-label="古籍词条"></div></div>
 <script src="app.js"></script>
 <script src="sources.js"></script>
+<script src="terms.js"></script>
 <script src="enhance.js"></script>
 </body>
 </html>
