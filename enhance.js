@@ -11,8 +11,11 @@ function attachClassicEvidence(){
     const anchor=card.querySelector('.source');
     if(anchor) anchor.insertAdjacentHTML('afterend',html);
     else card.insertAdjacentHTML('beforeend',html);
+    linkifyClassicTerms(card);
   });
 }
 const originalCalc=document.getElementById('calc').onclick;
 document.getElementById('calc').onclick=()=>{ originalCalc(); attachClassicEvidence(); };
 renderGeneralClassics();
+linkifyClassicTerms(document.getElementById('generalClassics'));
+renderBookShelf();
