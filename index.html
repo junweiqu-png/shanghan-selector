@@ -7,18 +7,28 @@
   <title>伤寒论方证辨识器</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="terms.css">
+  <link rel="stylesheet" href="learning.css">
 </head>
 <body>
 <main class="wrap">
   <header class="hero">
-    <div class="eyebrow">经典学习 · 脉证合参 · 古籍词条互链</div>
+    <div class="eyebrow">经典学习 · 脉证合参 · 古籍词条互链 · 主动训练</div>
     <h1>《伤寒论》方证辨识器</h1>
-    <p>先选症状与脉象，再查看候选方证。经典原文中的重要医学词会自动高亮，点击即可横向查看同一词在其他古籍中的原文用法。</p>
+    <p>先选症状与脉象，再查看候选方证。经典原文中的重要医学词会自动高亮；学习模式强调先回忆、再看答案、写按语和复盘误判。</p>
     <div class="hero-note">不是自动诊断或处方器。结果用于经典学习、症状整理和与专业医生沟通。</div>
   </header>
 
   <section class="danger">
     <b>先看红旗：</b> 胸痛或明显呼吸困难、意识改变/抽搐、严重脱水、呕血便血、持续剧烈腹痛、休克样四肢冰冷伴精神差、孕期重症、婴幼儿或高龄重症，应优先急诊/就医，不使用本页自行试方。
+  </section>
+
+  <section class="panel learning-panel">
+    <div class="learning-intro">
+      <div><h2>治学训练台</h2><p>参考《名老中医之路》中反复出现的治学路径做成功能化训练：经典熟读、读记并行、先辨后看、临证返经典、阶段复盘、博采而有定见。</p></div>
+      <span id="reviewCount" class="review-pill">待复盘 0 条</span>
+    </div>
+    <div id="learnMethods" class="learn-methods"></div>
+    <div class="recall-wrap"><h3>随机经典回忆</h3><p class="hint">先在脑中说出主证、脉象、鉴别点和条文，再点“显示原文”。</p><div id="recallCard" class="recall-card"></div></div>
   </section>
 
   <section class="panel">
@@ -57,11 +67,11 @@
       <div><b>核心症状</b><p>该方证最有辨识度的症状，权重最高。</p></div>
       <div><b>关键脉象</b><p>直接与方证或六经方向高度相关的脉象，作为高权重证据。</p></div>
       <div><b>经典证据链</b><p>优先列《伤寒论》直接条文，再列同书旁条或古代医家解释。</p></div>
-      <div><b>关键词互链</b><p>点击“恶寒、无汗、浮、沉、心下”等词，可横向查看多部古籍。</p></div>
+      <div><b>主动学习</b><p>先解释自己的判断，再揭示原文；把疑问、误判和按语留到复盘。</p></div>
     </div>
   </section>
 
-  <footer>V0.5 · 症状 + 脉象 + 经典原文证据链 + 古籍关键词互链。条文编号、异体字与标点在不同版本间可能有差异，页面以书名和原文为主要定位依据。</footer>
+  <footer>V0.6 · 症状 + 脉象 + 经典证据链 + 关键词互链 + 主动学习闭环。学习方法为对名老中医治学经验的功能化归纳，不替代原书阅读。</footer>
 </main>
 
 <div id="termModal" class="term-modal" aria-hidden="true"><div id="termBody" class="term-dialog" role="dialog" aria-modal="true" aria-label="古籍词条"></div></div>
@@ -69,5 +79,6 @@
 <script src="sources.js"></script>
 <script src="terms.js"></script>
 <script src="enhance.js"></script>
+<script src="learning.js"></script>
 </body>
 </html>
