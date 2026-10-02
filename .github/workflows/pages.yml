@@ -30,10 +30,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Install Chinese conversion helper
+        run: npm install --no-save opencc-js@1.4.2
       - name: Build local classical corpus
         env:
           CORPUS_MAX_BOOKS: 700
         run: node scripts/build-site.mjs
+      - name: Bundle OpenCC for browser search
+        run: mkdir -p dist/vendor/opencc-js && cp -R node_modules/opencc-js/dist/esm/. dist/vendor/opencc-js/
       - name: Build Chinese full-text index
         run: npx -y pagefind@latest --site dist --glob "corpus-pages/**/*.html" --force-language zh
       - name: Remove temporary search pages
