@@ -33,7 +33,7 @@ async function main(){
     totalChars+=text.length;
     const chars=[...compact(text)];
     const seen=new Set();
-    for(let j=0;j+GRAM_SIZE<=chars.length;j++)seen.add(chars.slice(j,j+GRAM_SIZE).join(''));
+    for(let j=0;j+GRAM_SIZE<=chars.length;j++)seen.add(chars[j]+chars[j+1]);
     totalUniqueBookGrams+=seen.size;
     for(const gram of seen){
       const map=shards[bucketFor(gram)];
