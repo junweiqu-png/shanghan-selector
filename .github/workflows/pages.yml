@@ -30,6 +30,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Restore corpus API cache
+        uses: actions/cache@v4
+        with:
+          path: .corpus-cache
+          key: corpus-wikisource-v1-${{ github.run_id }}
+          restore-keys: |
+            corpus-wikisource-v1-
       - name: Install Chinese conversion helper
         run: npm install --no-save opencc-js@1.4.2
       - name: Build local classical corpus
