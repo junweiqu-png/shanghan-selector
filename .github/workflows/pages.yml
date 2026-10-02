@@ -30,7 +30,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Validate browser scripts
+      - name: Validate browser and build scripts
         run: |
           node --check app.js
           node --check sources.js
@@ -38,7 +38,10 @@ jobs:
           node --check enhance.js
           node --check formula-data.js
           node --check compare.js
+          node --check search-engine.js
           node --check library.js
+          node --check scripts/build-site.mjs
+          node --check scripts/build-ngram-index.mjs
       - name: Restore corpus API cache
         uses: actions/cache@v4
         with:
@@ -54,9 +57,9 @@ jobs:
         run: node scripts/build-site.mjs
       - name: Bundle OpenCC for browser search
         run: mkdir -p dist/vendor/opencc-js && cp -R node_modules/opencc-js/dist/esm/. dist/vendor/opencc-js/
-      - name: Build Chinese full-text index
-        run: npx -y pagefind@latest --site dist --glob "corpus-pages/**/*.html" --force-language zh
-      - name: Remove temporary search pages
+      - name: Build Chinese n-gram inverted index
+        run: node scripts/build-ngram-index.mjs
+      - name: Remove temporary corpus pages
         run: rm -rf dist/corpus-pages
       - name: Setup Pages
         uses: actions/configure-pages@v5
