@@ -32,20 +32,11 @@ async function categoryMembers(cat,depth=0,seenCats=new Set()){
     const u=new URL(API);u.search=new URLSearchParams({action:'query',list:'categorymembers',cmtitle:cat,cmtype:'page|subcat',cmnamespace:'0|14',cmlimit:'500',format:'json',formatversion:'2',...(cont?{cmcontinue:cont}:{})});
     const j=await getJSON(u); out.push(...(j.query?.categorymembers||[])); cont=j.continue?.cmcontinue||'';
   }while(cont);
-  if(depth<2){
-    for(const m of out.filter(x=>x.ns===14)) out.push(...await categoryMembers(m.title,depth+1,seenCats));
-  }
+  if(depth<2){for(const m of out.filter(x=>x.ns===14))out.push(...await categoryMembers(m.title,depth+1,seenCats));}
   return out;
 }
 function decodeEntities(s){return s.replace(/&#x([0-9a-f]+);/gi,(_,x)=>String.fromCodePoint(parseInt(x,16))).replace(/&#(\d+);/g,(_,x)=>String.fromCodePoint(Number(x))).replace(/&nbsp;/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;|&apos;/g,"'");}
-function htmlToText(html){
-  return decodeEntities(String(html||'')
-    .replace(/<style[\s\S]*?<\/style>/gi,'').replace(/<script[\s\S]*?<\/script>/gi,'')
-    .replace(/<sup[\s\S]*?<\/sup>/gi,'').replace(/<!--([\s\S]*?)-->/g,'')
-    .replace(/<br\s*\/?\s*>/gi,'\n').replace(/<\/(p|div|li|tr|h[1-6]|section|blockquote)>/gi,'\n')
-    .replace(/<li[^>]*>/gi,'• ').replace(/<[^>]+>/g,''))
-    .replace(/[ \t]+\n/g,'\n').replace(/\n[ \t]+/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
-}
+function htmlToText(html){return decodeEntities(String(html||'').replace(/<style[\s\S]*?<\/style>/gi,'').replace(/<script[\s\S]*?<\/script>/gi,'').replace(/<sup[\s\S]*?<\/sup>/gi,'').replace(/<!--([\s\S]*?)-->/g,'').replace(/<br\s*\/?\s*>/gi,'\n').replace(/<\/(p|div|li|tr|h[1-6]|section|blockquote)>/gi,'\n').replace(/<li[^>]*>/gi,'• ').replace(/<[^>]+>/g,'')).replace(/[ \t]+\n/g,'\n').replace(/\n[ \t]+/g,'\n').replace(/\n{3,}/g,'\n\n').trim();}
 function catFor(t){
   if(/傷寒|仲景|金匱|柴胡|桂枝/.test(t))return '伤寒经方'; if(/本草|藥|食療/.test(t))return '本草药物';
   if(/脈|診|舌/.test(t))return '诊法脉学'; if(/針|鍼|灸|穴/.test(t))return '针灸'; if(/溫病|溫熱|濕熱/.test(t))return '温病';
@@ -57,8 +48,7 @@ function sourceUrl(t){return 'https://zh.wikisource.org/wiki/'+encodeURIComponen
 function escHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 async function fetchWork(title){
   const u=new URL(API);u.search=new URLSearchParams({action:'parse',page:title,prop:'text',disableeditsection:'1',redirects:'1',format:'json',formatversion:'2'});
-  const j=await getJSON(u); const text=htmlToText(j.parse?.text||'');
-  if(text.length<300)return null;
+  const j=await getJSON(u), text=htmlToText(j.parse?.text||''); if(text.length<300)return null;
   const id=safeId(title), meta=META[title]||{};
   return {id,title:`《${title}》`,rawTitle:title,author:meta.author||'',edition:meta.edition||'维基文库校录本',category:catFor(title),path:`books/ws/${id}.txt`,source:'中文维基文库',sourceUrl:sourceUrl(title),license:'CC BY-SA 4.0 / 原作公版或自由许可',chars:text.length,text};
 }
@@ -71,10 +61,10 @@ async function main(){
   titles.sort((a,b)=>(CORE.indexOf(a)<0?999:CORE.indexOf(a))-(CORE.indexOf(b)<0?999:CORE.indexOf(b))||a.localeCompare(b,'zh-Hant'));
   titles=titles.slice(0,MAX); console.log(`Corpus candidates: ${titles.length}`);
   const works=(await mapLimit(titles,6,async(t,idx)=>{const w=await fetchWork(t);if((idx+1)%25===0)console.log(`Fetched ${idx+1}/${titles.length}`);return w;})).filter(Boolean);
-  await fs.mkdir(path.join(DIST,'books','ws'),{recursive:true}); await fs.mkdir(path.join(DIST,'corpus-pages'),{recursive:true});
+  await fs.mkdir(path.join(DIST,'books','ws'),{recursive:true});await fs.mkdir(path.join(DIST,'corpus-pages'),{recursive:true});
   for(const w of works){
     await fs.writeFile(path.join(DIST,w.path),w.text,'utf8');
-    const html=`<!doctype html><html lang="zh"><head><meta charset="utf-8"><title>${escHtml(w.title)}</title></head><body><main data-pagefind-body><h1 data-pagefind-meta="title">${escHtml(w.title)}</h1><span data-pagefind-meta="book_id:${w.id},category:${escHtml(w.category)},source:中文维基文库"></span><pre>${escHtml(w.text)}</pre></main></body></html>`;
+    const html=`<!doctype html><html lang="zh"><head><meta charset="utf-8"><title>${escHtml(w.title)}</title></head><body><main data-pagefind-body><h1 data-pagefind-meta="title">${escHtml(w.title)}</h1><span data-pagefind-meta="book_id:${w.id}"></span><span data-pagefind-meta="category:${escHtml(w.category)}"></span><span data-pagefind-meta="source:中文维基文库"></span><pre>${escHtml(w.text)}</pre></main></body></html>`;
     await fs.writeFile(path.join(DIST,'corpus-pages',w.id+'.html'),html,'utf8');
   }
   const manifest=works.map(({text,rawTitle,...w})=>w);
