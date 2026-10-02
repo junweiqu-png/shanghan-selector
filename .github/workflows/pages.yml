@@ -4,6 +4,8 @@ on:
   push:
     branches: ["main"]
   workflow_dispatch:
+  schedule:
+    - cron: "23 3 * * 1"
 
 permissions:
   contents: read
@@ -20,9 +22,22 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build local classical corpus
+        env:
+          CORPUS_MAX_BOOKS: 700
+        run: node scripts/build-site.mjs
+      - name: Build Chinese full-text index
+        run: npx -y pagefind@latest --site dist --glob "corpus-pages/**/*.html" --force-language zh
+      - name: Remove temporary search pages
+        run: rm -rf dist/corpus-pages
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
@@ -30,7 +45,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: dist
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
