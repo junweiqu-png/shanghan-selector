@@ -30,6 +30,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Validate browser scripts
+        run: |
+          node --check app.js
+          node --check sources.js
+          node --check terms.js
+          node --check enhance.js
+          node --check formula-data.js
+          node --check compare.js
+          node --check library.js
       - name: Restore corpus API cache
         uses: actions/cache@v4
         with:
