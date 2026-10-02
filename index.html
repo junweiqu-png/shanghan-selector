@@ -24,20 +24,21 @@
     <section class="panel">
       <div class="view-lead"><div><h2>古籍原典库</h2><p>构建时自动从中文维基文库中医分类生成本地 TXT；书目先加载，正文点开时才下载。原文不被 AI 改写。</p></div><span id="bookStats" class="count">正在读取书目…</span></div>
       <div class="library-tools"><input id="bookFilter" class="book-filter" placeholder="筛书名 / 类别 / 医家…"><label class="import-label">加入我的 TXT<input id="txtImport" type="file" accept=".txt,text/plain" multiple></label></div>
-      <p class="hint">公共古籍来源：中文维基文库（CC BY-SA，具体原作版权/版本状态以源页面为准）；你导入的 TXT 仅保存在当前浏览器 IndexedDB。</p>
+      <p class="hint">公共古籍来源：中文维基文库（CC BY-SA，具体原作版权/版本状态以源页面为准）；你导入的 TXT 仅保存在当前浏览器 IndexedDB。每本书可查看来源、许可、字数和分卷抓取完整度。</p>
       <div id="localBookList" class="book-list"></div>
     </section>
     <section id="readerPanel" class="panel reader-panel" hidden>
-      <div class="reader-bar"><div><h3 id="readerTitle"></h3><p id="readerMeta"></p></div><div class="reader-actions"><button id="readerPrev" type="button">上一段</button><input id="readerFind" placeholder="本书内查找…"><button id="readerNext" type="button">下一段</button></div></div>
+      <div class="reader-bar"><div><h3 id="readerTitle"></h3><p id="readerMeta"></p></div><div class="reader-actions"><button id="readerPrev" type="button">上一段</button><input id="readerFind" placeholder="本书内查找：同样支持 AND / 引号 / 减号 / OR"><button id="readerNext" type="button">下一段</button></div></div>
       <div id="readerBody" class="reader-body"></div>
     </section>
   </section>
 
   <section class="app-view" data-view="search">
     <section class="panel">
-      <div class="view-lead"><div><h2>横向搜索古籍全文</h2><p>搜索走预生成中文静态索引，不需要先下载几百本书。可输入组合概念，例如：<b>口渴 小便不利</b>、<b>胸胁苦满</b>、<b>脉沉</b>。</p></div></div>
-      <div class="search-box"><input id="librarySearch" placeholder="例如：脉沉　胸胁苦满　厥　口渴 小便不利"><button id="librarySearchBtn" type="button">搜索</button></div>
-      <div id="searchResults"><div class="empty">结果来自本站构建生成的古籍 TXT 索引、你导入的本地 TXT，以及你自己的经验层。</div></div>
+      <div class="view-lead"><div><h2>横向搜索古籍全文</h2><p>大语料先走中文 n-gram 倒排索引缩小候选，再逐本读取 TXT 做严格复核；你自己导入的小 TXT 直接字面扫描。</p></div></div>
+      <div class="search-box"><input id="librarySearch" placeholder="例如：脉沉 口渴　\"胸胁苦满\"　脉沉 -烦　脉沉 OR 脉浮"><button id="librarySearchBtn" type="button">搜索</button></div>
+      <p class="hint"><b>默认：</b>空格 = AND，字面量匹配，忽略大小写，顺序无关。 <b>扩展：</b><code>"原文短语"</code>、<code>-排除词</code>、<code>OR</code>。 <b>高级：</b><code>脉*</code>、<code>脉?</code> 为通配符；<code>/脉[浮沉]/</code> 为显式正则。简繁自动扩展，原文保持原样。</p>
+      <div id="searchResults"><div class="empty">结果来自本站构建生成的古籍 TXT、你导入的本地 TXT，以及你自己的经验层；所有入口共用同一套搜索语义。</div></div>
     </section>
   </section>
 
@@ -45,14 +46,14 @@
     <section class="danger"><b>先看红旗：</b> 胸痛或明显呼吸困难、意识改变/抽搐、严重脱水、呕血便血、持续剧烈腹痛、休克样四肢冰冷伴精神差、孕期重症、婴幼儿或高龄重症，应优先急诊/就医，不使用本页自行试方。</section>
     <section class="panel"><div class="section-head"><div><span class="step">1</span><h2>选择症状</h2></div><span id="selectedCount" class="count">症状已选 0 项</span></div><p class="hint">尽量只选现在确实存在的症状；系统的重点是找出最值得鉴别的相近方，而不是制造一个“最高分答案”。</p><div id="groups"></div></section>
     <section class="panel"><div class="section-head"><div><span class="step">2</span><h2>选择脉象</h2></div><span id="pulseCount" class="count">脉象已选 0 项</span></div><p class="hint">脉象可组合，如“浮 + 紧”“弦 + 细”“沉 + 微”；单一脉名不会直接定方。</p><div id="pulseGroups"></div><div class="actions"><button id="calc">脉证合参辨识</button><button class="secondary" id="clear">全部清空</button></div></section>
-    <section class="panel"><div class="section-head"><div><span class="step">3</span><h2>候选方证与鉴别</h2></div></div><p class="hint">候选卡先显示人工整理的直接经典依据；需要深挖时，可在卡片内继续检索整个古籍全文库。全文命中只用于查证与旁证，不参与排名。</p><div id="results" class="empty">请先选择症状，再结合脉象辨识。</div></section>
+    <section class="panel"><div class="section-head"><div><span class="step">3</span><h2>候选方证与鉴别</h2></div></div><p class="hint">候选卡先显示人工整理的直接经典依据；需要深挖时，可在卡片内继续检索整个古籍全文库。全文命中只用于查证与旁证，不参与排名，并与“搜索”页使用完全相同的 AND/短语/排除/OR 规则。</p><div id="results" class="empty">请先选择症状，再结合脉象辨识。</div></section>
     <section class="panel compact"><h2>脉法总则 · 古籍原文</h2><p class="hint">高亮关键词可继续跳到词条；词条底部的“更多原文”会转入本地古籍全文搜索。</p><div id="generalClassics" class="classics general-classics"></div></section>
   </section>
 
-  <footer>V0.9 · 自动古籍语料底座：Wikisource → 本地 TXT → Pagefind 中文全文索引；候选方可继续按“方名 / 当前脉证”回查整个原典库。</footer>
+  <footer>V1.0 · 自动古籍语料底座：Wikisource → 本地 TXT → 中文 n-gram 倒排索引 → TXT 严格复核；古籍、搜索、辨证回查共用同一套搜索合同。</footer>
 </main>
 <div id="termModal" class="term-modal" aria-hidden="true"><div id="termBody" class="term-dialog" role="dialog" aria-modal="true" aria-label="古籍词条"></div></div>
 <div id="formulaLab" class="formula-lab"><div class="formula-dialog"><div id="comparePicker"></div><div id="formulaDiff"></div></div></div>
-<script src="app.js"></script><script src="sources.js"></script><script src="terms.js"></script><script src="enhance.js"></script><script src="formula-data.js"></script><script src="compare.js"></script><script src="books/manifest.js"></script><script src="library.js"></script>
+<script src="app.js"></script><script src="sources.js"></script><script src="terms.js"></script><script src="enhance.js"></script><script src="formula-data.js"></script><script src="compare.js"></script><script src="books/manifest.js"></script><script src="search-engine.js"></script><script src="library.js"></script>
 </body>
 </html>
