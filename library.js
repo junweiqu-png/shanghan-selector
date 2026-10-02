@@ -7,7 +7,7 @@ function repoBooks(){return (typeof BOOK_MANIFEST==='undefined'?[]:BOOK_MANIFEST
 function allBooks(){const m=new Map(repoBooks().map(b=>[b.id,b]));localBooks.forEach(b=>m.set(b.id,b));return [...m.values()];}
 function getBook(id){return localBooks.find(b=>b.id===id)||repoBookCache.get(id)||repoBooks().find(b=>b.id===id);}
 async function ensureBook(book){if(!book)return null;if(book.text)return book;if(repoBookCache.has(book.id))return repoBookCache.get(book.id);const r=await fetch(book.path);if(!r.ok)throw new Error(`古籍正文加载失败 ${r.status}`);const full={...book,text:await r.text(),origin:'repo'};repoBookCache.set(book.id,full);return full;}
-function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[m]));}
+function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 function bookTitleFromFile(name){return name.replace(/\.txt$/i,'').replace(/[-_]/g,' ');}
 function setView(name){document.querySelectorAll('.app-view').forEach(v=>v.classList.toggle('active',v.dataset.view===name));document.querySelectorAll('.mode-nav button').forEach(b=>b.classList.toggle('active',b.dataset.view===name));location.hash=name;}
 window.openLocalSearch=function(term){setView('search');const input=document.getElementById('librarySearch');input.value=term;runLibrarySearch();input.focus();};
