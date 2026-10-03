@@ -42,6 +42,7 @@ jobs:
           node --check library.js
           node --check scripts/build-site.mjs
           node --check scripts/build-ngram-index.mjs
+          node --check scripts/build-shanghan-catalog.mjs
       - name: Restore corpus API cache
         uses: actions/cache@v4
         with:
@@ -55,6 +56,8 @@ jobs:
         env:
           CORPUS_MAX_BOOKS: 700
         run: node scripts/build-site.mjs
+      - name: Build Shanghan formula catalog
+        run: node scripts/build-shanghan-catalog.mjs
       - name: Bundle OpenCC for browser search
         run: mkdir -p dist/vendor/opencc-js && cp -R node_modules/opencc-js/dist/esm/. dist/vendor/opencc-js/
       - name: Build Chinese n-gram inverted index
