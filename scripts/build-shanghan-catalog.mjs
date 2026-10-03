@@ -51,7 +51,6 @@ function extractVariations(section,baseName){
   const flat=String(section||'').replace(/\n+/g,'，').replace(/；/g,'；');
   const starts=[];const rx=/(?:^|[；。])\s*((?:若|或)[^；。]{0,220}(?:加|去)[^；。]{0,220})/gu;let m;
   while((m=rx.exec(flat)))starts.push(m[1].trim());
-  // Some editions place several 若 clauses separated only by commas. Split again before later 若/或.
   const chunks=[];
   for(const s of starts){for(const x of s.split(/(?=，(?:若|或))/u)){const c=x.replace(/^，/,'').trim();if(c)chunks.push(c);}}
   const out=[];let n=0;
@@ -70,7 +69,15 @@ function extractVariations(section,baseName){
   return out.slice(0,30);
 }
 function inferParent(name){const rules=[[/^桂枝(?:加|去)/u,'桂枝汤'],[/^白虎加/u,'白虎汤'],[/^四逆加/u,'四逆汤'],[/^通脉四逆加/u,'通脉四逆汤'],[/^理中/u,'理中丸'],[/^小青龙加/u,'小青龙汤'],[/^真武加/u,'真武汤']];for(const [rx,p] of rules)if(rx.test(name))return p;return '';}
-function normalizeSimple(s){return String(s||'').replace(/傷寒/g,'伤寒').replace(/論/g,'论').replace(/湯/g,'汤').replace(/藥/g,'药').replace(/脈/g,'脉').replace(/陽/g,'阳').replace(/陰/g,'阴').replace(/薑/g,'姜').replace(/棗/g,'枣').replace(/朮/g,'术').replace(/黃/g,'黄').replace(/瀉/g,'泻').replace(/豬/g,'猪').replace(/膽/g,'胆').replace(/龍/g,'龙').replace(/礬/g,'矾').replace(/麥/g,'麦').replace(/蔥/g,'葱').replace(/連/g,'连').replace(/參/g,'参').replace(/歸/g,'归').replace(/澤/g,'泽').replace(/瀝/g,'沥').replace(/餘/g,'余').replace(/劑/g,'剂').replace(/證/g,'证').replace(/裏/g,'里');}
+
+// The corpus source is largely traditional Chinese while the UI/search vocabulary is simplified.
+// Normalize the characters that materially affect formula names and Shanghan symptom/pulse matching.
+const SIMPLE_MAP={
+  '傷':'伤','論':'论','湯':'汤','藥':'药','脈':'脉','陽':'阳','陰':'阴','薑':'姜','棗':'枣','朮':'术','黃':'黄','瀉':'泻','豬':'猪','膽':'胆','龍':'龙','礬':'矾','麥':'麦','蔥':'葱','連':'连','參':'参','歸':'归','澤':'泽','瀝':'沥','餘':'余','劑':'剂','證':'证','裏':'里','裡':'里',
+  '調':'调','氣':'气','實':'实','發':'发','熱':'热','惡':'恶','無':'无','嘔':'呕','煩':'烦','滿':'满','頭':'头','項':'项','強':'强','緊':'紧','緩':'缓','數':'数','澀':'涩','結':'结','遲':'迟','飲':'饮','脅':'胁','風':'风','溫':'温','燒':'烧','針':'针','過':'过','經':'经','後':'后','續':'续','體':'体','輕':'轻','穀':'谷','絕':'绝','與':'与','從':'从','復':'复','難':'难','瀉':'泻','瀉':'泻','瀆':'渎','濕':'湿','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻',
+  '瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻','瀉':'泻'
+};
+function normalizeSimple(s){return [...String(s||'')].map(ch=>SIMPLE_MAP[ch]||ch).join('');}
 
 async function main(){
   const manifest=parseManifest(await fs.readFile(path.join(DIST,'books','manifest.js'),'utf8'));
