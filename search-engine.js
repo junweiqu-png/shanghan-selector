@@ -49,10 +49,10 @@
   async function textMatches(text,raw){return (await searchText(text,raw,{maxHits:1,windowSize:Math.max(SEARCH_WINDOW,String(text||'').length)})).length>0;}
 
   async function searchCorpus(raw,loader,{maxResults=RESULT_LIMIT,concurrency=12,exhaustive=false}={}){
-    const ast=parse(raw),docs=await candidates(ast),results=[];let cursor=0,verified=0,stoppedEarly=false;
-    async function worker(){while(true){if(!exhaustive&&results.length>=maxResults){stoppedEarly=true;return;}const idx=cursor++;if(idx>=docs.length)return;const doc=docs[idx];try{const book=await loader(doc),hits=await searchText(book.text,ast,{maxHits:4});verified++;if(hits.length)results.push({doc,book,hits});}catch(e){verified++;console.warn('strict corpus verify failed',doc.id,e);}}}
+    const ast=parse(raw),docs=await candidates(ast),results=[];let cursor=0,verified=0,stoppedEarly=false;const limit=exhaustive?Math.max(maxResults,docs.length):Math.min(maxResults,RESULT_LIMIT);
+    async function worker(){while(true){if(!exhaustive&&results.length>=limit){stoppedEarly=true;return;}const idx=cursor++;if(idx>=docs.length)return;const doc=docs[idx];try{const book=await loader(doc),hits=await searchText(book.text,ast,{maxHits:4});verified++;if(hits.length)results.push({doc,book,hits});}catch(e){verified++;console.warn('strict corpus verify failed',doc.id,e);}}}
     await Promise.all(Array.from({length:Math.min(concurrency,Math.max(1,docs.length))},worker));
-    results.sort((a,b)=>a.doc.i-b.doc.i);const shown=exhaustive?results:results.slice(0,maxResults);shown.totalMatches=stoppedEarly?null:results.length;shown.candidateCount=docs.length;shown.verifiedCount=verified;shown.exhaustive=!stoppedEarly;shown.ast=ast;return shown;
+    results.sort((a,b)=>a.doc.i-b.doc.i);const shown=exhaustive?results:results.slice(0,limit);shown.totalMatches=stoppedEarly?null:results.length;shown.candidateCount=docs.length;shown.verifiedCount=verified;shown.exhaustive=!stoppedEarly;shown.ast=ast;return shown;
   }
   function describe(ast){return ast.groups.map(g=>{const inc=g.include.map(a=>(a.type==='phrase'?`"${a.value}"`:a.type==='regex'?`/${a.value}/${a.flags||''}`:a.value)).join(' AND ');const exc=g.exclude.map(a=>`NOT ${a.type==='phrase'?`"${a.value}"`:a.value}`).join(' AND ');return [inc,exc].filter(Boolean).join(' AND ');}).join(' OR ');}
   globalThis.TCMSearch={parse,variants,candidates,searchText,textMatches,searchCorpus,describe,meta};
