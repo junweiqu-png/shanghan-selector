@@ -1,5 +1,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import vm from 'node:vm';
 
 const ROOT=process.cwd();
 const DIST=path.join(ROOT,'dist');
@@ -70,13 +71,21 @@ function extractVariations(section,baseName){
 }
 function inferParent(name){const rules=[[/^桂枝(?:加|去)/u,'桂枝汤'],[/^白虎加/u,'白虎汤'],[/^四逆加/u,'四逆汤'],[/^通脉四逆加/u,'通脉四逆汤'],[/^理中/u,'理中丸'],[/^小青龙加/u,'小青龙汤'],[/^真武加/u,'真武汤']];for(const [rx,p] of rules)if(rx.test(name))return p;return '';}
 
-// The corpus source is largely traditional Chinese while the UI/search vocabulary is simplified.
-// Normalize characters that materially affect formula names and Shanghan symptom/pulse matching.
 const SIMPLE_MAP={
   '傷':'伤','論':'论','湯':'汤','藥':'药','脈':'脉','陽':'阳','陰':'阴','薑':'姜','棗':'枣','朮':'术','黃':'黄','瀉':'泻','豬':'猪','膽':'胆','龍':'龙','礬':'矾','麥':'麦','蔥':'葱','連':'连','參':'参','歸':'归','澤':'泽','瀝':'沥','餘':'余','劑':'剂','證':'证','裏':'里','裡':'里',
   '調':'调','氣':'气','實':'实','發':'发','熱':'热','惡':'恶','無':'无','嘔':'呕','煩':'烦','滿':'满','頭':'头','項':'项','強':'强','緊':'紧','緩':'缓','數':'数','澀':'涩','結':'结','遲':'迟','飲':'饮','脅':'胁','風':'风','溫':'温','燒':'烧','針':'针','過':'过','經':'经','後':'后','續':'续','體':'体','輕':'轻','穀':'谷','絕':'绝','與':'与','從':'从','復':'复','難':'难','導':'导','諸':'诸','減':'减','莖':'茎','兩':'两','銖':'铢','箇':'个','濕':'湿'
 };
 function normalizeSimple(s){return [...String(s||'')].map(ch=>SIMPLE_MAP[ch]||ch).join('');}
+
+async function validateExpertBenchmarks(formulas){
+  const source=await fs.readFile(path.join(ROOT,'formula-data.js'),'utf8');
+  const raw=vm.runInNewContext(`${source}\nJSON.stringify({manual:Object.keys(FORMULA_DATA),bench:Object.keys(EXPERT_BENCHMARKS)})`,Object.create(null),{timeout:1000});
+  const parsed=JSON.parse(raw),available=new Set([...Object.keys(formulas),...parsed.manual]);
+  const missingPairs=[];
+  for(const key of parsed.bench){const [a,b]=key.split('|');const missing=[a,b].filter(n=>!available.has(n));if(missing.length)missingPairs.push(`${key} 缺 ${missing.join('、')}`);}
+  console.log(`Expert differentiation benchmarks ready: ${parsed.bench.length-missingPairs.length}/${parsed.bench.length} pairs`);
+  if(missingPairs.length)throw new Error(`Expert benchmark coverage failed: ${missingPairs.join('; ')}`);
+}
 
 async function main(){
   const manifest=parseManifest(await fs.readFile(path.join(DIST,'books','manifest.js'),'utf8'));
@@ -93,6 +102,7 @@ async function main(){
     byName.set(f.name,{name:f.name,rawName:f.rawName,source:'《伤寒论》',sourceBookId:book.id,line:f.line,formulaText:simpleSection.slice(0,2400),ingredients:parseIngredients(simpleSection),clauses:[...new Set(clauses)].slice(0,8),inlineMods:inlineMods(simpleSection),variations:extractVariations(simpleSection,f.name),parent:inferParent(f.name)});
   }
   const formulas=Object.fromEntries([...byName.entries()].sort((a,b)=>a[0].localeCompare(b[0],'zh-CN'))),variationCount=Object.values(formulas).reduce((n,f)=>n+(f.variations?.length||0),0);
+  await validateExpertBenchmarks(formulas);
   const payload={generatedAt:new Date().toISOString(),sourceBookId:book.id,sourceTitle:book.title,count:Object.keys(formulas).length,variationCount,formulas};
   await fs.writeFile(path.join(DIST,'shanghan-catalog.generated.js'),`const SHANGHAN_CATALOG = ${JSON.stringify(payload)};\n`,'utf8');
   await fs.writeFile(path.join(DIST,'shanghan-catalog.json'),JSON.stringify(payload,null,2),'utf8');
