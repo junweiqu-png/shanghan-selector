@@ -47,14 +47,14 @@
     <section class="danger"><b>先看红旗：</b> 胸痛或明显呼吸困难、意识改变/抽搐、严重脱水、呕血便血、持续剧烈腹痛、休克样四肢冰冷伴精神差、孕期重症、婴幼儿或高龄重症，应优先急诊/就医，不使用本页自行试方。</section>
     <section class="panel"><div class="section-head"><div><span class="step">1</span><h2>选择症状</h2></div><span id="selectedCount" class="count">症状已选 0 项</span></div><p class="hint">尽量只选现在确实存在的症状；系统的重点是找出最值得鉴别的相近方，而不是制造一个“最高分答案”。</p><div id="groups"></div></section>
     <section class="panel"><div class="section-head"><div><span class="step">2</span><h2>选择脉象</h2></div><span id="pulseCount" class="count">脉象已选 0 项</span></div><p class="hint">脉象可组合，如“浮 + 紧”“弦 + 细”“沉 + 微”；单一脉名不会直接定方。</p><div id="pulseGroups"></div><div class="actions"><button id="calc">脉证合参辨识</button><button class="secondary" id="clear">全部清空</button></div></section>
-    <section class="panel"><div class="section-head"><div><span class="step">3</span><h2>候选方证与鉴别</h2></div></div><p class="hint">“和谁最容易混？”现在分开评估<b>辨证鉴别价值</b>与<b>结构可比度</b>。名家经典鉴别题优先训练“抓主证→关键分界→最值钱的一问→反事实翻转”；只改一味药、只改剂量的组合则优先用于研究加减和剂量。两种学习目的不再混成一个分数。</p><div id="results" class="empty">请先选择症状，再结合脉象辨识。</div></section>
+    <section class="panel"><div class="section-head"><div><span class="step">3</span><h2>候选方证与鉴别</h2></div></div><p class="hint">“和谁最容易混？”现在分开评估<b>辨证鉴别价值</b>与<b>结构可比度</b>。名家经典鉴别题优先训练“抓主证→关键分界→最值钱的一问→反事实翻转”；同时加入类方组训练，从共同母证一路比较到最小分界。只改一味药、只改剂量的组合则用于药证和随证加减研究。</p><div id="results" class="empty">请先选择症状，再结合脉象辨识。</div></section>
     <section class="panel compact"><h2>脉法总则 · 古籍原文</h2><p class="hint">这里的词条链接用于主动探索；古籍阅读正文默认保持干净。</p><div id="generalClassics" class="classics general-classics"></div></section>
   </section>
 
-  <footer>V1.4 · 名家鉴别压力测试：主证优先、关键一问、反事实翻转；“辨证价值”与“结构可比度”双轴排序。保留《伤寒论》直接方标题、方内加减自然实验和全文快速搜索。</footer>
+  <footer>V1.4 · 名家鉴别压力测试：主证优先、关键一问、反事实翻转、类方组训练；“辨证价值”与“结构可比度”双轴排序。保留《伤寒论》直接方标题、方内加减自然实验和全文快速搜索。</footer>
 </main>
 <div id="termModal" class="term-modal" aria-hidden="true"><div id="termBody" class="term-dialog" role="dialog" aria-modal="true" aria-label="古籍词条"></div></div>
 <div id="formulaLab" class="formula-lab"><div class="formula-dialog"><div id="comparePicker"></div><div id="formulaDiff"></div></div></div>
-<script src="cache-setup.js"></script><script src="app.js"></script><script src="sources.js"></script><script src="terms.js"></script><script src="enhance.js"></script><script src="shanghan-catalog.generated.js"></script><script src="formula-data.js"></script><script src="compare.js"></script><script src="variation-lab.js"></script><script src="books/manifest.js"></script><script src="search-engine.js"></script><script src="library.js"></script>
+<script src="cache-setup.js"></script><script src="app.js"></script><script src="sources.js"></script><script src="terms.js"></script><script src="enhance.js"></script><script src="shanghan-catalog.generated.js"></script><script src="formula-data.js"></script><script src="compare.js"></script><script src="method-band.js"></script><script src="variation-lab.js"></script><script src="books/manifest.js"></script><script src="search-engine.js"></script><script src="library.js"></script>
 </body>
 </html>
