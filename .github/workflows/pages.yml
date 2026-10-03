@@ -38,8 +38,11 @@ jobs:
           node --check enhance.js
           node --check formula-data.js
           node --check compare.js
+          node --check variation-lab.js
           node --check search-engine.js
           node --check library.js
+          node --check cache-setup.js
+          node --check sw.js
           node --check scripts/build-site.mjs
           node --check scripts/build-ngram-index.mjs
           node --check scripts/build-shanghan-catalog.mjs
