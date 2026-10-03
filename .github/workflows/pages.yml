@@ -21,7 +21,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - name: Checkout
@@ -38,6 +38,7 @@ jobs:
           node --check enhance.js
           node --check formula-data.js
           node --check compare.js
+          node --check method-band.js
           node --check variation-lab.js
           node --check search-engine.js
           node --check library.js
