@@ -11,7 +11,7 @@ function parseManifest(raw){
 }
 const clean=s=>String(s||'').replace(/\u00a0/g,' ').replace(/[ \t]+/g,' ').trim();
 const hash=s=>crypto.createHash('sha1').update(s).digest('hex').slice(0,12);
-const chapterRx=/^辨[^。；，]{1,28}第[一二三四五六七八九十百廿卅]+$/u;
+const chapterRx=/^(?:(?:辨[^。；，]{1,28})|(?:平[脉脈]法)|(?:[伤傷]寒例))第[一二三四五六七八九十百廿卅]+$/u;
 const volumeRx=/^(?:卷第[一二三四五六七八九十]+|=====.+=====)$/u;
 const formulaHeadingRx=/^[\p{Script=Han}]{2,28}(?:湯|汤|丸|散|煎|膏|飲|饮|汁)方?$/u;
 
