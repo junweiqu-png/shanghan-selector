@@ -1,6 +1,8 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { pinyin } from 'pinyin-pro';
+import OpenCC from 'opencc-js';
 
 const ROOT=process.cwd(),DIST=path.join(ROOT,'dist');
 
@@ -11,6 +13,28 @@ function parseManifest(raw){
 }
 const clean=s=>String(s||'').replace(/\u00a0/g,' ').replace(/[ \t]+/g,' ').trim();
 const hash=s=>crypto.createHash('sha1').update(s).digest('hex').slice(0,12);
+const toSimple=OpenCC.Converter({from:'t',to:'cn'});
+function toPinyin(text){
+  return pinyin(String(text||''),{nonZh:'consecutive'}).replace(/\s+([，。；！？?!：:])/g,'$1').replace(/([，。；！？?!：:])\s*/g,'$1 ');
+}
+function autoGloss(text){
+  let x=toSimple(String(text||'')).trim();
+  x=x.replace(/问曰[:：]?/g,'问：').replace(/答曰[:：]?/g,'答：');
+  x=x.replace(/何谓也[？?]?/g,'是什么意思？').replace(/何谓/g,'是什么意思');
+  x=x.replace(/假令/g,'假如').replace(/凡/g,'一般来说').replace(/若/g,'如果').replace(/或/g,'有时');
+  x=x.replace(/此为/g,'这属于').replace(/此名/g,'这叫做').replace(/名曰/g,'称为');
+  x=x.replace(/不可与([^，。；]{1,16}(?:汤|丸|散))/g,'不可给予$1');
+  x=x.replace(/可与([^，。；]{1,16}(?:汤|丸|散))/g,'可以给予$1');
+  x=x.replace(/宜([^，。；]{1,16}(?:汤|丸|散))/g,'适宜使用$1');
+  x=x.replace(/([\u3400-\u9fff]{2,16}(?:汤|丸|散))主之/g,'应以$1治疗');
+  x=x.replace(/法当/g,'按治法应当').replace(/当/g,'应当').replace(/则/g,'就').replace(/故/g,'所以').replace(/乃/g,'才');
+  x=x.replace(/复/g,'又').replace(/反/g,'反而');
+  x=x.replace(/恶寒/g,'怕冷').replace(/恶风/g,'怕风').replace(/下利/g,'腹泻').replace(/不大便/g,'大便不通');
+  x=x.replace(/小便不利/g,'小便不畅').replace(/但欲寐/g,'只想睡觉').replace(/心下/g,'心下（胃脘部）').replace(/胸胁/g,'胸胁部');
+  x=x.replace(/身体/g,'身体').replace(/身重/g,'身体沉重');
+  x=x.replace(/\s+/g,' ').replace(/([，。；！？：])\s+/g,'$1');
+  return x;
+}
 const chapterRx=/^(?:(?:辨[^。；，]{1,28})|(?:平[脉脈]法)|(?:[伤傷]寒例))第[一二三四五六七八九十百廿卅]+$/u;
 const volumeRx=/^(?:卷第[一二三四五六七八九十]+|=====.+=====)$/u;
 const formulaHeadingRx=/^[\p{Script=Han}]{2,28}(?:湯|汤|丸|散|煎|膏|飲|饮|汁)方?$/u;
@@ -83,7 +107,9 @@ async function main(){
       line:i+1,
       text:line,
       segments,
-      defaults:initialLabels(segments)
+      defaults:initialLabels(segments),
+      pinyin:toPinyin(line),
+      gloss:autoGloss(line)
     });
   }
   const payload={generatedAt:new Date().toISOString(),sourceBookId:book.id,sourceTitle:book.title,count:cards.length,cards};
