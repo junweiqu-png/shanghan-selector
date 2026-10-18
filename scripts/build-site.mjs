@@ -50,7 +50,9 @@ async function writeCache(url,data){
 }
 async function getJSON(url,tries=8){
   const cached=await readCache(url);
-  const cacheFresh=cached&&Date.now()-cached.savedAt<=CACHE_TTL_MS;\n  const reuseCachedOnPush=cached&&process.env.GITHUB_EVENT_NAME!=='schedule';\n  if(cacheFresh||reuseCachedOnPush){cacheStats.freshHits++;return cached.data;}
+  const cacheFresh=cached&&Date.now()-cached.savedAt<=CACHE_TTL_MS;
+  const reuseCachedOnPush=cached&&process.env.GITHUB_EVENT_NAME!=='schedule';
+  if(cacheFresh||reuseCachedOnPush){cacheStats.freshHits++;return cached.data;}
   let lastError=null;
   for(let i=0;i<tries;i++){
     await requestSlot();
