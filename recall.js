@@ -16,7 +16,7 @@ function render(){
  const card=$('#flashcard');card.classList.toggle('flipped',state.flipped);
  $('#front').innerHTML=face(c,frontKind,frontKind==='p'?'前提':'结论');
  $('#back').innerHTML=face(c,backKind,backKind==='p'?'前提':'结论');
- $('#segments').innerHTML=c.segments.map((s,i)=>'<button type="button" data-seg="'+i+'" class="seg '+(ls[i]==='p'?'premise':ls[i]==='c'?'conclusion':'unset')+'"><span>'+(ls[i]==='p'?'前提':ls[i]==='c'?'结论':'未标')+'</span>'+esc(s)+'</button>').join('');
+ $('#segments').innerHTML=c.segments.map((s,i)=>'<button type="button" data-seg="'+i+'" class="seg '+(ls[i]==='p'?'premise':'conclusion')+'"><span>'+(ls[i]==='p'?'前提':'结论')+'</span>'+esc(s)+'</button>').join('');
  $('#original').textContent=c.text;
  $('#jump').value=state.i+1; save();
 }
