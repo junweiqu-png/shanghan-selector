@@ -58,7 +58,7 @@ jobs:
           restore-keys: |
             corpus-wikisource-v1-
       - name: Install Chinese conversion helper
-        run: npm install --no-save opencc-js@1.4.2
+        run: npm install --no-save opencc-js@1.4.2 pinyin-pro@3.29.5
       - name: Build local classical corpus
         env:
           CORPUS_MAX_BOOKS: 700
