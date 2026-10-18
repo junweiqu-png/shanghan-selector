@@ -41,6 +41,7 @@ jobs:
           node --check method-band.js
           node --check variation-lab.js
           node --check multi-compare.js
+          node --check recall.js
           node --check search-engine.js
           node --check library.js
           node --check cache-setup.js
@@ -48,6 +49,7 @@ jobs:
           node --check scripts/build-site.mjs
           node --check scripts/build-ngram-index.mjs
           node --check scripts/build-shanghan-catalog.mjs
+          node --check scripts/build-shanghan-recall.mjs
       - name: Restore corpus API cache
         uses: actions/cache@v4
         with:
@@ -63,6 +65,8 @@ jobs:
         run: node scripts/build-site.mjs
       - name: Build Shanghan formula catalog
         run: node scripts/build-shanghan-catalog.mjs
+      - name: Build Shanghan recall cards
+        run: node scripts/build-shanghan-recall.mjs
       - name: Bundle OpenCC for browser search
         run: mkdir -p dist/vendor/opencc-js && cp -R node_modules/opencc-js/dist/esm/. dist/vendor/opencc-js/
       - name: Build Chinese n-gram inverted index
