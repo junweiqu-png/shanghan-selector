@@ -85,6 +85,7 @@ function render(){
  const legacy=state.glossEdits[c.id]||'';
  $('#legacyGloss').hidden=!legacy;$('#legacyGlossText').textContent=legacy;
  $('#jump').value=state.i+1;save();
+ window.recallStudyCardChanged?.(c);
 }
 function go(delta){
   if(state.orderMode==='random'){
@@ -104,7 +105,7 @@ function autoSaveGloss(kind,selector){
   state.sideGlossEdits[c.id][kind]=v;save();
   $('#autoSaveStatus').textContent='已自动保存';
 }
-$('#flashcard').addEventListener('click',e=>{if(e.target.closest('button,input,textarea'))return;flip();});
+$('#flashcard').addEventListener('click',e=>{if(e.target.closest('button,input,textarea'))return;const s=window.getSelection?.();if(s&&!s.isCollapsed&&s.toString().trim())return;flip();});
 $('#prev').onclick=()=>go(-1);$('#next').onclick=()=>go(1);
 $('#direction').onclick=()=>{state.direction=state.direction==='forward'?'reverse':'forward';state.flipped=false;render();};
 $('#orderMode').onclick=()=>{state.orderMode=state.orderMode==='random'?'sequential':'random';if(state.orderMode==='random')ensureRandomOrder();state.flipped=false;render();};
@@ -117,9 +118,10 @@ $('#jump').addEventListener('change',e=>{const n=Math.max(1,Math.min(DATA.cards.
 $('#toggleEdit').onclick=()=>{const ed=$('#editor'),wasOpen=ed.classList.contains('open');ed.classList.toggle('open');if(wasOpen)render();};
 document.addEventListener('keydown',e=>{if(e.target.matches('input,textarea'))return;if(e.key==='ArrowDown'||e.key==='PageDown')go(1);else if(e.key==='ArrowUp'||e.key==='PageUp')go(-1);else if(e.key===' '||e.key==='Enter'){e.preventDefault();flip();}});
 let wheelLock=false;
-$('#stage').addEventListener('wheel',e=>{if(Math.abs(e.deltaY)<24)return;e.preventDefault();if(wheelLock)return;wheelLock=true;go(e.deltaY>0?1:-1);setTimeout(()=>wheelLock=false,320);},{passive:false});
+$('#flashcard').addEventListener('wheel',e=>{if(Math.abs(e.deltaY)<24)return;e.preventDefault();if(wheelLock)return;wheelLock=true;go(e.deltaY>0?1:-1);setTimeout(()=>wheelLock=false,320);},{passive:false});
 let touchY=null;
-$('#stage').addEventListener('touchstart',e=>{touchY=e.touches[0]?.clientY??null;},{passive:true});
-$('#stage').addEventListener('touchend',e=>{if(touchY==null)return;const y=e.changedTouches[0]?.clientY??touchY,d=touchY-y;touchY=null;if(Math.abs(d)>55)go(d>0?1:-1);},{passive:true});
+$('#flashcard').addEventListener('touchstart',e=>{touchY=e.touches[0]?.clientY??null;},{passive:true});
+$('#flashcard').addEventListener('touchend',e=>{if(touchY==null)return;const y=e.changedTouches[0]?.clientY??touchY,d=touchY-y;touchY=null;if(Math.abs(d)>55)go(d>0?1:-1);},{passive:true});
+window.recallJumpTo=idx=>{const n=Math.max(0,Math.min(DATA.cards.length-1,Number(idx)||0));state.i=n;if(state.orderMode==='random')ensureRandomOrder();state.flipped=false;render();};
 restore();render();
 })();
