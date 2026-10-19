@@ -109,7 +109,9 @@ async function main(){
       segments,
       defaults:initialLabels(segments),
       pinyin:toPinyin(line),
-      gloss:autoGloss(line)
+      gloss:autoGloss(line),
+      segmentPinyin:segments.map(toPinyin),
+      segmentGloss:segments.map(autoGloss)
     });
   }
   const payload={generatedAt:new Date().toISOString(),sourceBookId:book.id,sourceTitle:book.title,count:cards.length,cards};
