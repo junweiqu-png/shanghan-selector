@@ -15,7 +15,13 @@ const clean=s=>String(s||'').replace(/\u00a0/g,' ').replace(/[ \t]+/g,' ').trim(
 const hash=s=>crypto.createHash('sha1').update(s).digest('hex').slice(0,12);
 const toSimple=OpenCC.Converter({from:'t',to:'cn'});
 function toPinyin(text){
-  return pinyin(String(text||''),{nonZh:'consecutive'}).replace(/\s+([，。；！？?!：:])/g,'$1').replace(/([，。；！？?!：:])\s*/g,'$1 ');
+  return pinyin(String(text||''),{nonZh:'consecutive',traditional:true}).replace(/\s+([，。；！？?!：:])/g,'$1').replace(/([，。；！？?!：:])\s*/g,'$1 ');
+}
+function toRubyTokens(text){
+  return pinyin(String(text||''),{type:'all',traditional:true}).map(x=>({
+    c:x.origin,
+    p:x.isZh?x.pinyin:''
+  }));
 }
 function autoGloss(text){
   let x=toSimple(String(text||'')).trim();
@@ -111,6 +117,7 @@ async function main(){
       pinyin:toPinyin(line),
       gloss:autoGloss(line),
       segmentPinyin:segments.map(toPinyin),
+      segmentRuby:segments.map(toRubyTokens),
       segmentGloss:segments.map(autoGloss)
     });
   }
