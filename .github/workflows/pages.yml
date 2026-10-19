@@ -42,6 +42,7 @@ jobs:
           node --check variation-lab.js
           node --check multi-compare.js
           node --check recall.js
+          node --check recall-study.js
           node --check search-engine.js
           node --check library.js
           node --check cache-setup.js
