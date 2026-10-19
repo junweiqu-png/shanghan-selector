@@ -50,6 +50,7 @@ jobs:
           node --check scripts/build-ngram-index.mjs
           node --check scripts/build-shanghan-catalog.mjs
           node --check scripts/build-shanghan-recall.mjs
+          node --check scripts/build-shanghan-commentaries.mjs
       - name: Restore corpus API cache
         uses: actions/cache@v4
         with:
@@ -67,6 +68,8 @@ jobs:
         run: node scripts/build-shanghan-catalog.mjs
       - name: Build Shanghan recall cards
         run: node scripts/build-shanghan-recall.mjs
+      - name: Build Shanghan commentary index
+        run: node scripts/build-shanghan-commentaries.mjs
       - name: Bundle OpenCC for browser search
         run: mkdir -p dist/vendor/opencc-js && cp -R node_modules/opencc-js/dist/esm/. dist/vendor/opencc-js/
       - name: Build Chinese n-gram inverted index
