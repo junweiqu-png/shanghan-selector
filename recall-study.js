@@ -77,19 +77,46 @@ function renderDictionary(term){
   body.querySelectorAll('[data-jump-card]').forEach(b=>b.onclick=()=>window.recallJumpTo?.(Number(b.dataset.jumpCard)));
 }
 function renderCommentaries(card){
-  const buttons=document.getElementById('commentatorButtons'),body=document.getElementById('commentaryBody');
-  if(!buttons||!body)return;
+  const rail=document.getElementById('commentatorButtons'),body=document.getElementById('commentaryBody');
+  if(!rail||!body)return;
+  window.recallClearCommentaryFocus?.();
   const entries=COMMENTS.cards?.[card.id]||[],by=new Map(entries.map(e=>[e.sourceId,e]));
-  buttons.innerHTML=(COMMENTS.sources||[]).map(s=>{
-    const e=by.get(s.id),cls=e?'available':'missing';
-    return '<button type="button" class="'+cls+'" data-commentator="'+esc(s.id)+'" '+(e?'':'disabled')+'><b>'+esc(s.name)+'</b><small>'+esc(s.book)+(e?(e.match==='direct'?' · 直接匹配':' · 相关匹配'):' · 未检出直接注')+'</small></button>';
+  const sources=COMMENTS.sources||[];
+  rail.innerHTML=sources.map((src,si)=>{
+    const e=by.get(src.id),pairs=e?.pairs||[],context=e?.context||null;
+    const status=pairs.length?(pairs.length+'处精确解析'):(context?'仅上下文':'本条未定位');
+    const pairHtml=pairs.map((p,pi)=>`
+      <article class="commentary-pair source-${esc(src.id)}" data-source="${esc(src.id)}" data-pair="${pi}">
+        <button type="button" class="pair-anchor" data-segments="${(p.segmentIndexes||[]).join(',')}">
+          <span>对应原文</span><mark>${esc(p.anchorText||'')}</mark>
+          <small>${p.precision==='clause'?'整条锚定':'句段锚定'} · 点击同步高亮左侧</small>
+        </button>
+        <div class="pair-explanation"><span>名家解析</span><p>${esc(p.explanation||'')}</p></div>
+        <details class="pair-context"><summary>查看解析前后上下文</summary>
+          <div class="context-flow">${p.contextBefore?'<span>'+esc(p.contextBefore)+'</span>':''}<mark class="context-anchor">${esc(p.anchorText||'')}</mark><mark class="context-explanation">${esc(p.explanation||'')}</mark>${p.contextAfter?'<span>'+esc(p.contextAfter)+'</span>':''}</div>
+        </details>
+      </article>`).join('');
+    const contextHtml=context?`
+      <details class="context-only">
+        <summary>仅定位到相同原句：查看上下文</summary>
+        <div class="context-only-anchor">定位原文：<mark>${esc(context.anchorText||'')}</mark></div>
+        <blockquote>${esc(context.context||'')}</blockquote>
+        <p>这里只能确认原句在该书中出现，不能可靠断定哪一段是在直接解释它，所以不标成“解析”。</p>
+      </details>`:'';
+    const content=(pairHtml||contextHtml)?(pairHtml+contextHtml):'<p class="commentary-empty">当前条文在这本书里没有找到足够可靠的句段锚点。</p>';
+    return `<details class="scholar-book source-${esc(src.id)}">
+      <summary><div class="scholar-summary"><b>${esc(src.name)}</b><small>${esc(src.book)}</small></div><span>${status}</span></summary>
+      <div class="scholar-content"><a class="open-source" href="${src.url}" target="_blank" rel="noopener">打开原书 ↗</a>${content}</div>
+    </details>`;
   }).join('');
-  body.innerHTML='<p class="commentary-empty">'+(entries.length?'点击上方名家，查看当前条文在该注本中的原文附近解释。':'当前这条在已接入的名家注本中暂未检出可可靠定位的直接或近似注解。')+'</p>';
-  buttons.querySelectorAll('[data-commentator]:not([disabled])').forEach(b=>b.onclick=()=>{
-    const e=by.get(b.dataset.commentator);if(!e)return;
-    buttons.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));
-    body.innerHTML='<div class="commentary-head"><div><b>'+esc(e.name)+'</b><span>'+esc(e.book)+'</span></div><a href="'+e.url+'" target="_blank" rel="noopener">打开原书 ↗</a></div><div class="match-badge">'+(e.match==='direct'?'当前条文直接匹配':'当前条文关键词近似匹配')+'</div><blockquote>'+esc(e.snippet)+'</blockquote><p class="commentary-note">这里只展示古籍原文附近内容；“近似匹配”不等于该医家专门在解释这一整条，请结合上下文阅读。</p>';
-  });
+  body.innerHTML='<p class="commentary-note precise-note">彩色“名家解析”只用于句段级精确锚定；灰色上下文仅供前后阅读，不当作直接解释。</p>';
+
+  rail.querySelectorAll('.pair-anchor').forEach(btn=>btn.addEventListener('click',()=>{
+    rail.querySelectorAll('.commentary-pair.active').forEach(x=>x.classList.remove('active'));
+    const art=btn.closest('.commentary-pair');art?.classList.add('active');
+    const indexes=(btn.dataset.segments||'').split(',').filter(Boolean).map(Number);
+    window.recallFocusSegments?.(indexes);
+  }));
 }
 function detectSelection(){
   const term=selectionText();
