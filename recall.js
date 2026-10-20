@@ -115,6 +115,13 @@ function face(c,kind){
   out+='</section>';
  }
  if(hasCustom)out+='<div class="custom-gloss"><b>我保存的白话</b><p>'+esc(custom)+'</p></div>';
+ const inherited=c.originIds.filter(id=>id!==c.id&&state.sideGlossEdits[id]&&Object.prototype.hasOwnProperty.call(state.sideGlossEdits[id],kind));
+ if(inherited.length){
+  out+='<details class="inherited-gloss"><summary>原卡保存的白话（保留）</summary>';
+  for(const id of inherited)out+='<p>'+esc(state.sideGlossEdits[id][kind]||'')+'</p>';
+  out+='</details>';
+ }
+
  out+='</div>';
  return out;
 }
