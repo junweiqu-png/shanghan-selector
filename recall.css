@@ -31,3 +31,5 @@ body{overflow:hidden}.stage{display:block;overflow:auto;padding:14px 16px 10px;t
  .controls{gap:5px}
  .controls button{font-size:12px;padding:7px 9px}
 }
+
+.inherited-gloss{border:1px solid #e4d6b6;border-radius:10px;padding:8px 12px;margin:12px 0;background:#fffaf0;color:#6c5940}.inherited-gloss summary{font-size:12px;cursor:pointer}.inherited-gloss p{font-family:"Songti SC","STSong",serif;font-size:16px;line-height:1.7;margin:8px 0}
