@@ -7,6 +7,13 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&
 const LEXICON={
   '灑淅':{title:'灑淅（洒淅）',reading:'常见现代读音：sǎ xī；部分历史辞典另收 xiǎn xī',brief:'寒冷、寒栗或寒颤的样子。在伤寒、金匮语境里，多用来形容体表发冷、寒栗的感觉。',note:'这是古汉语形容词，不宜按现代“洒”“淅”的字面义拆开理解。',links:[['汉典·洒淅','https://www.zdic.net/hans/%E6%B4%92%E6%B7%85'],['教育部重编国语辞典','https://dict.revised.moe.edu.tw/dictView.jsp?ID=108163']]},
   '洒淅':{alias:'灑淅'},
+  '綿綿':{title:'绵绵',reading:'mián mián',brief:'这里用来形容脉势连绵而柔软。成无己解释为“连绵而软”，与下文“如泻漆之绝”的前大后细比喻应合在一起理解。',links:[['成无己注文（校核文本）','https://www.shidianguji.com/mid-page/7555622943361237001']]},
+  '绵绵':{alias:'綿綿'},
+  '瀉漆':{title:'泻漆',reading:'xiè qī',brief:'“泻”在这里指倾注、倒出；“漆”指漆汁。古人用漆汁倾泻将尽、前大后细的形状比拟脉象，不是现代“腹泻”的意思。',note:'成无己原注：“如泻漆之绝者，前大而后细也。”',links:[['成无己注文（校核文本）','https://www.shidianguji.com/mid-page/7555622943361237001']]},
+  '泻漆':{alias:'瀉漆'},
+  '瀉漆之絕':{title:'泻漆之绝',reading:'xiè qī zhī jué',brief:'比喻漆汁倾出将要断绝之时，液流由粗转细。这里形容脉象逐渐衰微；成无己直接解释为“前大而后细”。',links:[['成无己注文（校核文本）','https://www.shidianguji.com/mid-page/7555622943361237001']]},
+  '泻漆之绝':{alias:'瀉漆之絕'},
+  '如瀉漆之絕者':{alias:'瀉漆之絕'},
   '幾幾':{title:'几几',reading:'jǐ jǐ（古注亦讨论其音义）',brief:'形容项背拘急、俯仰转动不自如的样子。成无己以短羽之鸟伸引其颈来说明这种状态。',links:[['《伤寒明理论·项强》','https://zh.wikisource.org/zh-hans/%E5%82%B7%E5%AF%92%E6%98%8E%E7%90%86%E8%AB%96/%E9%A0%85%E5%BC%B7']]},
   '几几':{alias:'幾幾'},
   '譫語':{title:'谵语',reading:'zhān yǔ',brief:'神识不清时言语错乱、语无伦次。伤寒条文中要结合热势、腹证、汗下经过等继续辨别，不能见“谵语”就只作一种病机。',links:[['《伤寒明理论·谵语》','https://zh.wikisource.org/zh-hant/%E5%82%B7%E5%AF%92%E6%98%8E%E7%90%86%E8%AB%96/%E8%AD%AB%E8%AA%9E']]},
@@ -76,47 +83,77 @@ function renderDictionary(term){
   body.innerHTML=html;
   body.querySelectorAll('[data-jump-card]').forEach(b=>b.onclick=()=>window.recallJumpTo?.(Number(b.dataset.jumpCard)));
 }
+function activeEntries(card){
+ const combined=new Map(),refs=card.sourceMap||[];
+ const ids=[...new Set(refs.map(m=>m.id))];
+ for(const id of ids){
+  for(const entry of COMMENTS.cards?.[id]||[]){
+   let e=combined.get(entry.sourceId);
+   if(!e){e={...entry,pairs:[],context:null};combined.set(entry.sourceId,e);}
+   for(const pair of entry.pairs||[]){
+    const local=[];
+    for(let j=0;j<refs.length;j++)if(refs[j].id===id&&(pair.segmentIndexes||[]).includes(refs[j].index))local.push(j);
+    if(!local.length)continue;
+    const full=local.length===(pair.segmentIndexes||[]).length;
+    e.pairs.push({...pair,segmentIndexes:local,anchorText:full?pair.anchorText:local.map(j=>card.segments[j]).join(''),partial:!full});
+   }
+   if(entry.context&&!e.context)e.context=entry.context;
+  }
+ }
+ // A checked lexical example: do not confuse the explanation of 绵绵 with that of 泻漆.
+ const text=card.text||'';
+ if(/綿綿|绵绵/.test(text)&&/瀉漆|泻漆/.test(text)){
+  const src=(COMMENTS.sources||[]).find(x=>x.id==='cheng');
+  if(src){
+   const e=combined.get('cheng')||{sourceId:'cheng',name:src.name,book:src.book,url:src.url,pairs:[],context:null};
+   e.pairs=e.pairs.filter(p=>!/綿綿|绵绵|瀉漆|泻漆/.test(p.anchorText||''));
+   const segIndexes=card.segments.map((t,i)=>/綿綿|绵绵|瀉漆|泻漆/.test(t)?i:-1).filter(i=>i>=0);
+   e.pairs.unshift(
+    {precision:'verified-phrase',segmentIndexes:segIndexes,anchorText:'綿綿',explanation:'綿綿者，連綿而軟也。',verified:true,
+     sourceUrl:'https://www.shidianguji.com/mid-page/7555622943361237001'},
+    {precision:'verified-phrase',segmentIndexes:segIndexes,anchorText:'如瀉漆之絕者',explanation:'如瀉漆之絕者，前大而後細也。',verified:true,
+     sourceUrl:'https://www.shidianguji.com/mid-page/7555622943361237001'}
+   );
+   combined.set('cheng',e);
+  }
+ }
+ return combined;
+}
 function renderCommentaries(card){
-  const rail=document.getElementById('commentatorButtons'),body=document.getElementById('commentaryBody');
-  if(!rail||!body)return;
-  window.recallClearCommentaryFocus?.();
-  const entries=COMMENTS.cards?.[card.id]||[],by=new Map(entries.map(e=>[e.sourceId,e]));
-  const sources=COMMENTS.sources||[];
-  rail.innerHTML=sources.map((src,si)=>{
-    const e=by.get(src.id),pairs=e?.pairs||[],context=e?.context||null;
-    const status=pairs.length?(pairs.length+'处精确解析'):(context?'仅上下文':'本条未定位');
-    const pairHtml=pairs.map((p,pi)=>`
-      <article class="commentary-pair source-${esc(src.id)}" data-source="${esc(src.id)}" data-pair="${pi}">
-        <button type="button" class="pair-anchor" data-segments="${(p.segmentIndexes||[]).join(',')}">
-          <span>对应原文</span><mark>${esc(p.anchorText||'')}</mark>
-          <small>${p.precision==='clause'?'整条锚定':'句段锚定'} · 点击同步高亮左侧</small>
-        </button>
-        <div class="pair-explanation"><span>名家解析</span><p>${esc(p.explanation||'')}</p></div>
-        <details class="pair-context"><summary>查看解析前后上下文</summary>
-          <div class="context-flow">${p.contextBefore?'<span>'+esc(p.contextBefore)+'</span>':''}<mark class="context-anchor">${esc(p.anchorText||'')}</mark><mark class="context-explanation">${esc(p.explanation||'')}</mark>${p.contextAfter?'<span>'+esc(p.contextAfter)+'</span>':''}</div>
-        </details>
-      </article>`).join('');
-    const contextHtml=context?`
-      <details class="context-only">
-        <summary>仅定位到相同原句：查看上下文</summary>
-        <div class="context-only-anchor">定位原文：<mark>${esc(context.anchorText||'')}</mark></div>
-        <blockquote>${esc(context.context||'')}</blockquote>
-        <p>这里只能确认原句在该书中出现，不能可靠断定哪一段是在直接解释它，所以不标成“解析”。</p>
-      </details>`:'';
-    const content=(pairHtml||contextHtml)?(pairHtml+contextHtml):'<p class="commentary-empty">当前条文在这本书里没有找到足够可靠的句段锚点。</p>';
-    return `<details class="scholar-book source-${esc(src.id)}">
-      <summary><div class="scholar-summary"><b>${esc(src.name)}</b><small>${esc(src.book)}</small></div><span>${status}</span></summary>
-      <div class="scholar-content"><a class="open-source" href="${src.url}" target="_blank" rel="noopener">打开原书 ↗</a>${content}</div>
-    </details>`;
+ const rail=document.getElementById('commentatorButtons'),body=document.getElementById('commentaryBody');
+ if(!rail||!body)return;
+ window.recallClearCommentaryFocus?.();
+ const by=activeEntries(card), sources=COMMENTS.sources||[];
+ rail.innerHTML=sources.map(src=>{
+  const e=by.get(src.id),pairs=e?.pairs||[],context=e?.context||null;
+  const status=pairs.length?(pairs.length+'处原文锚定'):(context?'仅上下文':'本条未定位');
+  const pairHtml=pairs.map((p,pi)=>{
+   const verified=!!p.verified,label=verified?'逐词校核':'原文位置锚定 · 注释范围待复核';
+   const contextHtml=verified
+    ?'<p class="commentary-note">此处分别解释“绵绵”和“泻漆之绝”，已据古注转录文本核对。<a href="'+p.sourceUrl+'" target="_blank" rel="noopener">查看校核文本 ↗</a></p>'
+    :'<details class="pair-context"><summary>查看上下文</summary><div class="context-flow">'+
+      (p.contextBefore?'<span>'+esc(p.contextBefore)+'</span>':'')+
+      '<mark class="context-anchor">'+esc(p.anchorText||'')+'</mark>'+
+      '<mark class="context-explanation">'+esc(p.explanation||'')+'</mark>'+
+      (p.contextAfter?'<span>'+esc(p.contextAfter)+'</span>':'')+
+      '</div></details>';
+   return '<article class="commentary-pair source-'+esc(src.id)+'" data-pair="'+pi+'">'+
+    '<button type="button" class="pair-anchor" data-segments="'+(p.segmentIndexes||[]).join(',')+'">'+
+    '<span>对应原文</span><mark>'+esc(p.anchorText||'')+'</mark><small>'+label+' · 点击高亮左侧</small></button>'+
+    '<div class="pair-explanation"><span>'+ (verified?'成无己原注（已核对）':'注本所附文字（需结合原书核对归属）')+
+    '</span><p>'+esc(p.explanation||'')+'</p></div>'+contextHtml+'</article>';
   }).join('');
-  body.innerHTML='<p class="commentary-note precise-note">彩色“名家解析”只用于句段级精确锚定；灰色上下文仅供前后阅读，不当作直接解释。</p>';
-
-  rail.querySelectorAll('.pair-anchor').forEach(btn=>btn.addEventListener('click',()=>{
-    rail.querySelectorAll('.commentary-pair.active').forEach(x=>x.classList.remove('active'));
-    const art=btn.closest('.commentary-pair');art?.classList.add('active');
-    const indexes=(btn.dataset.segments||'').split(',').filter(Boolean).map(Number);
-    window.recallFocusSegments?.(indexes);
-  }));
+  const ctx=context?'<details class="context-only"><summary>仅原文出现的上下文</summary><p>'+esc(context.anchorText||'')+'</p><blockquote>'+esc(context.context||'')+'</blockquote></details>':'';
+  const content=pairHtml+ctx||'<p class="commentary-empty">当前段暂无可定位的原文注释。</p>';
+  return '<details class="scholar-book source-'+esc(src.id)+'"><summary><div class="scholar-summary"><b>'+esc(src.name)+'</b><small>'+esc(src.book)+'</small></div><span>'+status+'</span></summary>'+
+   '<div class="scholar-content"><a class="open-source" href="'+src.url+'" target="_blank" rel="noopener">打开原书 ↗</a>'+content+'</div></details>';
+ }).join('');
+ body.innerHTML='<p class="commentary-note precise-note">“原文位置锚定”不等于注释范围全部核准。已核实的逐词解释会单独标明；灰色上下文不作为直接注释。</p>';
+ rail.querySelectorAll('.pair-anchor').forEach(btn=>btn.addEventListener('click',()=>{
+  rail.querySelectorAll('.commentary-pair.active').forEach(x=>x.classList.remove('active'));
+  btn.closest('.commentary-pair')?.classList.add('active');
+  window.recallFocusSegments?.((btn.dataset.segments||'').split(',').filter(Boolean).map(Number));
+ }));
 }
 function detectSelection(){
   const term=selectionText();
