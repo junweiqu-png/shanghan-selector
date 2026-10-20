@@ -224,7 +224,7 @@ let selectTime=0;
 $('#flashcard').addEventListener('pointerdown',e=>{startPoint={x:e.clientX,y:e.clientY};});
 $('#flashcard').addEventListener('pointerup',e=>{if(startPoint&&Math.hypot(e.clientX-startPoint.x,e.clientY-startPoint.y)>5)selectTime=Date.now();});
 $('#flashcard').addEventListener('click',e=>{
- if(e.target.closest('button,a'))return;
+ if(e.target.closest('button,a,.group-text,.group-gloss,.custom-gloss'))return;
  if(Date.now()-selectTime<700)return;
  if(!window.getSelection()?.isCollapsed)return;
  flip();
@@ -244,6 +244,7 @@ $('#direction').onclick=()=>{state.direction=state.direction==='forward'?'revers
 $('#orderMode').onclick=()=>{state.orderMode=state.orderMode==='random'?'sequential':'random';if(state.orderMode==='random')ensureRandom();state.flipped=false;render();};
 $('#pinyinToggle').onclick=()=>{state.showPinyin=!state.showPinyin;render();};
 $('#copyFace').onclick=copyText;
+$('#flipFace').onclick=flip;
 $('#toggleEdit').onclick=()=>{$('#editor').classList.toggle('open');};
 $('#splitCard').onclick=()=>{$('#editor').classList.add('open');document.querySelector('.split-here')?.scrollIntoView({block:'nearest'});};
 $('#mergePrev').onclick=()=>merge('prev');
