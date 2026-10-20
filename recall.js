@@ -44,9 +44,10 @@ function rubyTokens(card,ids){
   if(arr.length!==card.segments.length)return null;
   return ids.flatMap(i=>arr[i]||[]);
 }
-function rubyHTML(card,ids){
-  const toks=rubyTokens(card,ids);
-  if(!toks)return esc(ids.map(i=>card.segments[i]).join(''));
+function segmentRubyHTML(card,i){
+  const arr=card.segmentRuby||[];
+  const toks=arr.length===card.segments.length?(arr[i]||[]):null;
+  if(!toks)return esc(card.segments[i]||'');
   return toks.map(t=>{
     const ch=esc(t.c||'');
     return t.p?'<ruby><rb>'+ch+'</rb><rt>'+esc(t.p)+'</rt></ruby>':'<span class="punct">'+ch+'</span>';
@@ -54,7 +55,8 @@ function rubyHTML(card,ids){
 }
 function renderGroup(card,ids,showGloss=true){
   const gl=(card.segmentGloss&&card.segmentGloss.length===card.segments.length)?ids.map(i=>card.segmentGloss[i]||'').join(''):'';
-  return '<section class="recall-group"><p class="group-text ruby-text">'+rubyHTML(card,ids)+'</p>'+
+  const text=ids.map(i=>'<span class="clause-segment" data-seg-index="'+i+'">'+segmentRubyHTML(card,i)+'</span>').join('');
+  return '<section class="recall-group"><p class="group-text ruby-text">'+text+'</p>'+
     (showGloss&&gl?'<p class="group-gloss">'+esc(gl)+'</p>':'')+'</section>';
 }
 function face(card,kind,title){
@@ -123,5 +125,18 @@ let touchY=null;
 $('#flashcard').addEventListener('touchstart',e=>{touchY=e.touches[0]?.clientY??null;},{passive:true});
 $('#flashcard').addEventListener('touchend',e=>{if(touchY==null)return;const y=e.changedTouches[0]?.clientY??touchY,d=touchY-y;touchY=null;if(Math.abs(d)>55)go(d>0?1:-1);},{passive:true});
 window.recallJumpTo=idx=>{const n=Math.max(0,Math.min(DATA.cards.length-1,Number(idx)||0));state.i=n;if(state.orderMode==='random')ensureRandomOrder();state.flipped=false;render();};
+window.recallFocusSegments=indexes=>{
+  const list=(indexes||[]).map(Number).filter(Number.isInteger);
+  const c=DATA.cards[state.i],ls=labels(c);
+  const kinds=[...new Set(list.map(i=>ls[i]).filter(Boolean))];
+  if(kinds.length===1){
+    const frontKind=state.direction==='forward'?'p':'c';
+    state.flipped=kinds[0]!==frontKind;
+    $('#flashcard').classList.toggle('flipped',state.flipped);
+  }
+  document.querySelectorAll('.clause-segment.commentary-target').forEach(x=>x.classList.remove('commentary-target'));
+  for(const i of list)document.querySelectorAll('.clause-segment[data-seg-index="'+i+'"]').forEach(x=>x.classList.add('commentary-target'));
+};
+window.recallClearCommentaryFocus=()=>document.querySelectorAll('.clause-segment.commentary-target').forEach(x=>x.classList.remove('commentary-target'));
 restore();render();
 })();
