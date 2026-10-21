@@ -2,20 +2,27 @@
 'use strict';
 function normalizedTitle(s){return String(s||'').normalize('NFKC').toLowerCase().replace(/\.(txt|text)$/i,'').replace(/[\s\p{P}\p{S}]+/gu,'');}
 function signature(text){
- const str=String(text||''),win=24,base=33,hashes=new Set();
+ const str=String(text||''),win=24,base=33,top=[],seen=new Set();
+ function offer(hash){
+   const h=hash>>>0;
+   if(seen.has(h)||(top.length>=64&&h>=top[top.length-1]))return;
+   let lo=0,hi=top.length;
+   while(lo<hi){const mid=(lo+hi)>>1;if(top[mid]<h)lo=mid+1;else hi=mid;}
+   top.splice(lo,0,h);seen.add(h);
+   if(top.length>64)seen.delete(top.pop());
+ }
  if(str.length<win){
    let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}
-   return [h>>>0];
+   offer(h);return top;
  }
  let factor=1;for(let i=1;i<win;i++)factor=Math.imul(factor,base);
  let h=0;for(let i=0;i<win;i++)h=(Math.imul(h,base)+str.charCodeAt(i))>>>0;
  for(let end=win;end<=str.length;end++){
-   if((h&63)===0)hashes.add(h>>>0);
+   offer(h);
    if(end===str.length)break;
    h=(Math.imul((h-Math.imul(str.charCodeAt(end-win),factor))>>>0,base)+str.charCodeAt(end))>>>0;
  }
- if(!hashes.size)hashes.add(h>>>0);
- return [...hashes].sort((a,b)=>a-b).slice(0,64);
+ return top;
 }
 function similarity(a,b){
  if(!a?.length||!b?.length)return 0;
