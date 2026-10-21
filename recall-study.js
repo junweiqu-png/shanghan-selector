@@ -185,7 +185,9 @@ function renderCommentaries(card){
  const by=activeEntries(card), sources=COMMENTS.sources||[];
  rail.innerHTML=sources.map(src=>{
   const e=by.get(src.id),pairs=e?.pairs||[],context=e?.context||null;
-  const status=pairs.length?(pairs.length+'处原文锚定'):(context?'仅上下文':'本条未定位');
+  const precise=pairs.filter(p=>String(p.explanation||'').trim().length>0);
+  const status=precise.length?(precise.length+'处解析'):(context?'仅上下文':'本条无解读');
+  const stateClass=precise.length?'has-commentary':(context?'has-context':'no-commentary');
   const pairHtml=pairs.map((p,pi)=>{
    const verified=!!p.verified,label=verified?'逐词校核':'原文位置锚定 · 注释范围待复核';
    const contextHtml=verified
@@ -204,10 +206,10 @@ function renderCommentaries(card){
   }).join('');
   const ctx=context?'<details class="context-only"><summary>仅原文出现的上下文</summary><p>'+esc(context.anchorText||'')+'</p><blockquote>'+esc(context.context||'')+'</blockquote></details>':'';
   const content=pairHtml+ctx||'<p class="commentary-empty">当前段暂无可定位的原文注释。</p>';
-  return '<details class="scholar-book source-'+esc(src.id)+'"><summary><div class="scholar-summary"><b>'+esc(src.name)+'</b><small>'+esc(src.book)+'</small></div><span>'+status+'</span></summary>'+
+  return '<details class="scholar-book source-'+esc(src.id)+' '+stateClass+'"><summary><div class="scholar-summary"><b><i class="scholar-state-dot" aria-hidden="true"></i>'+esc(src.name)+'</b><small>'+esc(src.book)+'</small></div><span class="scholar-status">'+status+'</span></summary>'+
    '<div class="scholar-content"><a class="open-source" href="'+src.url+'" target="_blank" rel="noopener">打开原书 ↗</a>'+content+'</div></details>';
  }).join('');
- body.innerHTML='<p class="commentary-note precise-note">“原文位置锚定”不等于注释范围全部核准。已核实的逐词解释会单独标明；灰色上下文不作为直接注释。</p>';
+ body.innerHTML='<p class="commentary-legend"><span class="legend-available">● 有解析</span><span class="legend-context">● 仅上下文</span><span class="legend-empty">● 无解读</span></p><p class="commentary-note precise-note">绿色标识有可展开的解析文字，但原文位置锚定不等于注释范围全部核准。已核实的逐词解释会单独标明。</p>';
  rail.querySelectorAll('.pair-anchor').forEach(btn=>btn.addEventListener('click',()=>{
   rail.querySelectorAll('.commentary-pair.active').forEach(x=>x.classList.remove('active'));
   btn.closest('.commentary-pair')?.classList.add('active');
