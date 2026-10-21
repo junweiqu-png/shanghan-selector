@@ -1,5 +1,5 @@
-const CACHE='tcm-classics-runtime-v1';
-const cacheable=url=>url.pathname.includes('/books/ws/')||url.pathname.includes('/search-index/')||url.pathname.includes('/vendor/opencc-js/');
+const CACHE='tcm-classics-runtime-v2';
+const cacheable=url=>url.pathname.includes('/books/ws/')||url.pathname.includes('/search-index-v2/')||url.pathname.includes('/vendor/opencc-js/');
 self.addEventListener('install',()=>self.skipWaiting());
 self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()));
 self.addEventListener('fetch',event=>{
