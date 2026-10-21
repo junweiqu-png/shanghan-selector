@@ -3,3 +3,25 @@
 .mode-nav{grid-template-columns:repeat(4,1fr)}.mode-nav a{border:1px solid #cfd9d3;background:#fff;border-radius:14px;padding:12px 10px;font-weight:800;color:#365247;cursor:pointer;text-decoration:none;text-align:center}.mode-nav a:hover{background:#edf4f0;border-color:#9db8aa}@media(max-width:700px){.mode-nav{grid-template-columns:repeat(4,1fr);gap:5px}.mode-nav a{padding:10px 6px;font-size:14px}}
 
 .folder-import{background:#4c6655}.import-status{font-size:12px;color:#667c70;line-height:1.65;margin:10px 0 2px}.search-warnings{color:#995b38;font-size:12px}
+
+.import-review-panel[hidden]{display:none!important}
+.import-review-panel{border:1px solid #b9cdbf;border-radius:16px;background:#fffdf6;padding:14px;margin:14px 0}
+.import-review-title{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.import-review-title h3{margin:0;font-size:17px}.import-review-title span{font-size:12px;color:#6a766b}
+.import-instructions{font-size:12px;color:#6a776c;line-height:1.7}
+.import-review-item{border-top:1px solid #e3dfd5;padding:12px 2px}
+.import-review-head{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.import-review-head strong{font-size:15px;overflow-wrap:anywhere}
+.import-duplicate,.import-changed{font-size:11px;font-weight:800;padding:3px 7px;border-radius:999px}
+.import-duplicate{background:#f3eae3;color:#905c47}.import-changed{background:#e7f1e9;color:#34634b}
+.import-match{font-size:12px;color:#63736a;margin:6px 0;line-height:1.6}.import-match b{color:#4b6255}
+.import-diff{border:1px solid #e1d7c7;border-radius:9px;padding:7px 10px;margin:8px 0}
+.import-diff summary{cursor:pointer;font-size:13px;font-weight:800}
+.import-added{max-height:320px;overflow:auto;margin:8px 0}
+.import-added p{padding:6px 8px;background:#f3f8f2;margin:4px 0;border-left:2px solid #76a387;font:14px/1.65 "Songti SC","STSong",serif;white-space:pre-wrap;overflow-wrap:anywhere}
+.import-added p b{font:700 11px system-ui;color:#396d4a}
+.import-diff-note,.import-empty{font-size:12px;color:#7f776a;line-height:1.65}
+.import-review-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
+.import-review-actions button,.diff-show-all{border:1px solid #809f88;background:#274d39;border-radius:9px;padding:8px 12px;color:#fff;font-weight:700;cursor:pointer}
+.import-review-actions .import-ignore{background:#fff;color:#62584c;border-color:#d7cabc}
+.diff-show-all{background:#eef5ee;color:#24503b;margin-top:8px}
