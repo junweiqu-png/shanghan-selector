@@ -33,3 +33,15 @@ body{overflow:hidden}.stage{display:block;overflow:auto;padding:14px 16px 10px;t
 }
 
 .inherited-gloss{border:1px solid #e4d6b6;border-radius:10px;padding:8px 12px;margin:12px 0;background:#fffaf0;color:#6c5940}.inherited-gloss summary{font-size:12px;cursor:pointer}.inherited-gloss p{font-family:"Songti SC","STSong",serif;font-size:16px;line-height:1.7;margin:8px 0}
+
+.dict-corpus{margin-top:12px;border-top:1px solid #e3dccf;padding-top:12px}
+.dict-corpus h4{margin:0 0 7px;color:#244f3e;font-size:14px}
+.dict-corpus-summary{font-size:12px;color:#637d70;padding:6px 0}
+.dict-evidence-item{display:block;text-decoration:none;color:inherit;background:#fbfcf8;border:1px solid #dce7df;border-radius:10px;padding:10px 11px;margin:7px 0}
+.dict-evidence-item:hover{background:#f0f8f2;border-color:#92b49f}
+.dict-evidence-item b{display:block;color:#234b38;font-size:14px}
+.dict-evidence-item span{font-size:11px;color:#7b857b}
+.dict-evidence-item p{font-family:"Songti SC","STSong",serif;font-size:14px;line-height:1.65;margin:5px 0 0}
+.dict-evidence-item mark{background:#ffe2a0;border-radius:2px;padding:0 1px}
+.dict-corpus-warning{color:#a06637;font-size:12px;line-height:1.55}
+.dict-occ summary{font-weight:700;cursor:pointer}
