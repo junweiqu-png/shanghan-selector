@@ -25,8 +25,8 @@
   <section class="app-view" data-view="library">
     <section class="panel">
       <div class="view-lead"><div><h2>古籍原典库</h2><p>点开书后直接进入正文；分卷书自动跳过根目录。阅读时保持原文干净，不自动把术语染成一片。</p></div><span id="bookStats" class="count">正在读取书目…</span></div>
-      <div class="library-tools"><input id="bookFilter" class="book-filter" placeholder="筛书名 / 类别 / 医家…"><label class="import-label">加入我的 TXT<input id="txtImport" type="file" accept=".txt,text/plain" multiple></label></div>
-      <p class="hint">公共古籍来源：中文维基文库（CC BY-SA，具体原作版权/版本状态以源页面为准）；你导入的 TXT 仅保存在当前浏览器 IndexedDB。每本书可查看来源、许可、字数和分卷抓取完整度。</p>
+      <div class="library-tools"><input id="bookFilter" class="book-filter" placeholder="筛书名 / 类别 / 医家…"><label class="import-label">加入多个 TXT<input id="txtImport" type="file" accept=".txt,text/plain" multiple></label><label class="import-label folder-import">选择 TXT 文件夹<input id="txtFolderImport" type="file" accept=".txt,text/plain" webkitdirectory directory multiple></label></div>
+      <p id="importStatus" class="import-status" role="status">支持整个文件夹（包括子文件夹）的 TXT 批量导入；文件只存于当前浏览器，不上传服务器。同名书按文件夹路径区分。</p><p class="hint">公共古籍来源：中文维基文库（CC BY-SA，具体原作版权/版本状态以源页面为准）；你导入的 TXT 仅保存在当前浏览器 IndexedDB。每本书可查看来源、许可、字数和分卷抓取完整度。</p>
       <div id="localBookList" class="book-list"></div>
     </section>
     <section id="readerPanel" class="panel reader-panel" hidden>
@@ -56,6 +56,6 @@
 </main>
 <div id="termModal" class="term-modal" aria-hidden="true"><div id="termBody" class="term-dialog" role="dialog" aria-modal="true" aria-label="古籍词条"></div></div>
 <div id="formulaLab" class="formula-lab"><div class="formula-dialog"><div id="comparePicker"></div><div id="formulaDiff"></div></div></div>
-<script src="cache-setup.js"></script><script src="app.js"></script><script src="sources.js"></script><script src="terms.js"></script><script src="enhance.js"></script><script src="shanghan-catalog.generated.js"></script><script src="formula-data.js"></script><script src="compare.js"></script><script src="method-band.js"></script><script src="variation-lab.js"></script><script src="multi-compare.js"></script><script src="books/manifest.js"></script><script src="search-engine.js"></script><script src="library.js"></script>
+<script src="cache-setup.js"></script><script src="app.js"></script><script src="sources.js"></script><script src="terms.js"></script><script src="enhance.js"></script><script src="shanghan-catalog.generated.js"></script><script src="formula-data.js"></script><script src="compare.js"></script><script src="method-band.js"></script><script src="variation-lab.js"></script><script src="multi-compare.js"></script><script src="books/manifest.js"></script><script src="search-engine.js"></script><script src="local-library-store.js"></script><script src="shared-corpus-search.js"></script><script src="library.js"></script>
 </body>
 </html>
