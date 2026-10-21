@@ -27,7 +27,8 @@ async function search(raw,{maxRepo=80,maxLocal=80,repoHits=4,localHits=4,exhaust
 }
 function readerUrl(bookId,line,q){
  const params=new URLSearchParams({book:bookId,line:String(line||1),term:q||''});
- return 'index.html?'+params.toString()+'#library';
+ params.set('from','search');
+ return 'reader.html?'+params.toString();
 }
 function searchUrl(q){
  return 'index.html?'+new URLSearchParams({query:q}).toString()+'#search';
