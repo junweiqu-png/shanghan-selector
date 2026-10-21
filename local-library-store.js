@@ -27,7 +27,7 @@
   }
   function maybeInBloom(meta,groups){
     const bloom=meta.gramBloom;
-    if(!(bloom instanceof Uint8Array)||bloom.length!==BYTE_COUNT)return true;
+    if(meta.gramVersion!==2||!(bloom instanceof Uint8Array)||bloom.length!==BYTE_COUNT)return true;
     return groups.some(group=>group.every(variants=>variants.some(v=>{
       let prev=null;
       for(const ch of v){
@@ -43,7 +43,7 @@
     id:b.id,title:b.title,origin:'browser',filename:b.filename||'',
     relativePath:b.relativePath||b.filename||'',addedAt:b.addedAt||Date.now(),
     chars:b.chars||b.text?.length||0,category:b.category||'我的 TXT',gramBloom:b.gramBloom||null,
-    digest:b.digest||null,signature:b.signature||null,canonicalChars:b.canonicalChars||0
+    digest:b.digest||null,signature:b.signature||null,canonicalChars:b.canonicalChars||0,gramVersion:b.gramVersion||0
   });
   function open(){
     if(opening)return opening;
@@ -130,7 +130,7 @@
         if(!text.trim())throw new Error('文件为空');
         const id='user:'+rel;
         await put({id,title:file.name.replace(/\.txt$/i,'').replace(/[-_]/g,' '),
-          text,origin:'browser',filename:file.name,relativePath:rel,addedAt:Date.now(),chars:text.length,gramBloom:buildBloom(text)});
+          text,origin:'browser',filename:file.name,relativePath:rel,addedAt:Date.now(),chars:text.length,gramBloom:buildBloom(await TCMSearch.canonical(text)),gramVersion:2});
         summary.imported++;
       }catch(e){
         summary.failed++;
@@ -145,7 +145,7 @@
     const metas=await all();
     const ast=TCMSearch.parse(raw),rows=[],errors=[];
     const bloomGroups=await Promise.all(ast.groups.map(async group=>
-      Promise.all(group.include.filter(a=>a.type==='literal'||a.type==='phrase').map(a=>TCMSearch.variants(a.value)))
+      Promise.all(group.include.filter(a=>a.type==='literal'||a.type==='phrase').map(async a=>[await TCMSearch.canonical(a.value)]))
     ));
     const candidates=metas.filter(meta=>maybeInBloom(meta,bloomGroups));
     let cursor=0,checked=0,stop=false;
@@ -167,5 +167,5 @@
     await Promise.all(Array.from({length:Math.min(concurrency,Math.max(1,candidates.length))},worker));
     return {rows:rows.slice(0,maxBooks),scanned:checked,total:metas.length,filtered:metas.length-candidates.length,partial:stop||cursor<candidates.length,errors};
   }
-  globalThis.TCMLocalLibrary={open,all,get,put,remove,patchMeta,buildBloom,importFiles,search};
+  globalThis.TCMLocalLibrary={open,all,get,put,remove,patchMeta,buildBloom,textFromFile,importFiles,search};
 })();
