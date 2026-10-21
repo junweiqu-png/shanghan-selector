@@ -2,10 +2,47 @@
   'use strict';
   const DB_NAME='tcm-local-library',VERSION=2;
   let opening=null;
+  const BIT_COUNT=131072, BYTE_COUNT=BIT_COUNT/8;
+  function positions(a,b,kind){
+    const h1=(Math.imul(a^kind,0x9e3779b1)^Math.imul(b,0x85ebca6b))>>>0;
+    const h2=(Math.imul(a+kind,0xc2b2ae35)^Math.imul(b+1,0x27d4eb2f))|1;
+    return [h1&(BIT_COUNT-1),(h1+h2)&(BIT_COUNT-1),(h1+Math.imul(2,h2))&(BIT_COUNT-1)];
+  }
+  function addBloom(bloom,a,b,kind){
+    for(const p of positions(a,b,kind))bloom[p>>>3]|=1<<(p&7);
+  }
+  function hasBloom(bloom,a,b,kind){
+    return positions(a,b,kind).every(p=>(bloom[p>>>3]&(1<<(p&7)))!==0);
+  }
+  function buildBloom(text){
+    const bloom=new Uint8Array(BYTE_COUNT);
+    let prev=null;
+    for(const ch of String(text||'').normalize('NFKC').toLowerCase()){
+      const code=ch.codePointAt(0);
+      addBloom(bloom,code,0,1);
+      if(prev!==null)addBloom(bloom,prev,code,2);
+      prev=code;
+    }
+    return bloom;
+  }
+  function maybeInBloom(meta,groups){
+    const bloom=meta.gramBloom;
+    if(!(bloom instanceof Uint8Array)||bloom.length!==BYTE_COUNT)return true;
+    return groups.some(group=>group.every(variants=>variants.some(v=>{
+      let prev=null;
+      for(const ch of v){
+        const cp=ch.codePointAt(0);
+        if(!hasBloom(bloom,cp,0,1))return false;
+        if(prev!==null&&!hasBloom(bloom,prev,cp,2))return false;
+        prev=cp;
+      }
+      return true;
+    })));
+  }
   const toMeta=b=>({
     id:b.id,title:b.title,origin:'browser',filename:b.filename||'',
     relativePath:b.relativePath||b.filename||'',addedAt:b.addedAt||Date.now(),
-    chars:b.chars||b.text?.length||0,category:b.category||'我的 TXT'
+    chars:b.chars||b.text?.length||0,category:b.category||'我的 TXT',gramBloom:b.gramBloom||null
   });
   function open(){
     if(opening)return opening;
@@ -46,7 +83,8 @@
     const db=await open();
     return new Promise((resolve,reject)=>{
       const tx=db.transaction(['books','catalog'],'readwrite');
-      tx.objectStore('books').put(book);
+      const {gramBloom,...full}=book;
+      tx.objectStore('books').put(full);
       tx.objectStore('catalog').put(toMeta(book));
       tx.oncomplete=()=>resolve(toMeta(book));
       tx.onerror=()=>reject(tx.error||new Error('浏览器存储空间不足'));
@@ -82,7 +120,7 @@
         if(!text.trim())throw new Error('文件为空');
         const id='user:'+rel;
         await put({id,title:file.name.replace(/\.txt$/i,'').replace(/[-_]/g,' '),
-          text,origin:'browser',filename:file.name,relativePath:rel,addedAt:Date.now(),chars:text.length});
+          text,origin:'browser',filename:file.name,relativePath:rel,addedAt:Date.now(),chars:text.length,gramBloom:buildBloom(text)});
         summary.imported++;
       }catch(e){
         summary.failed++;
@@ -96,13 +134,17 @@
     if(!globalThis.TCMSearch)throw new Error('搜索引擎还没有加载');
     const metas=await all();
     const ast=TCMSearch.parse(raw),rows=[],errors=[];
+    const bloomGroups=await Promise.all(ast.groups.map(async group=>
+      Promise.all(group.include.filter(a=>a.type==='literal'||a.type==='phrase').map(a=>TCMSearch.variants(a.value)))
+    ));
+    const candidates=metas.filter(meta=>maybeInBloom(meta,bloomGroups));
     let cursor=0,checked=0,stop=false;
     // The same strict text verification as main-site full-text search.
     async function worker(){
       while(true){
         if(rows.length>=maxBooks){stop=true;return;}
-        const ix=cursor++;if(ix>=metas.length)return;
-        const meta=metas[ix];
+        const ix=cursor++;if(ix>=candidates.length)return;
+        const meta=candidates[ix];
         try{
           const full=await get(meta.id);
           if(!full)continue;
@@ -112,8 +154,8 @@
         }catch(e){checked++;if(errors.length<6)errors.push(meta.title+': '+String(e.message||e));}
       }
     }
-    await Promise.all(Array.from({length:Math.min(concurrency,Math.max(1,metas.length))},worker));
-    return {rows:rows.slice(0,maxBooks),scanned:checked,total:metas.length,partial:stop||cursor<metas.length,errors};
+    await Promise.all(Array.from({length:Math.min(concurrency,Math.max(1,candidates.length))},worker));
+    return {rows:rows.slice(0,maxBooks),scanned:checked,total:metas.length,filtered:metas.length-candidates.length,partial:stop||cursor<candidates.length,errors};
   }
   globalThis.TCMLocalLibrary={open,all,get,put,remove,importFiles,search};
 })();
