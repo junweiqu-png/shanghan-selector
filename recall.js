@@ -149,10 +149,10 @@ function render(){
  $('#pinyinToggle').textContent=state.showPinyin?'拼音：开':'拼音：关';
  $('#jump').max=cards.length;$('#jump').value=state.i+1;
  $('#original').textContent=c.text;
- $('#segments').innerHTML=c.segments.map((s,i)=>{
+ $('#segments').innerHTML=c.segments.map((phrase,i)=>{
   const l=labels(c)[i];
-  return '<div class="segment-edit-row"><button class="seg '+(l==='p'?'premise':'conclusion')+'" data-seg="'+i+'" type="button"><span>'+(l==='p'?'前提':'结论')+'</span>'+esc(s)+'</button>'+
-   (i<c.segments.length-1?'<button class="split-here" data-split="'+i+'" type="button">在此拆卡 ↧</button>':'')+'</div>';
+  return '<span class="clause-edit-unit"><button class="seg '+(l==='p'?'premise':'conclusion')+'" data-seg="'+i+'" type="button" title="点击切换前提／结论"><small>'+(l==='p'?'问':'答')+'</small>'+esc(phrase)+'</button>'+
+   (i<c.segments.length-1?'<button class="split-here" data-split="'+i+'" type="button" title="在此句段后拆成下一张卡" aria-label="第'+(i+1)+'段后拆卡">✂</button>':'')+'</span>';
  }).join('');
  $('#premiseGlossEdit').value=gloss(c,'p');$('#conclusionGlossEdit').value=gloss(c,'c');
  $('#mergePrev').disabled=c.firstUnit===0;
