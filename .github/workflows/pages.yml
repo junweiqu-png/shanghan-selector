@@ -45,6 +45,10 @@ jobs:
           node --check recall-study.js
           node --check search-engine.js
           node --check library.js
+          node --check reader.js
+          node --check import-review-core.js
+          node --check import-review.js
+          node --check scripts/build-import-fingerprints.mjs
           node --check local-library-store.js
           node --check shared-corpus-search.js
           node --check cache-setup.js
@@ -67,6 +71,8 @@ jobs:
         env:
           CORPUS_MAX_BOOKS: 700
         run: node scripts/build-site.mjs
+      - name: Build corpus duplicate fingerprints
+        run: node scripts/build-import-fingerprints.mjs
       - name: Build Shanghan formula catalog
         run: node scripts/build-shanghan-catalog.mjs
       - name: Build Shanghan recall cards
@@ -77,6 +83,8 @@ jobs:
         run: mkdir -p dist/vendor/opencc-js && cp -R node_modules/opencc-js/dist/esm/. dist/vendor/opencc-js/
       - name: Build Chinese n-gram inverted index
         run: node scripts/build-ngram-index.mjs
+      - name: Verify duplicate-review logic and bidirectional script matching
+        run: node scripts/test-import-and-search.mjs
       - name: Remove temporary corpus pages
         run: rm -rf dist/corpus-pages
       - name: Setup Pages
