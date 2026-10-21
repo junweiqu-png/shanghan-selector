@@ -10,7 +10,7 @@ const units=base.flatMap((c,bi)=>c.segments.map((text,si)=>({
   text, defaultLabel:c.defaults[si]||'p', ruby:c.segmentRuby?.[si]||null, gloss:c.segmentGloss?.[si]||''
 })));
 const state={i:0,cardKey:null,flipped:false,direction:'forward',edits:{},glossEdits:{},sideGlossEdits:{},orderMode:'sequential',randomOrder:[],randomPos:0,boundaries:{},showPinyin:true};
-let cards=[],wheelLock=false,startPoint=null;
+let cards=[],wheelLock=false,startPoint=null,selectingText=false;
 
 function isBoundary(i){
  if(i>=units.length-1)return true;
@@ -98,11 +98,21 @@ function savedGloss(c,kind){return state.sideGlossEdits[c.id]?.[kind];}
 function gloss(c,kind){return savedGloss(c,kind)??automaticGloss(c,kind);}
 function rubyHTML(c,i){
  const toks=c.segmentRuby[i];
- if(!state.showPinyin||!Array.isArray(toks))return esc(c.segments[i]);
+ if(selectingText||!state.showPinyin||!Array.isArray(toks))return esc(c.segments[i]);
+ // Pinyin is CSS generated content. It never exists as DOM text and cannot
+ // contaminate native Android/iOS selection, dictionary lookup or clipboard.
  return toks.map(t=>{
   const ch=esc(t.c||'');
-  return t.p?'<ruby><rb>'+ch+'</rb><rt>'+esc(t.p)+'</rt></ruby>':ch;
+  return t.p?'<span class="phonetic-char" data-py="'+esc(t.p)+'">'+ch+'</span>':ch;
  }).join('');
+}
+function renderFaces(){
+ const c=current(),fk=state.direction==='forward'?'p':'c',bk=fk==='p'?'c':'p';
+ $('#front').innerHTML=face(c,fk);
+ $('#back').innerHTML=face(c,bk);
+ $('#flashcard').classList.toggle('flipped',state.flipped);
+ $('#selectText').textContent=selectingText?'退出选字':'选字复制';
+ $('#selectText').setAttribute('aria-pressed',selectingText?'true':'false');
 }
 function face(c,kind){
  const custom=savedGloss(c,kind),hasCustom=custom!==undefined;
@@ -139,9 +149,7 @@ function legacyNotes(c){
 function render(){
  const c=current();if(!c)return;
  const fk=state.direction==='forward'?'p':'c',bk=fk==='p'?'c':'p';
- $('#flashcard').classList.toggle('flipped',state.flipped);
- $('#front').innerHTML=face(c,fk);
- $('#back').innerHTML=face(c,bk);
+ renderFaces();
  $('#progress').textContent=(state.orderMode==='random'?String(state.randomPos+1):String(state.i+1))+' / '+cards.length+' · 原条 '+(c.firstBaseIndex+1);
  $('#chapter').textContent=c.chapter+' · 原文行 '+c.line+(c.originIds.length>1?' · 合并 '+c.originIds.length+' 条':'');
  $('#direction').textContent=state.direction==='forward'?'正向：前提 → 结论':'反向：结论 → 前提';
@@ -205,7 +213,7 @@ function merge(direction){
  const c=current(),boundary=direction==='prev'?c.firstUnit-1:c.lastUnit;
  resetLayoutBoundary(boundary,false);
 }
-function flip(){state.flipped=!state.flipped;$('#flashcard').classList.toggle('flipped',state.flipped);}
+function flip(){if(!window.getSelection()?.isCollapsed)return;state.flipped=!state.flipped;$('#flashcard').classList.toggle('flipped',state.flipped);}
 function setLabel(i){
  const c=current(),src=c.sourceMap[i],old=base[src.baseIndex];
  const arr=Array.isArray(state.edits[src.id])&&state.edits[src.id].length===old.segments.length?[...state.edits[src.id]]:[...old.defaults];
@@ -252,6 +260,10 @@ $('#orderMode').onclick=()=>{state.orderMode=state.orderMode==='random'?'sequent
 $('#pinyinToggle').onclick=()=>{state.showPinyin=!state.showPinyin;render();};
 $('#copyFace').onclick=copyText;
 $('#flipFace').onclick=flip;
+$('#mobileFlip').onclick=flip;
+$('#mobilePrev').onclick=()=>navigate(-1);
+$('#mobileNext').onclick=()=>navigate(1);
+$('#selectText').onclick=()=>{selectingText=!selectingText;window.getSelection()?.removeAllRanges();renderFaces();};
 $('#toggleEdit').onclick=()=>{$('#editor').classList.toggle('open');};
 $('#splitCard').onclick=()=>{$('#editor').classList.add('open');document.querySelector('.split-here')?.scrollIntoView({block:'nearest'});};
 $('#mergePrev').onclick=()=>merge('prev');
@@ -279,18 +291,14 @@ document.addEventListener('keydown',e=>{
  else if(e.key===' '||e.key==='Enter'){e.preventDefault();flip();}
 });
 $('#flashcard').addEventListener('wheel',e=>{
- if(Math.abs(e.deltaY)<24)return;
+ if(window.matchMedia('(pointer:coarse)').matches||Math.abs(e.deltaY)<24)return;
  e.preventDefault();if(wheelLock)return;
  wheelLock=true;navigate(e.deltaY>0?1:-1);
  setTimeout(()=>wheelLock=false,320);
 },{passive:false});
-let touchY=null;
-$('#flashcard').addEventListener('touchstart',e=>{touchY=e.touches[0]?.clientY??null;},{passive:true});
-$('#flashcard').addEventListener('touchend',e=>{
- if(touchY==null)return;
- const d=touchY-(e.changedTouches[0]?.clientY??touchY);touchY=null;
- if(Math.abs(d)>55)navigate(d>0?1:-1);
-},{passive:true});
+// On touch devices a swipe always scrolls the page. Use the explicit
+// navigation buttons to change cards, avoiding conflict with selection,
+ // dictionary scrolling, and expandable scholar commentary.
 window.recallJumpTo=jumpToBase;
 window.recallFocusSegments=indexes=>{
  const c=current(),lab=labels(c),list=(indexes||[]).map(Number).filter(i=>Number.isInteger(i)&&i>=0&&i<c.segments.length);
