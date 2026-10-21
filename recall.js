@@ -213,7 +213,7 @@ function merge(direction){
  const c=current(),boundary=direction==='prev'?c.firstUnit-1:c.lastUnit;
  resetLayoutBoundary(boundary,false);
 }
-function flip(){if(!window.getSelection()?.isCollapsed)return;state.flipped=!state.flipped;$('#flashcard').classList.toggle('flipped',state.flipped);}
+function flip(){window.getSelection()?.removeAllRanges();state.flipped=!state.flipped;$('#flashcard').classList.toggle('flipped',state.flipped);}
 function setLabel(i){
  const c=current(),src=c.sourceMap[i],old=base[src.baseIndex];
  const arr=Array.isArray(state.edits[src.id])&&state.edits[src.id].length===old.segments.length?[...state.edits[src.id]]:[...old.defaults];
@@ -239,6 +239,8 @@ let selectTime=0;
 $('#flashcard').addEventListener('pointerdown',e=>{startPoint={x:e.clientX,y:e.clientY};});
 $('#flashcard').addEventListener('pointerup',e=>{if(startPoint&&Math.hypot(e.clientX-startPoint.x,e.clientY-startPoint.y)>5)selectTime=Date.now();});
 $('#flashcard').addEventListener('click',e=>{
+ // Phone taps are for selection/reading. Flips must be explicit on touch screens.
+ if(window.matchMedia('(pointer:coarse)').matches)return;
  if(e.target.closest('button,a,.group-text,.group-gloss,.custom-gloss'))return;
  if(Date.now()-selectTime<700)return;
  if(!window.getSelection()?.isCollapsed)return;
