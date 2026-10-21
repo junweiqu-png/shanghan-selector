@@ -45,3 +45,12 @@ body{overflow:hidden}.stage{display:block;overflow:auto;padding:14px 16px 10px;t
 .dict-evidence-item mark{background:#ffe2a0;border-radius:2px;padding:0 1px}
 .dict-corpus-warning{color:#a06637;font-size:12px;line-height:1.55}
 .dict-occ summary{font-weight:700;cursor:pointer}
+
+/* The split editor is an inline flow, not a list of full-width rows. */
+#segments.segments{display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 5px;padding:10px 0;line-height:1.7}
+#segments .clause-edit-unit{display:inline-flex;align-items:center;max-width:100%;gap:3px;vertical-align:baseline}
+#segments .clause-edit-unit .seg{display:inline-block;flex:none;max-width:min(100%,500px);width:auto;margin:0;border-radius:8px;padding:5px 7px;text-align:left;white-space:normal;overflow-wrap:anywhere;line-height:1.5;font-size:15px}
+#segments .clause-edit-unit .seg small{display:inline-block;font:700 10px/1 system-ui;padding:2px 3px;border-radius:3px;margin-right:5px;color:#45695b}
+#segments .clause-edit-unit .split-here{display:inline-flex;align-items:center;justify-content:center;width:23px;height:26px;border:1px dashed #c4b599;background:#fbf5e9;border-radius:6px;padding:0;font-size:14px;flex:none;color:#806f51}
+#segments .clause-edit-unit .split-here:hover{background:#ffebbc;border-color:#aa873f}
+@media(max-width:700px){#segments .clause-edit-unit .seg{font-size:14px;padding:4px 6px}#segments .clause-edit-unit .split-here{width:20px}}
