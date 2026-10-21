@@ -1,14 +1,16 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import OpenCC from 'opencc-js';
 
 const ROOT=process.cwd();
 const DIST=path.join(ROOT,'dist');
-const OUT=path.join(DIST,'search-index');
+const OUT=path.join(DIST,'search-index-v2');
+const t2s=OpenCC.Converter({from:'t',to:'cn'});
 const SHARD_COUNT=64;
 const GRAM_SIZE=2;
 
 function compact(s){
-  return String(s||'').normalize('NFKC').toLowerCase().replace(/[\s\p{P}\p{S}]+/gu,'');
+  return t2s(String(s||'').normalize('NFKC')).toLowerCase().replace(/[\s\p{P}\p{S}]+/gu,'');
 }
 function bucketFor(gram){
   const a=gram.codePointAt(0)||0;
@@ -44,10 +46,11 @@ async function main(){
     if((i+1)%40===0||i===manifest.length-1)console.log(`n-gram indexed ${i+1}/${manifest.length}`);
   }
 
+  await fs.rm(path.join(DIST,'search-index'),{recursive:true,force:true});
   await fs.rm(OUT,{recursive:true,force:true});
   await fs.mkdir(path.join(OUT,'shards'),{recursive:true});
   const docs=manifest.map((b,i)=>({i,id:b.id,path:b.path,title:b.title,author:b.author||'',category:b.category||'',edition:b.edition||'',chars:b.chars||0,complete:b.complete!==false,captureStatus:b.captureStatus||'',source:b.source||'',sourceUrl:b.sourceUrl||'',license:b.license||''}));
-  const meta={version:1,generatedAt:new Date().toISOString(),gramSize:GRAM_SIZE,shardCount:SHARD_COUNT,documentCount:docs.length,totalChars,documents:docs};
+  const meta={version:2,generatedAt:new Date().toISOString(),gramSize:GRAM_SIZE,shardCount:SHARD_COUNT,documentCount:docs.length,totalChars,documents:docs};
   await fs.writeFile(path.join(OUT,'meta.json'),JSON.stringify(meta),'utf8');
 
   let indexBytes=0,gramCount=0;
@@ -60,7 +63,7 @@ async function main(){
   }
   const stats={...meta,documents:undefined,gramCount,totalUniqueBookGrams,indexBytes};
   await fs.writeFile(path.join(OUT,'stats.json'),JSON.stringify(stats,null,2),'utf8');
-  console.log(`n-gram index ready: ${docs.length} docs; ${gramCount.toLocaleString()} unique 2-grams; ${(indexBytes/1024/1024).toFixed(1)} MiB JSON shards`);
+  console.log(`canonical simplified n-gram index ready: ${docs.length} docs; ${gramCount.toLocaleString()} unique 2-grams; ${(indexBytes/1024/1024).toFixed(1)} MiB JSON shards`);
 }
 
 main().catch(e=>{console.error(e);process.exit(1);});
