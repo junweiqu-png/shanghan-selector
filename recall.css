@@ -54,3 +54,28 @@ body{overflow:hidden}.stage{display:block;overflow:auto;padding:14px 16px 10px;t
 #segments .clause-edit-unit .split-here{display:inline-flex;align-items:center;justify-content:center;width:23px;height:26px;border:1px dashed #c4b599;background:#fbf5e9;border-radius:6px;padding:0;font-size:14px;flex:none;color:#806f51}
 #segments .clause-edit-unit .split-here:hover{background:#ffebbc;border-color:#aa873f}
 @media(max-width:700px){#segments .clause-edit-unit .seg{font-size:14px;padding:4px 6px}#segments .clause-edit-unit .split-here{width:20px}}
+
+/* 名家解条：按当前条文实际可见的内容状态分色。 */
+.scholar-book .scholar-state-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:1px;background:#a2a39f}
+.scholar-book.has-commentary{border-color:#7cab92;box-shadow:0 1px 0 #dcefe5}
+.scholar-book.has-commentary>summary{background:#e0f2e7;border-left:5px solid #247e50;padding-left:7px}
+.scholar-book.has-commentary .scholar-summary b{color:#165b3e;font-weight:850}
+.scholar-book.has-commentary .scholar-state-dot{background:#17824a;box-shadow:0 0 0 3px #c0e9cf}
+.scholar-book.has-commentary>summary>.scholar-status{font-size:11px;font-weight:850;background:#277f52;color:white;padding:4px 9px}
+.scholar-book.has-commentary[open]>summary{background:#cbead8}
+.scholar-book.has-commentary[open]>.scholar-content{border-top-color:#a1d4b6}
+.scholar-book.has-context{border-color:#e1c782}
+.scholar-book.has-context>summary{background:#fff3cd;border-left:5px solid #c8942b;padding-left:7px}
+.scholar-book.has-context .scholar-summary b{color:#805b16}
+.scholar-book.has-context .scholar-state-dot{background:#d39b2b}
+.scholar-book.has-context>summary>.scholar-status{background:#f3d77c;color:#684b0b;font-weight:750;padding:4px 9px}
+.scholar-book.no-commentary{border-color:#e4e3df}
+.scholar-book.no-commentary>summary{background:#f6f6f3;color:#888;opacity:.83}
+.scholar-book.no-commentary .scholar-summary b,.scholar-book.no-commentary .scholar-summary small{color:#81817d}
+.scholar-book.no-commentary>summary>.scholar-status{background:#ebebe8;color:#80817b}
+.scholar-book>summary:focus-visible{outline:3px solid #256c9b;outline-offset:-3px}
+.commentary-legend{display:flex;gap:9px;flex-wrap:wrap;margin:8px 0;font-size:11px;font-weight:750}
+.commentary-legend span{border-radius:6px;padding:4px 6px}
+.legend-available{background:#e0f2e7;color:#165b3e}
+.legend-context{background:#fff0c7;color:#805b16}
+.legend-empty{background:#f1f1ed;color:#80817b}
