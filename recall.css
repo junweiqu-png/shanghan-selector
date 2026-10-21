@@ -79,3 +79,57 @@ body{overflow:hidden}.stage{display:block;overflow:auto;padding:14px 16px 10px;t
 .legend-available{background:#e0f2e7;color:#165b3e}
 .legend-context{background:#fff0c7;color:#805b16}
 .legend-empty{background:#f1f1ed;color:#80817b}
+
+/* Pinyin belongs to visual annotation only: glyph text is the only copyable text. */
+.phonetic-char{display:inline-block;position:relative;vertical-align:baseline;margin:0 .025em;white-space:nowrap;user-select:text;-webkit-user-select:text}
+.phonetic-char::before{content:attr(data-py);position:absolute;left:50%;top:-1.15em;transform:translateX(-50%);font:500 .40em/1.15 system-ui,-apple-system,"PingFang SC",sans-serif;color:#2f6652;white-space:nowrap;pointer-events:none;user-select:none;-webkit-user-select:none}
+.group-text.ruby-text{line-height:2.1;padding-top:.7em}
+.mobile-card-toolbar{display:none}
+
+/* Mobile is a single natural-scroll column, without sideways viewport drift. */
+@media(max-width:900px){
+ html,body{width:100%;max-width:100%;overflow-x:clip!important;overscroll-behavior-x:none}
+ body{overflow-y:auto!important}
+ .recall-shell{display:block!important;width:100%;max-width:100%;height:auto!important;min-height:100dvh}
+ .stage{width:100%;max-width:100%;overflow:visible!important;padding:8px!important;touch-action:pan-y}
+ .study-layout{display:grid;grid-template-columns:minmax(0,1fr)!important;width:100%!important;max-width:100%!important;margin:0!important;gap:12px}
+ .recall-column,.commentary-rail,.dictionary-panel,.card-wrap,.flashcard,.bottom,.editor{min-width:0;max-width:100%;width:100%;box-sizing:border-box}
+ .card-wrap{height:auto!important;min-height:0!important}
+ .flashcard,.flashcard.flipped{height:auto!important;min-height:0!important;touch-action:pan-y}
+ .face,.face.back{position:static!important;inset:auto!important;overflow:visible!important;max-height:none!important;min-height:240px;box-shadow:0 6px 20px #493c2916}
+ .commentary-rail{position:static!important;max-height:none!important;overflow:visible!important}
+ .dictionary-panel,.commentary-rail{margin-left:0;margin-right:0}
+ .bottom{position:static;padding:9px 8px}
+ .editor.open{max-height:none!important;overflow:visible!important}
+ .mobile-card-toolbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;width:100%;margin:9px 0 4px}
+ .mobile-card-toolbar button{font-size:12px;font-weight:700;line-height:1.3;color:#315343;background:#fffdf5;border:1px solid #b6cabb;border-radius:9px;padding:10px 3px;min-width:0;touch-action:manipulation}
+ .mobile-card-toolbar button:nth-child(2){background:#ddefe2;border-color:#7fb597}
+ .mobile-card-toolbar button[aria-pressed="true"]{background:#255842;color:white;border-color:#255842}
+ .scholar-book,.commentary-pair,.pair-explanation,.dict-evidence-item{max-width:100%;overflow-wrap:anywhere}
+ .group-text,.group-gloss,.pair-explanation p,.context-flow,.dict-context p{overflow-wrap:anywhere;word-break:normal}
+ .face-lines,.face-label,.study-title,.controls,.commentary-body{min-width:0}
+ .controls{display:flex;flex-wrap:wrap;gap:5px}
+ .controls button{max-width:100%;white-space:normal}
+ /* no independently scrolling card: dragging on Chinese scrolls the page */
+ .ruby-text,.group-text,.face{touch-action:pan-y}
+}
+@media(max-width:700px){
+ .topbar{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px!important;width:100%;max-width:100%;padding:9px 9px 10px!important;align-items:center}
+ .topbar>a{grid-column:1/3;grid-row:1;justify-self:start;white-space:nowrap;min-width:0}
+ .topbar #progress{grid-column:3/5;grid-row:1;text-align:right;justify-self:end;min-width:0;max-width:100%;white-space:nowrap;font-size:12px}
+ .topbar .meta{grid-column:1/-1;grid-row:2;order:initial!important;min-width:0;max-width:100%;text-align:left}
+ .topbar .meta b{font-size:13px}
+ .topbar #jump{grid-column:1;grid-row:3}
+ .topbar #orderMode{grid-column:2;grid-row:3}
+ .topbar #pinyinToggle{grid-column:3;grid-row:3}
+ .topbar #direction{grid-column:4;grid-row:3}
+ .topbar input,.topbar button{width:100%;max-width:100%;min-width:0;margin:0;padding:8px 2px!important;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .topbar .meta small{display:none}
+ .face,.face.back{padding:25px 15px!important;border-radius:13px}
+ .group-text.ruby-text{font-size:22px;line-height:2.15}
+ .group-gloss{font-size:16px}
+ .dictionary-panel,.commentary-rail{padding:12px!important}
+ .mobile-card-toolbar button{min-height:40px}
+ .gloss-grid{grid-template-columns:minmax(0,1fr)}
+ #segments.segments{max-width:100%}
+}
