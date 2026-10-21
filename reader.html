@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f5f2e9"><title>古籍阅读 · 中医经典学习系统</title><link rel="stylesheet" href="reader.css"></head>
+<body class="reading-day">
+<header class="reader-top">
+  <button id="goBack" type="button" title="返回书库或搜索结果">‹ <span>返回</span></button>
+  <div class="reader-titles"><strong id="bookTitle">加载中…</strong><small id="bookInfo"></small></div>
+  <button id="settingsToggle" type="button">Aa 阅读设置</button>
+</header>
+<aside id="settings" class="reader-settings" hidden>
+  <label>字号 <button id="fontDown" type="button">A−</button><output id="fontSize">21</output><button id="fontUp" type="button">A＋</button></label>
+  <label>背景 <button id="themeDay" type="button">纸张</button><button id="themeNight" type="button">夜间</button></label>
+</aside>
+<main id="readerMain" class="reader-main">
+  <div id="loading" class="reader-message">正在打开古籍正文…</div>
+  <article id="textBody" class="book-paper" aria-label="古籍正文" hidden></article>
+  <div id="readerError" class="reader-error" hidden></div>
+</main>
+<footer class="reader-bottom">
+  <button id="prevPage" type="button">‹ 上一页</button>
+  <div class="reader-progress">
+    <input id="progressSlider" type="range" min="0" max="1000" value="0" aria-label="阅读进度">
+    <small id="progressLabel">—</small>
+  </div>
+  <button id="tocToggle" type="button">目录</button>
+  <button id="nextPage" type="button">下一页 ›</button>
+</footer>
+<aside id="tocPanel" class="toc-panel" hidden>
+ <div class="toc-head"><strong>本书目录</strong><button id="tocClose" type="button">关闭</button></div>
+ <div id="tocContents" class="toc-list"></div>
+</aside>
+<script src="books/manifest.js"></script><script src="search-engine.js"></script><script src="local-library-store.js"></script><script src="reader.js"></script>
+</body></html>
