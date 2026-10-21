@@ -39,12 +39,12 @@ async function existingLocal(onProgress){
  return enriched;
 }
 function candidatesFor(doc,records){
- const title=C.normalizedTitle(doc.title);
+ const title=doc.foldedTitle||C.normalizedTitle(doc.title);
  const list=[];
  for(const old of records){
    const exact=old.digest===doc.digest&&!!old.digest;
    const samePath=old.id===doc.id&&old.origin==='browser';
-   const sameName=C.normalizedTitle(old.title)===title;
+   const sameName=(old.foldedTitle||C.normalizedTitle(old.title))===title;
    const sim=C.similarity(old.signature,doc.signature);
    const ratio=Math.min(doc.canonicalChars||1,old.canonicalChars||old.chars||1)/Math.max(doc.canonicalChars||1,old.canonicalChars||old.chars||1);
    if(!exact&&!samePath&&!sameName&&!(sim>=.32&&ratio>=.20))continue;
@@ -73,7 +73,7 @@ async function add(entry,force=false){
    origin:'browser',filename:entry.filename,
    relativePath:entry.relativePath+(force?suffix:''),
    chars:entry.text.length,addedAt:Date.now(),
-   gramBloom:TCMLocalLibrary.buildBloom(entry.text),
+   gramBloom:TCMLocalLibrary.buildBloom(await TCMSearch.canonical(entry.text)),gramVersion:2,
    digest:entry.digest,signature:entry.signature,canonicalChars:entry.canonicalChars};
  await TCMLocalLibrary.put(book);
  state.usedIds.add(id);
@@ -86,7 +86,7 @@ function reviewMarkup(entry,i){
  const maybe=entry.diff;
  const details=!isExact?'<details class="import-diff" open><summary>新 TXT 相比旧版新增或改写的句段：'+
   (maybe?.total||0)+' 处'+(maybe?.hidden?'（只展示前'+maybe.additions.length+'处）':'')+'</summary>'+
-  (maybe?.additions?.length?'<div class="import-added">'+maybe.additions.map((p,n)=>'<p><b>＋ '+(n+1)+'</b> '+esc(p)+'</p>').join('')+'</div>':'<p class="import-empty">逐句对比未检测到新增句段，可能是删改、顺序、标点或局部字符发生变化。</p>')+
+  (maybe?.additions?.length?'<div class="import-added">'+(entry.showAll?maybe.additions:maybe.additions.slice(0,70)).map((p,n)=>'<p><b>＋ '+(n+1)+'</b> '+esc(p)+'</p>').join('')+'</div>'+ (maybe.additions.length>70&&!entry.showAll?'<button type="button" class="diff-show-all" data-showdiff="'+i+'">展开全部 '+maybe.additions.length+' 处新增或改写</button>':'') :'<p class="import-empty">逐句对比未检测到新增句段，可能是删改、顺序、标点或局部字符发生变化。</p>')+
   '<p class="import-diff-note">对比方法：繁简归一后逐句比较；“新增或改写”不等于已判定校勘版本更正确。旧版始终保留。</p></details>':'';
  const sources=entry.matches.slice(0,6).map(m=>'<div>'+esc(sourceLabel(m))+(m.exact?' · 全文相同':' · 内容相近 '+Math.round(m.similarity*100)+'%')+'</div>').join('');
  return '<section class="import-review-item"><div class="import-review-head"><strong>'+esc(entry.relativePath)+'</strong><span class="'+(isExact?'import-duplicate':'import-changed')+'">'+label+'</span></div>'+
@@ -103,6 +103,7 @@ function render(){
  state.pending.map((x,i)=>x.status==='pending'?reviewMarkup(x,i):'').join('')+
  (state.failed.length?'<details><summary>导入失败 '+state.failed.length+' 项</summary><p>'+state.failed.map(esc).join('；')+'</p></details>':'');
  host.querySelectorAll('[data-review]').forEach(btn=>btn.onclick=()=>resolve(Number(btn.dataset.review),btn.dataset.action));
+ host.querySelectorAll('[data-showdiff]').forEach(btn=>btn.onclick=()=>{state.pending[Number(btn.dataset.showdiff)].showAll=true;render();});
 }
 async function resolve(i,action){
  const row=state.pending[i];if(!row||row.status!=='pending'||state.busy)return;
@@ -125,7 +126,8 @@ async function begin(files,onProgress){
  try{
    progress('正在读取本站古籍的全文指纹，校验已有书库…');
    const [remote,local]=await Promise.all([fingerprints(),existingLocal(progress)]);
-   state.records=[...remote,...local];local.forEach(x=>state.usedIds.add(x.id));
+   state.records=await Promise.all([...remote,...local].map(async r=>({...r,foldedTitle:C.normalizedTitle(await TCMSearch.canonical(r.title))})));
+   local.forEach(x=>state.usedIds.add(x.id));
    for(let i=0;i<chosen.length;i++){
      const file=chosen[i],rel=file.webkitRelativePath||file.relativePath||file.name;
      progress('逐本比较 '+(i+1)+' / '+chosen.length+'：'+rel);
@@ -134,7 +136,7 @@ async function begin(files,onProgress){
        if(!text.trim())throw new Error('空文件');
        const title=file.name.replace(/\.txt$/i,'').replace(/[-_]/g,' ');
        const info=await analyzedText(text);
-       const item={id:'user:'+rel,title,text,filename:file.name,relativePath:rel,...info};
+       const item={id:'user:'+rel,title,text,filename:file.name,relativePath:rel,foldedTitle:C.normalizedTitle(await TCMSearch.canonical(title)),...info};
        const matches=candidatesFor(item,state.records);
        if(!matches.length){await add(item,false);continue;}
        if(matches[0].exact){state.duplicates++;state.pending.push({...item,matches,kind:'exact',status:'pending'});continue;}
