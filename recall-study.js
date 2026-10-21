@@ -1,7 +1,7 @@
 (()=>{
 const DATA=window.SHANGHAN_RECALL||SHANGHAN_RECALL;
 const COMMENTS=window.SHANGHAN_COMMENTARIES||SHANGHAN_COMMENTARIES||{sources:[],cards:{}};
-let currentCard=null,lastTerm='';
+let currentCard=null,lastTerm='',dictionaryRequest=0;
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const LEXICON={
@@ -57,32 +57,91 @@ function occurrences(term){
   }
   return out;
 }
-function renderDictionary(term){
-  lastTerm=term;
-  const title=document.getElementById('dictTerm'),body=document.getElementById('dictBody');
-  if(!title||!body)return;
-  if(!term){title.textContent='拖动选中上方的字或词';body.innerHTML='<p class="dict-empty">例如选中“灑淅”“心下”“厥”，这里会立即显示词义和《伤寒论》同词语境。</p>';return;}
-  title.textContent='“'+term+'”';
-  const d=lexData(term),occs=occurrences(term);
-  let html='';
-  if(d){
-    html+='<div class="dict-definition"><h4>'+esc(d.title||term)+'</h4>';
-    if(d.reading)html+='<p class="dict-reading">'+esc(d.reading)+'</p>';
-    html+='<p>'+esc(d.brief||'')+'</p>';
-    if(d.note)html+='<p class="dict-note">'+esc(d.note)+'</p>';
-    const refs=d.refs||[];
-    if(refs.length)html+='<div class="dict-refs">'+refs.slice(0,3).map(r=>'<div><b>'+esc(r.book||'古籍')+'</b>：'+esc(r.quote||'')+(r.note?' <span>'+esc(r.note)+'</span>':'')+'</div>').join('')+'</div>';
-    if(d.links?.length)html+='<div class="dict-links">'+d.links.map(([n,u])=>'<a href="'+u+'" target="_blank" rel="noopener">'+esc(n)+' ↗</a>').join('')+'</div>';
-    html+='</div>';
-  }else{
-    html+='<div class="dict-definition"><h4>'+esc(term)+'</h4><p>本站字典还没有这一个固定词条。先给你当前条文和《伤寒论》里的同词出现位置，避免机器凭空解释。</p></div>';
+function evidenceHighlight(excerpt,variants){
+  const raw=String(excerpt||''),ranges=[];
+  for(const v of variants){
+    if(!v)continue;
+    let start=0,count=0;
+    while(count++<60){
+      const i=raw.toLowerCase().indexOf(v.toLowerCase(),start);
+      if(i<0)break;
+      ranges.push([i,i+v.length]);start=i+Math.max(1,v.length);
+    }
   }
-  html+='<div class="dict-context"><b>本条语境</b><p>'+esc(currentCard?.text||'')+'</p></div>';
-  if(occs.length)html+='<div class="dict-occ"><b>《伤寒论》同词例句</b>'+occs.map(x=>'<button type="button" data-jump-card="'+x.i+'">'+esc(x.c.text.slice(0,90))+(x.c.text.length>90?'…':'')+'</button>').join('')+'</div>';
-  html+='<a class="dict-search" href="https://zh.wikisource.org/w/index.php?search='+encodeURIComponent(term)+'" target="_blank" rel="noopener">继续在维基文库查“'+esc(term)+'” ↗</a>';
-  body.innerHTML=html;
-  body.querySelectorAll('[data-jump-card]').forEach(b=>b.onclick=()=>window.recallJumpTo?.(Number(b.dataset.jumpCard)));
+  ranges.sort((a,b)=>a[0]-b[0]);
+  let last=0,out='';
+  for(const [a,b] of ranges){
+    if(a<last)continue;
+    out+=esc(raw.slice(last,a))+'<mark>'+esc(raw.slice(a,b))+'</mark>';
+    last=b;
+  }
+  return out+esc(raw.slice(last));
 }
+async function showCorpusEvidence(term,requestId){
+ const el=document.getElementById('dictEvidence');
+ if(!el)return;
+ if(!globalThis.TCMCorpusLookup||!globalThis.TCMSearch){
+   el.innerHTML='<p class="dict-empty">古籍全文搜索暂不可用，请到主站搜索。</p>';return;
+ }
+ try{
+   const found=await TCMCorpusLookup.search(term,{maxRepo:18,maxLocal:18,repoHits:2,localHits:2,concurrency:8});
+   if(requestId!==dictionaryRequest)return;
+   const vars=await TCMSearch.variants(term);
+   if(requestId!==dictionaryRequest)return;
+   const rows=[
+     ...found.repo.map(r=>({b:r.book||r.doc,h:r.hits[0],origin:'公共古籍'})),
+     ...found.local.rows.map(r=>({b:r.book,h:r.hits[0],origin:'我的 TXT'}))
+   ].filter(r=>r.h);
+   const list=rows.map(({b,h,origin})=>{
+     const url=TCMCorpusLookup.readerUrl(b.id,h.line,term);
+     return '<a class="dict-evidence-item" href="'+esc(url)+'">'+
+       '<b>'+esc(b.title||'无题')+'</b><span>'+origin+' · 第 '+h.line+' 行 · 打开原文 ↗</span>'+
+       '<p>'+evidenceHighlight(h.excerpt,vars)+'</p></a>';
+   }).join('');
+   const incomplete=found.repo.totalMatches===null?' · 公共古籍先显示前 '+found.repo.length+' 本':'';
+   const problems=found.errors.length?'<p class="dict-corpus-warning">部分来源检索未完成：'+esc(found.errors.slice(0,2).join('；'))+'</p>':'';
+   el.innerHTML='<div class="dict-corpus-summary">全库严格检索：公共古籍 '+found.repo.length+' 本 · 本地 TXT '+found.local.rows.length+
+      ' 本（本地书库 '+found.local.total+' 本）'+incomplete+'</div>'+
+      (list||'<p class="dict-empty">当前搜索范围内未检出原文命中。</p>')+
+      problems+
+      '<a class="dict-search" href="'+esc(TCMCorpusLookup.searchUrl(term))+'">到主站搜索“'+esc(term)+'”，继续查看完整检索结果 →</a>';
+ }catch(e){
+   if(requestId===dictionaryRequest)el.innerHTML='<p class="dict-corpus-warning">古籍全文检索遇到问题：'+esc(e.message)+'</p>'+
+       '<a class="dict-search" href="'+esc(TCMCorpusLookup.searchUrl(term))+'">转到主站继续搜索 →</a>';
+ }
+}
+function renderDictionary(term){
+ const requestId=++dictionaryRequest;
+ lastTerm=term;
+ const title=document.getElementById('dictTerm'),body=document.getElementById('dictBody');
+ if(!title||!body)return;
+ if(!term){
+   title.textContent='拖动选中上方的字或词';
+   body.innerHTML='<p class="dict-empty">例如选中“灑淅”“瀉漆”“心下”，将自动查询各医书的原文用例，包括你批量导入的 TXT。</p>';
+   return;
+ }
+ title.textContent='“'+term+'”';
+ const d=lexData(term),occs=occurrences(term);
+ let html='';
+ if(d){
+   html+='<div class="dict-definition"><h4>'+esc(d.title||term)+'</h4>';
+   if(d.reading)html+='<p class="dict-reading">'+esc(d.reading)+'</p>';
+   html+='<p>'+esc(d.brief||'')+'</p>';
+   if(d.note)html+='<p class="dict-note">'+esc(d.note)+'</p>';
+   if(d.refs?.length)html+='<div class="dict-refs">'+d.refs.slice(0,3).map(r=>'<div><b>'+esc(r.book||'古籍')+'</b>：'+esc(r.quote||'')+'</div>').join('')+'</div>';
+   if(d.links?.length)html+='<div class="dict-links">'+d.links.map(([n,u])=>'<a href="'+u+'" target="_blank" rel="noopener">'+esc(n)+' ↗</a>').join('')+'</div>';
+   html+='</div>';
+ }else{
+   html+='<div class="dict-definition"><h4>'+esc(term)+'</h4><p>暂无人工校对的固定词义。下面自动列出医书中的真实用例，方便从上下文判断，避免凭空造释义。</p></div>';
+ }
+ html+='<div class="dict-context"><b>本条语境</b><p>'+esc(currentCard?.text||'')+'</p></div>';
+ if(occs.length)html+='<details class="dict-occ"><summary>《伤寒论》另有 '+occs.length+' 条同词例句</summary>'+occs.map(x=>'<button type="button" data-jump-card="'+x.i+'">'+esc(x.c.text.slice(0,90))+(x.c.text.length>90?'…':'')+'</button>').join('')+'</details>';
+ html+='<section class="dict-corpus"><h4>各医书全文用例</h4><div id="dictEvidence"><p class="dict-empty">正在使用主站同一搜索规则，检索公共古籍及本地 TXT…</p></div></section>';
+ body.innerHTML=html;
+ body.querySelectorAll('[data-jump-card]').forEach(b=>b.onclick=()=>window.recallJumpTo?.(Number(b.dataset.jumpCard)));
+ showCorpusEvidence(term,requestId);
+}
+
 function activeEntries(card){
  const combined=new Map(),refs=card.sourceMap||[];
  const ids=[...new Set(refs.map(m=>m.id))];
