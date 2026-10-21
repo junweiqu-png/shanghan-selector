@@ -42,7 +42,6 @@ async function addedSentences(newText,oldText,canonical,limit=200){
 function chooseMatch(target,metas){
  let best=null;
  for(const meta of metas){
-   if(meta.id===target.id)continue;
    const exact=!!(meta.digest&&target.digest===meta.digest);
    const sameName=normalizedTitle(meta.title)===normalizedTitle(target.title);
    const s=similarity(target.signature,meta.signature),ratio=Math.min(target.chars||1,meta.chars||1)/Math.max(target.chars||1,meta.chars||1);
