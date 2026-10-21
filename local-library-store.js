@@ -42,7 +42,8 @@
   const toMeta=b=>({
     id:b.id,title:b.title,origin:'browser',filename:b.filename||'',
     relativePath:b.relativePath||b.filename||'',addedAt:b.addedAt||Date.now(),
-    chars:b.chars||b.text?.length||0,category:b.category||'我的 TXT',gramBloom:b.gramBloom||null
+    chars:b.chars||b.text?.length||0,category:b.category||'我的 TXT',gramBloom:b.gramBloom||null,
+    digest:b.digest||null,signature:b.signature||null,canonicalChars:b.canonicalChars||0
   });
   function open(){
     if(opening)return opening;
@@ -89,6 +90,15 @@
       tx.oncomplete=()=>resolve(toMeta(book));
       tx.onerror=()=>reject(tx.error||new Error('浏览器存储空间不足'));
       tx.onabort=()=>reject(tx.error||new Error('导入写入失败'));
+    });
+  }
+  async function patchMeta(id,patch){
+    const db=await open();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction('catalog','readwrite'),store=tx.objectStore('catalog');
+      const get=store.get(id);
+      get.onsuccess=()=>{if(get.result)store.put({...get.result,...patch});};
+      tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
     });
   }
   async function remove(id){
@@ -157,5 +167,5 @@
     await Promise.all(Array.from({length:Math.min(concurrency,Math.max(1,candidates.length))},worker));
     return {rows:rows.slice(0,maxBooks),scanned:checked,total:metas.length,filtered:metas.length-candidates.length,partial:stop||cursor<candidates.length,errors};
   }
-  globalThis.TCMLocalLibrary={open,all,get,put,remove,importFiles,search};
+  globalThis.TCMLocalLibrary={open,all,get,put,remove,patchMeta,buildBloom,importFiles,search};
 })();
