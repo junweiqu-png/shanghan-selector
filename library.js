@@ -72,26 +72,23 @@ let importing=false;
 async function importTxt(files){
  if(importing)return;
  importing=true;
- const stat=document.getElementById('importStatus');
- const items=[...files].filter(f=>/\.txt$/i.test(f.name||''));
- if(!items.length){stat.textContent='所选内容没有 TXT 文件';importing=false;return;}
- stat.textContent='准备导入 '+items.length+' 个 TXT…';
+ const status=document.getElementById('importStatus');
  try{
-  const result=await TCMLocalLibrary.importFiles(items,p=>{
-   stat.textContent='导入 '+p.done+'/'+p.total+' · 成功 '+p.imported+' · 失败 '+p.failed+' · '+p.file;
-  });
+  const summary=await TCMImportReview.begin(files,message=>{status.textContent=message;});
   localBooks=await dbAll();
   renderBooks(document.getElementById('bookFilter')?.value||'');
-  stat.textContent='完成：成功 '+result.imported+' 本，失败 '+result.failed+' 本。'+
-   (result.errors.length?' '+result.errors.join('；'):'')+
-   ' 仅保存在此浏览器，主站搜索和背诵字典均可检索。';
- }catch(e){stat.textContent='导入遇到问题：'+e.message;}
+  if(summary.changed||summary.duplicates){
+   document.getElementById('importReviewPanel')?.scrollIntoView({block:'nearest',behavior:'smooth'});
+  }
+ }catch(e){status.textContent='导入前比对未完成：'+e.message+'；本批次没有绕过审核导入冲突文件。';}
  finally{importing=false;}
 }
 function rememberReaderSelection(){const sel=window.getSelection?.();const body=document.getElementById('readerBody');if(!sel||!body||!sel.rangeCount)return;const node=sel.anchorNode,focus=sel.focusNode;if(!body.contains(node)||!body.contains(focus))return;const text=sel.toString().replace(/\s+/g,' ').trim();readerState.selection=text.length>0&&text.length<=40?text:'';const btn=document.getElementById('readerLookup');if(btn){btn.disabled=!readerState.selection;btn.textContent=readerState.selection?`查“${readerState.selection.slice(0,12)}${readerState.selection.length>12?'…':''}”`:'选中文字后查';}}
 function lookupSelection(){const text=readerState.selection.trim();if(!text)return;if(typeof FORMULA_DATA!=='undefined'&&FORMULA_DATA[text]&&typeof openCompareFor==='function'){openCompareFor(text);return;}openLocalSearch(text);}
 function bindLibraryUI(){document.querySelectorAll('.mode-nav button').forEach(b=>b.onclick=()=>setView(b.dataset.view));document.getElementById('librarySearchBtn').onclick=runLibrarySearch;document.getElementById('librarySearch').addEventListener('keydown',e=>{if(e.key==='Enter')runLibrarySearch();});document.getElementById('txtImport').onchange=e=>{importTxt(e.target.files);e.target.value='';};
-document.getElementById('txtFolderImport').onchange=e=>{importTxt(e.target.files);e.target.value='';};document.getElementById('bookFilter')?.addEventListener('input',e=>renderBooks(e.target.value.trim()));document.getElementById('readerPrev').onclick=async()=>{const floor=minReaderStart(readerState.book);readerState.start=Math.max(floor,readerState.start-readerState.size);await renderReader();document.getElementById('readerPanel')?.scrollIntoView({behavior:'smooth',block:'start'});};document.getElementById('readerNext').onclick=async()=>{readerState.start+=readerState.size;await renderReader();document.getElementById('readerPanel')?.scrollIntoView({behavior:'smooth',block:'start'});};document.getElementById('readerBackToHit')?.addEventListener('click',async()=>{if(!readerState.anchorLine)return;const floor=minReaderStart(readerState.book);readerState.start=Math.max(floor,readerState.anchorLine-45);await renderReader({focusAnchor:true});});document.getElementById('readerLookup')?.addEventListener('click',lookupSelection);document.addEventListener('selectionchange',rememberReaderSelection);document.getElementById('readerFind').addEventListener('keydown',async e=>{if(e.key==='Enter'){const q=e.target.value.trim();if(!q||!readerState.book)return;try{const line=await bestLine(readerState.book,q,{preferBody:true});const floor=firstContentLine(readerState.book);readerState.start=Math.max(floor-1,line-45);readerState.query=q;readerState.anchorLine=line;readerState.mode='search';await renderReader({focusAnchor:true});}catch(err){e.target.title=err.message;}}});document.addEventListener('click',e=>{const a=e.target.closest?.('.term-more a');if(a){e.preventDefault();const m=a.textContent.match(/“(.+?)”/);if(m)openLocalSearch(m[1]);}});}
+document.getElementById('txtFolderImport').onchange=e=>{importTxt(e.target.files);e.target.value='';};
+window.addEventListener('tcm-local-books-changed',async()=>{localBooks=await dbAll();renderBooks(document.getElementById('bookFilter')?.value||'');});
+document.getElementById('bookFilter')?.addEventListener('input',e=>renderBooks(e.target.value.trim()));document.getElementById('readerPrev').onclick=async()=>{const floor=minReaderStart(readerState.book);readerState.start=Math.max(floor,readerState.start-readerState.size);await renderReader();document.getElementById('readerPanel')?.scrollIntoView({behavior:'smooth',block:'start'});};document.getElementById('readerNext').onclick=async()=>{readerState.start+=readerState.size;await renderReader();document.getElementById('readerPanel')?.scrollIntoView({behavior:'smooth',block:'start'});};document.getElementById('readerBackToHit')?.addEventListener('click',async()=>{if(!readerState.anchorLine)return;const floor=minReaderStart(readerState.book);readerState.start=Math.max(floor,readerState.anchorLine-45);await renderReader({focusAnchor:true});});document.getElementById('readerLookup')?.addEventListener('click',lookupSelection);document.addEventListener('selectionchange',rememberReaderSelection);document.getElementById('readerFind').addEventListener('keydown',async e=>{if(e.key==='Enter'){const q=e.target.value.trim();if(!q||!readerState.book)return;try{const line=await bestLine(readerState.book,q,{preferBody:true});const floor=firstContentLine(readerState.book);readerState.start=Math.max(floor-1,line-45);readerState.query=q;readerState.anchorLine=line;readerState.mode='search';await renderReader({focusAnchor:true});}catch(err){e.target.title=err.message;}}});document.addEventListener('click',e=>{const a=e.target.closest?.('.term-more a');if(a){e.preventDefault();const m=a.textContent.match(/“(.+?)”/);if(m)openLocalSearch(m[1]);}});}
 (async()=>{try{localBooks=await dbAll();}catch{localBooks=[];}renderBooks();bindLibraryUI();const initial=location.hash.replace('#','');setView(['library','search','diagnosis'].includes(initial)?initial:'diagnosis');
 const params=new URLSearchParams(location.search),book=params.get('book'),term=params.get('term')||'';
 if(book){openBook(book,Number(params.get('line'))||0,term);}
