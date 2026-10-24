@@ -10,7 +10,7 @@ const units=base.flatMap((c,bi)=>c.segments.map((text,si)=>({
   text, defaultLabel:c.defaults[si]||'p', ruby:c.segmentRuby?.[si]||null, gloss:c.segmentGloss?.[si]||''
 })));
 const state={i:0,cardKey:null,flipped:false,direction:'forward',edits:{},glossEdits:{},sideGlossEdits:{},orderMode:'sequential',randomOrder:[],randomPos:0,boundaries:{},showPinyin:true};
-let cards=[],wheelLock=false,startPoint=null,selectingText=false;
+let cards=[],wheelLock=false,selectingText=false;
 
 function isBoundary(i){
  if(i>=units.length-1)return true;
@@ -235,15 +235,33 @@ function copyFallback(value,done){
  const t=document.createElement('textarea');t.value=value;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();
  try{document.execCommand('copy');done();}finally{t.remove();}
 }
-let selectTime=0;
-$('#flashcard').addEventListener('pointerdown',e=>{startPoint={x:e.clientX,y:e.clientY};});
-$('#flashcard').addEventListener('pointerup',e=>{if(startPoint&&Math.hypot(e.clientX-startPoint.x,e.clientY-startPoint.y)>5)selectTime=Date.now();});
+// A short, stationary tap flips either face on phones. Swipes, long-press
+// text selection and active "选字复制" mode never flip the card.
+let tapGesture=null,lastTapEnd=null;
+const tapDistance=e=>tapGesture?Math.hypot(e.clientX-tapGesture.x,e.clientY-tapGesture.y):0;
+$('#flashcard').addEventListener('pointerdown',e=>{
+ if(!e.isPrimary)return;
+ tapGesture={x:e.clientX,y:e.clientY,started:Date.now(),moved:false};
+});
+$('#flashcard').addEventListener('pointermove',e=>{
+ if(tapGesture&&tapDistance(e)>12)tapGesture.moved=true;
+});
+$('#flashcard').addEventListener('pointerup',e=>{
+ if(!tapGesture)return;
+ lastTapEnd={time:Date.now(),rejected:tapGesture.moved||tapDistance(e)>12||Date.now()-tapGesture.started>=500};
+ tapGesture=null;
+});
+$('#flashcard').addEventListener('pointercancel',()=>{
+ tapGesture=null;lastTapEnd={time:Date.now(),rejected:true};
+});
 $('#flashcard').addEventListener('click',e=>{
- // Phone taps are for selection/reading. Flips must be explicit on touch screens.
- if(window.matchMedia('(pointer:coarse)').matches)return;
- if(e.target.closest('button,a,.group-text,.group-gloss,.custom-gloss'))return;
- if(Date.now()-selectTime<700)return;
+ if(selectingText||e.target.closest('button,a,input,textarea'))return;
+ if(lastTapEnd&&Date.now()-lastTapEnd.time<450&&lastTapEnd.rejected)return;
  if(!window.getSelection()?.isCollapsed)return;
+ // On desktop keep text taps selectable; on phones short taps on the actual
+ // Chinese characters flip, while long-press still opens native selection.
+ if(!window.matchMedia('(pointer:coarse)').matches&&
+    e.target.closest('.group-text,.group-gloss,.custom-gloss'))return;
  flip();
 });
 document.addEventListener('copy',e=>{
