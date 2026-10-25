@@ -261,7 +261,7 @@ $('#segments').addEventListener('click',e=>{
 $('#resetOne').onclick=()=>{
  const c=current();
  delete state.edits[c.id];
- delete state.lineBreaks[c.id];
+ state.lineBreaks[c.id]=[]; // Explicitly clear: do not re-migrate old split markers after reload.
  delete state.sideGlossEdits[c.id];render();
 };
 $('#premiseGlossEdit').addEventListener('input',()=>onGlossInput('p','#premiseGlossEdit'));
