@@ -77,6 +77,8 @@ jobs:
         run: node scripts/build-shanghan-catalog.mjs
       - name: Build Shanghan recall cards
         run: node scripts/build-shanghan-recall.mjs
+      - name: Test original-article recall card grouping and persistence
+        run: node scripts/test-recall-layout.mjs
       - name: Build Shanghan commentary index
         run: node scripts/build-shanghan-commentaries.mjs
       - name: Bundle OpenCC for browser search
