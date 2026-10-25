@@ -133,3 +133,20 @@ body{overflow:hidden}.stage{display:block;overflow:auto;padding:14px 16px 10px;t
  .gloss-grid{grid-template-columns:minmax(0,1fr)}
  #segments.segments{max-width:100%}
 }
+
+/* One classic clause = one flip card. Only the question/answer ROWS split. */
+.question-group-number{display:inline-flex;align-items:center;align-self:start;margin:3px 0 4px;padding:3px 9px;border-radius:7px;background:#ebf3ed;color:#246446;font-size:12px;font-family:system-ui,"PingFang SC",sans-serif;font-weight:750}
+.face.back .question-group-number{background:#fff0d6;color:#98632c}
+.face .recall-group+.recall-group{margin-top:11px;padding-top:10px;border-top:1px dashed #d7d6cb}
+#segments.segments .clause-edit-unit{display:inline-flex;gap:3px;align-items:baseline;max-width:100%;min-width:0}
+#segments.segments .clause-edit-unit .seg{max-width:min(76vw,460px);flex:0 1 auto;overflow-wrap:anywhere}
+#segments .line-break-toggle{display:inline-flex;align-items:center;justify-content:center;flex:none;width:23px;height:25px;font-size:15px;padding:0;background:#f9f6ee;color:#aaa69c;border:1px dashed #d8d5cd;border-radius:6px;cursor:pointer;touch-action:manipulation}
+#segments .line-break-toggle.active{background:#d9f1e0;color:#18623a;border:1px solid #83b99a;font-weight:850}
+#segments .line-break-toggle:hover{border-color:#40835d;background:#e5f5e8}
+#segments .line-break-toggle:focus-visible{outline:3px solid #4278a0}
+@media(max-width:700px){
+ #segments.segments .clause-edit-unit{max-width:100%}
+ #segments.segments .clause-edit-unit .seg{max-width:calc(100vw - 80px)}
+ #segments .line-break-toggle{width:22px;height:26px}
+ .question-group-number{font-size:11px;padding:3px 7px}
+}
