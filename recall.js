@@ -91,6 +91,37 @@ function rubyHTML(c,i){
   return t.p?'<span class="phonetic-char" data-py="'+esc(t.p)+'">'+ch+'</span>':ch;
  }).join('');
 }
+// Fit both sides of ordinary desktop cards without creating an inner
+// scrollbar. If an unusually long original will not fit legibly, allow
+// the card itself to grow; never crop the text.
+function fitCard(){
+ const wrap=$('.card-wrap'),card=$('#flashcard');
+ if(!wrap||!card||!wrap.style?.setProperty)return;
+ if(!window.matchMedia('(min-width: 901px)').matches){
+  wrap.classList.remove('card-expanded');
+  wrap.style.removeProperty('--card-text-size');
+  wrap.style.removeProperty('--card-gloss-size');
+  return;
+ }
+ wrap.classList.remove('card-expanded');
+ const wasFlipped=state.flipped;
+ let fits=false;
+ for(let size=22;size>=16;size--){
+  wrap.style.setProperty('--card-text-size',size+'px');
+  wrap.style.setProperty('--card-gloss-size',Math.max(12,size-8)+'px');
+  let tooTall=false,measured=true;
+  for(const flipped of [false,true]){
+   card.classList.toggle('flipped',flipped);
+   const face=$(flipped?'#back':'#front');
+   if(!face?.clientHeight){measured=false;break;}
+   if(face.scrollHeight>face.clientHeight+2){tooTall=true;break;}
+  }
+  if(measured&&!tooTall){fits=true;break;}
+  if(!measured)break;
+ }
+ card.classList.toggle('flipped',wasFlipped);
+ if(!fits)wrap.classList.add('card-expanded');
+}
 function renderFaces(){
  const c=current(),fk=state.direction==='forward'?'p':'c',bk=fk==='p'?'c':'p';
  $('#front').innerHTML=face(c,fk);
@@ -98,6 +129,7 @@ function renderFaces(){
  $('#flashcard').classList.toggle('flipped',state.flipped);
  $('#selectText').textContent=selectingText?'退出选字':'选字复制';
  $('#selectText').setAttribute('aria-pressed',selectingText?'true':'false');
+ fitCard();
 }
 function face(c,kind){
  const custom=savedGloss(c,kind),hasCustom=custom!==undefined;
@@ -293,5 +325,6 @@ window.recallFocusSegments=indexes=>{
  for(const i of list)document.querySelectorAll('.clause-segment[data-seg-index="'+i+'"]').forEach(x=>x.classList.add('commentary-target'));
 };
 window.recallClearCommentaryFocus=()=>document.querySelectorAll('.clause-segment.commentary-target').forEach(x=>x.classList.remove('commentary-target'));
+window.addEventListener?.('resize',()=>fitCard());
 restore();render();
 })();
