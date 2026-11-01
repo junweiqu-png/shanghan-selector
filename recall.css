@@ -240,3 +240,58 @@ body{overflow:hidden}.stage{display:block;overflow:auto;padding:14px 16px 10px;t
  .card-wrap{--card-text-size:18px;--card-gloss-size:13px}
  .face,.face.back{padding:15px 12px!important}
 }
+
+
+/* Larger body text and compact inline Q/A numbers.  No label consumes a full row. */
+.card-wrap{
+ --card-text-size:26px;
+ --card-gloss-size:16px;
+ --card-leading:1.5;
+ height:min(505px,58vh);
+}
+.face,.face.back{padding:23px 25px!important}
+.face-lines{width:100%;min-width:0}
+.face-lines .recall-group{
+ display:block;
+ width:100%;
+ min-width:0;
+}
+.face-lines .recall-group.has-group-label{
+ display:grid;
+ grid-template-columns:53px minmax(0,1fr);
+ align-items:start;
+ column-gap:7px;
+}
+.face-lines .recall-group-content{
+ min-width:0;
+ width:100%;
+}
+.face-lines .question-group-number{
+ display:inline-flex!important;
+ grid-column:1;
+ grid-row:1;
+ margin:9px 0 0!important;
+ padding:4px 2px!important;
+ width:100%;
+ justify-content:center;
+ align-self:start;
+ font-size:12px!important;
+ line-height:1.2!important;
+ white-space:nowrap;
+ border-radius:6px;
+}
+.face-lines .group-text.ruby-text{
+ font-size:var(--card-text-size)!important;
+ line-height:var(--card-leading)!important;
+}
+.group-gloss,.custom-gloss p{font-size:var(--card-gloss-size)!important}
+@media(max-width:900px){
+ .card-wrap{--card-text-size:22px;--card-gloss-size:15px;--card-leading:1.48}
+ .face-lines .recall-group.has-group-label{grid-template-columns:45px minmax(0,1fr);column-gap:5px}
+ .face-lines .question-group-number{font-size:11px!important;margin-top:8px!important}
+}
+@media(max-width:390px){
+ .card-wrap{--card-text-size:21px;--card-gloss-size:14px}
+ .face-lines .recall-group.has-group-label{grid-template-columns:39px minmax(0,1fr);column-gap:4px}
+ .face-lines .question-group-number{font-size:10px!important}
+}
