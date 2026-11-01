@@ -327,6 +327,7 @@ window.recallFocusSegments=indexes=>{
  for(const i of list)document.querySelectorAll('.clause-segment[data-seg-index="'+i+'"]').forEach(x=>x.classList.add('commentary-target'));
 };
 window.recallClearCommentaryFocus=()=>document.querySelectorAll('.clause-segment.commentary-target').forEach(x=>x.classList.remove('commentary-target'));
+window.recallFitCard=fitCard;
 window.addEventListener?.('resize',()=>fitCard());
 restore();render();
 })();
