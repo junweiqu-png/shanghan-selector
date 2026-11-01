@@ -183,6 +183,10 @@ function renderCommentaries(card){
  if(!rail||!body)return;
  window.recallClearCommentaryFocus?.();
  const by=activeEntries(card), sources=COMMENTS.sources||[];
+ // Do not reserve a blank 330px right column for articles without any
+ // located classical commentary. Keep the list accessible below the card.
+ const hasRelevantText=[...by.values()].some(e=>(e.pairs||[]).some(p=>String(p.explanation||'').trim())||!!e.context);
+ document.querySelector('.study-layout')?.classList.toggle('no-commentary-match',!hasRelevantText);
  rail.innerHTML=sources.map(src=>{
   const e=by.get(src.id),pairs=e?.pairs||[],context=e?.context||null;
   const precise=pairs.filter(p=>String(p.explanation||'').trim().length>0);
