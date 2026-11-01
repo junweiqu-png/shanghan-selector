@@ -106,9 +106,9 @@ function fitCard(){
  wrap.classList.remove('card-expanded');
  const wasFlipped=state.flipped;
  let fits=false;
- for(let size=22;size>=16;size--){
+ for(let size=26;size>=17;size--){
   wrap.style.setProperty('--card-text-size',size+'px');
-  wrap.style.setProperty('--card-gloss-size',Math.max(12,size-8)+'px');
+  wrap.style.setProperty('--card-gloss-size',Math.max(13,size-9)+'px');
   let tooTall=false,measured=true;
   for(const flipped of [false,true]){
    card.classList.toggle('flipped',flipped);
@@ -137,10 +137,12 @@ function face(c,kind){
  const gs=groups(c,kind);
  if(!gs.length)out+='<p class="empty-face">本面尚无标注内容</p>';
  for(const [groupNumber,g] of gs.entries()){
-  out+='<section class="recall-group">'+(gs.length>1?'<div class="question-group-number">'+(kind==='p'?'问题 ':'答案 ')+(groupNumber+1)+'</div>':'')+
-  '<p class="group-text ruby-text">'+g.map(i=>'<span class="clause-segment" data-seg-index="'+i+'">'+rubyHTML(c,i)+'</span>').join('')+'</p>';
+  const hasNumber=gs.length>1;
+  out+='<section class="recall-group'+(hasNumber?' has-group-label':'')+'">';
+  if(hasNumber)out+='<span class="question-group-number" aria-label="'+(kind==='p'?'问题':'答案')+(groupNumber+1)+'">'+(kind==='p'?'问题':'答案')+(groupNumber+1)+'</span>';
+  out+='<div class="recall-group-content"><p class="group-text ruby-text">'+g.map(i=>'<span class="clause-segment" data-seg-index="'+i+'">'+rubyHTML(c,i)+'</span>').join('')+'</p>';
   if(!hasCustom)out+='<p class="group-gloss">'+esc(g.map(i=>c.segmentGloss[i]||'').join(''))+'</p>';
-  out+='</section>';
+  out+='</div></section>';
  }
  if(hasCustom)out+='<div class="custom-gloss"><b>我保存的白话</b><p>'+esc(custom)+'</p></div>';
  // Old split-card translations are retained under their former cut IDs
