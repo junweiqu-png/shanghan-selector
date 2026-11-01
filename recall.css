@@ -295,3 +295,22 @@ body{overflow:hidden}.stage{display:block;overflow:auto;padding:14px 16px 10px;t
  .face-lines .recall-group.has-group-label{grid-template-columns:39px minmax(0,1fr);column-gap:4px}
  .face-lines .question-group-number{font-size:10px!important}
 }
+/* If this article has no matched scholar commentary, let the card use
+   the space rather than leaving an unused rail at the right. */
+@media(min-width:901px){
+ .study-layout.no-commentary-match{
+  grid-template-columns:minmax(0,1fr)!important;
+  max-width:1120px;
+ }
+ .study-layout.no-commentary-match .commentary-rail{
+  position:static;
+  max-height:none;
+ }
+ .study-layout.no-commentary-match .commentator-buttons{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(155px,1fr));
+ }
+ .study-layout.no-commentary-match .commentary-rail>.study-title{
+  margin-bottom:5px;
+ }
+}
