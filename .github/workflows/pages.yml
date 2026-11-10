@@ -61,6 +61,7 @@ jobs:
           node --check wenyan/scripts/build-evidence.mjs
           node --check wenyan/scripts/test-study.mjs
           node --check wenyan/scripts/build-expanded-corpus.mjs
+          node --check wenyan/scripts/build-large-corpus.mjs
           node --check wenyan/study-editor.js
           node --check wenyan/study-explorer.js
           node --check wenyan/pinyin.js
@@ -106,6 +107,8 @@ jobs:
         run: node wenyan/scripts/build-evidence.mjs
       - name: Build expanded school and classics corpus for background annotation
         run: node wenyan/scripts/build-expanded-corpus.mjs
+      - name: Index full CC0 thirteen classics, ancient histories and Zizhi Tongjian
+        run: node --max-old-space-size=2048 wenyan/scripts/build-large-corpus.mjs
       - name: Remove temporary corpus pages
         run: rm -rf dist/corpus-pages
       - name: Setup Pages
