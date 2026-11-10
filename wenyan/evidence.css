@@ -1,0 +1,20 @@
+/* Source-linked, high-contrast text evidence. */
+.evidence-filters{position:sticky;top:-16px;background:#fffefa;padding:9px 0;z-index:2;border-bottom:1px solid #e4e9e0}
+.evidence-filters button{min-width:0;font-size:12px;padding:9px 7px;border-radius:10px}
+.evidence-filters button.selected-filter{background:#2d674b;color:white;border-color:#2d674b}
+.corpus-example{border:1px solid #e1e9df;border-radius:14px;background:#fcfdfa;padding:13px 14px;margin:12px 0;line-height:1.65}
+.corpus-example>b{display:block;font-size:14px;color:#285c40}
+.corpus-example>small{display:block;color:#788879;font-size:12px;margin:3px 0 10px}
+.corpus-example small a{color:#2c7251;white-space:nowrap}
+.example-context{padding:5px 8px;margin:5px 0;border-left:3px solid #e4e8df}
+.example-context.selected{background:#eff7ed;border-left-color:#5b9a6f}
+.example-context span{display:block;font-size:11px;font-weight:750;color:#6f8a73;letter-spacing:.07em;margin-bottom:1px}
+.example-context p,.example-full{font:19px/1.75 "Songti SC","Noto Serif CJK SC","STSong",serif;white-space:pre-wrap;margin:3px 0;user-select:text}
+.example-context:not(.selected) p{font-size:17px;color:#607365}
+.corpus-example details{font-size:13px;color:#54725c;border-top:1px dashed #e1e8dd;margin-top:9px;padding-top:10px}
+.corpus-example summary{cursor:pointer}
+.corpus-example .example-full{font-size:16px;max-height:250px;overflow:auto;padding:7px 0;color:#44564a}
+.corpus-example>.evidence-add{font-size:12px;padding:7px 10px;margin-top:9px;background:#eef6f0;border-color:#d0e2d3}
+.corpus-example mark{background:#ffe0a3;color:#302c21;border-radius:3px;padding:0 1px}
+#corpusLoad{line-height:1.75}
+@media(max-width:620px){.corpus-example{padding:12px 11px}.example-context p{font-size:20px}.example-context:not(.selected) p{font-size:17px}}
