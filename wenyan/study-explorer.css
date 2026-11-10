@@ -42,3 +42,38 @@
 .study-corpus p{margin:7px 0}
 .study-corpus a{color:#347654}
 @media(max-width:620px){.study-example{padding:14px 12px}.study-original{font-size:23px;line-height:1.85}.study-translation{font-size:16px}.study-compare p{font-size:13.5px}.study-example-top b{font-size:17px}.study-origin{padding:13px 12px}}
+
+/* 精简关联学习：一个来源，一句原文，一段译文，一个对比结果。 */
+.study-toolbar{margin-bottom:5px}
+.study-origin{background:#f5f8f2;border:1px solid #e1e9dc;margin:3px 0 14px;padding:12px 13px;border-radius:12px}
+.study-origin h3{display:flex;align-items:baseline;gap:12px;margin:0;font-size:15px}
+.study-origin h3 em{font-size:27px;color:#a46422}
+.study-origin h3 span{color:#627268;font-weight:500}
+.study-origin .study-original{font-size:17px;line-height:1.65;margin:7px 0 4px}
+.study-origin-meaning{font-size:14px;color:#344f3d}
+.study-origin-meaning small{margin-left:9px;color:#829083;font-size:12px}
+.study-sectionhead{border:0;margin:15px 0 7px;padding:0 2px}
+.study-sectionhead b{font-size:15px;letter-spacing:.07em}
+.study-example{box-shadow:none;background:#fffefb;border-color:#e5e7df;margin:9px 0;padding:13px 14px;border-radius:13px}
+.study-example-top{font-size:16px;margin:0 0 7px;display:block;font-weight:650;color:#244f37;line-height:1.6}
+.study-example-top small{font-size:12px;color:#8a9086;font-weight:400}
+.study-example .study-original{font-size:21px;line-height:1.8;margin:5px 0 7px}
+.study-example .study-translation{font-size:15px;line-height:1.75;margin:7px 0 8px;padding:0;color:#4b5a50;border:0}
+.study-example .study-translation:before{content:"译文　";color:#72927b;font-weight:650;font-family:system-ui,sans-serif;font-size:12px}
+.study-sense{background:none;border:0;padding:0;margin:8px 0;color:#2d6645;font-size:14px}
+.study-sense small{font-weight:400;font-size:12px;color:#859184}
+.study-compare{padding:8px 10px;margin:8px 0;border-radius:8px;border-width:0 0 0 3px}
+.study-compare.same{border-left:3px solid #47a267}
+.study-compare.near{border-left:3px solid #d3a934}
+.study-compare.diff{border-left:3px solid #d16c5b}
+.study-compare b{font-size:13px}
+.study-compare p{margin:3px 0 0;color:#536257;font-size:13px;line-height:1.65}
+.study-compare-meanings{color:#2b4031;font-weight:650}
+.study-actions{gap:7px;margin-top:7px}
+.study-actions a,.study-actions button{font-size:11px;padding:4px 8px;color:#7b897e}
+.study-actions button{background:#f7faf4;border-color:#e5ecdf}
+.study-empty{padding:18px 0;color:#7d8980;font-size:14px}
+.study-token{border:0;background:transparent;padding:0;line-height:inherit}
+.study-token:not(.hit-word){border-bottom:1px dotted #afbdac}
+.study-token.hit-word{background:#ffde8f;border-bottom:2px solid #d69b36;box-shadow:0 2px 0 #ffd88f}
+@media(max-width:620px){.study-example{padding:12px}.study-example .study-original{font-size:22px}.study-origin .study-original{font-size:18px}.study-example .study-translation{font-size:16px}}
