@@ -145,6 +145,9 @@ function renderPage(term,isGrammar,origin,push=true){
   const key=r.title+"|"+r.code;
   if(seen.has(key))continue;seen.add(key);filtered.push(row);
  }
+ // 先同义，再近义，最后异义；同档保持高频篇目的优先顺序。
+ const weight={same:0,near:1,diff:2,unknown:3};
+ filtered.sort((a,b)=>(weight[relation(origin,a.record,isGrammar).type]??3)-(weight[relation(origin,b.record,isGrammar).type]??3));
  const html=wrapHeader()+baseHeader(origin,isGrammar)+
  '<div class="study-sectionhead"><b>关联古文</b></div>'+
  (filtered.length?filtered.map((r,i)=>rowCard(r,i,origin,isGrammar)).join(""):
