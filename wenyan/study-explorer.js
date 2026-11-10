@@ -4,16 +4,16 @@
 const $=id=>document.getElementById(id), DB=window.WENYAN_ANNOTATIONS||{words:{},grammar:{},meta:{groups:{},families:{}}};
 const esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const core=[...(window.WENYAN_DATA_1||[]),...(window.WENYAN_DATA_2||[]),...(window.WENYAN_DATA_3||[])];
-const allTerms=()=>[...new Set([...Object.keys(DB.words||{}),...Object.keys(window.WENYAN_CROSSLESSON?.words||{}),...(window.WENYAN_STUDY_EDITOR?.words()||[])])].filter(Boolean).sort((a,b)=>b.length-a.length);
+const allTerms=()=>[...new Set([...Object.keys(DB.words||{}),...Object.keys(window.WENYAN_CROSSLESSON?.words||{}),...Object.keys(window.WENYAN_VERIFIED_EXTRA?.words||{}),...core.flatMap(w=>(w.terms||[]).map(t=>t[0])),...(window.WENYAN_STUDY_EDITOR?.words()||[])])].filter(Boolean).sort((a,b)=>b.length-a.length);
 let chain=[],state=null;
 const order={"过秦论":1,"烛之武退秦师":2,"唐雎不辱使命":3,"曹刿论战":4,"孙权劝学":5,"爱莲说":6,"陋室铭":7,"卖油翁":8,"狼":9,"记承天寺夜游":10,"咏雪":40,"陈太丘与友期行":41};
 const sortEntries=(a,b)=>(order[a.title]||20)-(order[b.title]||20)||a.title.localeCompare(b.title,"zh-CN");
 const family=s=>DB.meta?.families?.[s]||s;
 function knowTerm(word){
- const builtin=DB.words?.[word],cross=window.WENYAN_CROSSLESSON?.words?.[word],personal=window.WENYAN_STUDY_EDITOR?.lookupWord(word);
- if(!builtin&&!cross&&!personal)return null;
- return {sources:[...(personal?.sources||[]),...(builtin?.sources||[]),...(cross?.sources||[])],
- examples:[...(personal?.examples||[]),...(builtin?.examples||[]),...(cross?.examples||[])]};
+ const builtin=DB.words?.[word],cross=window.WENYAN_CROSSLESSON?.words?.[word],verified=window.WENYAN_VERIFIED_EXTRA?.words?.[word],personal=window.WENYAN_STUDY_EDITOR?.lookupWord(word);
+ if(!builtin&&!cross&&!verified&&!personal)return null;
+ return {sources:[...(personal?.sources||[]),...(builtin?.sources||[]),...(verified?.sources||[]),...(cross?.sources||[])],
+ examples:[...(personal?.examples||[]),...(builtin?.examples||[]),...(verified?.examples||[]),...(cross?.examples||[])]};
 }
 function grammarSpec(name){const built=DB.grammar?.[name]||null,personal=window.WENYAN_STUDY_EDITOR?.lookupGrammar(name);if(!personal)return built;return {definition:personal.definition||built?.definition||"自定义句式",examples:[...(personal.examples||[]),...(built?.examples||[])]};}
 function grammarNames(){return [...new Set([...Object.keys(DB.grammar||{}),...(window.WENYAN_STUDY_EDITOR?.patterns()||[])])];}
