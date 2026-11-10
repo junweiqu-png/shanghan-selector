@@ -50,15 +50,16 @@ async function fetchPage(page){
     try{
       const res=await fetch(url,{headers:{'accept':'application/json','user-agent':'WenyanEvidenceStudy/1.0 (https://github.com/junweiqu-png/shanghan-selector; public education)'},
         signal:AbortSignal.timeout(25000)});
+      if(res.status===404)throw new Error('NOT_FOUND '+res.status);
       if(!res.ok)throw new Error('HTTP '+res.status);
       const data=await res.json();
-      if(data.error)throw new Error(data.error.code||'MediaWiki parse error');
+      if(data.error)throw new Error((data.error.code==='missingtitle'?'NOT_FOUND ':'')+(data.error.code||'MediaWiki parse error'));
       const html=data.parse?.text||data.parse?.text?.['*'];
       if(!html||typeof html!=='string')throw new Error('No parsed HTML');
       await fs.mkdir(cache,{recursive:true});
       await fs.writeFile(saved,JSON.stringify({page,html}), 'utf8');
       return html;
-    }catch(e){reason=e.message;await sleep(Math.min(11000,800*(attempt+1)**2));}
+    }catch(e){reason=e.message;if(reason.startsWith('NOT_FOUND'))break;await sleep(Math.min(11000,800*(attempt+1)**2));}
   }
   throw new Error(page+': '+reason);
 }
