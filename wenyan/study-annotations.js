@@ -1,4 +1,4 @@
-/* 逐句核对的古籍例句、翻译及词义、句式比较资料。 */
+/* 逐句整理的文言义项、译文和词性；新增「墓所」「居其所」处所义，区别于所字结构。 */
 window.WENYAN_ANNOTATIONS={
   "words": {
     "因": {
@@ -983,6 +983,14 @@ window.WENYAN_ANNOTATIONS={
     "所": {
       "sources": [
         [
+          "世说新语·赏誉",
+          "墓所",
+          "地方、处所",
+          "名词",
+          "place",
+          "与“墓”组成“墓所”，指墓地或陵园所在的地方"
+        ],
+        [
           "刻舟求剑",
           "所契者",
           "……的地方",
@@ -997,9 +1005,39 @@ window.WENYAN_ANNOTATIONS={
           "结构助词",
           "nominal",
           "构成名词性短语"
+        ],
+        [
+          "论语·为政",
+          "居其所",
+          "所在的位置、处所",
+          "名词",
+          "place",
+          "表示北极星所处的固定位置"
         ]
       ],
       "examples": [
+        [
+          "论语·为政",
+          "《论语·为政》",
+          "子曰：“为政以德，譬如北辰，居其所而众星共之。”",
+          "孔子说：“用道德治理政事，就像北极星安居在自己的位置上，群星都环绕着它。”",
+          "地方、位置",
+          "名词",
+          "place",
+          "指北极星居于的固定位置",
+          "https://www.chinakongzi.org/eBook/analects/one/files/basic-html/page63.html"
+        ],
+        [
+          "世说新语·赏誉",
+          "《世说新语·赏誉》第99则",
+          "殷渊源在墓所几十年。",
+          "殷浩在墓地附近住了将近十年。",
+          "地方、处所",
+          "名词",
+          "place",
+          "“墓所”是墓地所在的地方",
+          "https://zh.wikisource.org/wiki/世說新語/賞譽"
+        ],
         [
           "刻舟求剑",
           "《吕氏春秋·察今》",
@@ -1844,7 +1882,8 @@ window.WENYAN_ANNOTATIONS={
       "inherit": "inherit",
       "compare-ritual": "similarity-compare",
       "imitate": "similarity-compare",
-      "nominate": "nomination"
+      "nominate": "nomination",
+      "place": "place"
     }
   },
   "grammar": {
