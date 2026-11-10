@@ -23,3 +23,8 @@ ruby{ruby-position:over;white-space:nowrap}rt{font-family:system-ui,-apple-syste
 .study-original:has(ruby){line-height:2.15}
 .study-token ruby{line-height:inherit}
 .study-sectionhead #editStudyTerm{font-size:12px;padding:5px 10px;margin-left:auto}
+
+.study-source-filters{position:sticky;top:-14px;z-index:4;background:#fffefa;display:flex;gap:6px;overflow-x:auto;padding:9px 0 10px;margin-bottom:5px;border-bottom:1px solid #e1e8dd;scrollbar-width:thin}
+.study-source-filters button{white-space:nowrap;padding:7px 10px;font-size:12px;flex:none;background:#f8faf6;border-color:#dfe9dd}
+.study-source-filters button.active{background:#286c46;color:white;border-color:#286c46}
+#nextTeacherPage{background:#edf5ef;border-color:#cce2d0;width:100%;margin-top:12px}
