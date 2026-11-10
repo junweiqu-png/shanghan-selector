@@ -114,7 +114,14 @@ function createWordRows(term){
  if(!spec)return [];
  return (spec.examples||[]).filter(x=>x[2]&&x[3]&&x[4]&&x[5]&&x[6]).map(x=>({
  title:x[0],record:{title:x[0],source:x[1],text:x[2],translation:x[3],meaning:x[4],pos:x[5],code:x[6],usage:x[7],url:x[8]||""}
- })).map(x=>({...x,grammars:enrichGrammars(x.record)})).sort(sortEntries);
+ })).map(x=>({...x,grammars:enrichGrammars(x.record)})).sort((a,b)=>{
+   if(term==="因"){
+     const popular=["因利乘便","因人之力而敝之","安陵君因使唐雎","因遗策","因河为池"];
+     const rank=x=>{const i=popular.findIndex(t=>x.record.text.includes(t));return i<0?100:i;};
+     if(rank(a)!==rank(b))return rank(a)-rank(b);
+   }
+   return sortEntries(a,b);
+ });
 }
 function createGrammarRows(name){
  return (DB.grammar?.[name]?.examples||[]).filter(x=>x[2]&&x[3]&&x[4]&&x[5]).map(x=>({
@@ -170,7 +177,7 @@ function addTranslatedCard(key){
  if(value.custom.some(w=>w.lines?.some(l=>l[0]===e.text)&&w.source===e.source)){
   alert("这条有翻译的古文已加入背诵卡。");return;
  }
- value.custom.push({title:e.title+"·关联精读",source:e.source+(e.url?" · "+e.url:""),level:"关联学习",lines:[[e.text,e.translation,""]],terms:[],ruby:{},hint:"来自已整理的逐句原典比较"});
+ value.custom.push({title:e.title+"·关联精读",source:e.source,sourceUrl:e.url||"",level:"关联学习",lines:[[e.text,e.translation,""]],terms:[],ruby:{},hint:"来自已整理的逐句原典比较"});
  localStorage.setItem("wenyan-recall-v1",JSON.stringify(value));
  alert("已加入背诵卡（含原文和翻译）。下次打开篇目列表即可查看；页面会更新新增篇目。");
  location.reload();
