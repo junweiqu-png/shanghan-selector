@@ -33,6 +33,10 @@ assert(explorer.includes('editStudyTerm'),'association dialog lacks add-example 
 const teacher=fs.readFileSync(root+'study-editor.js','utf8');
 assert(teacher.includes('evidence/expanded-manifest.json'),'teacher corpus manifest not read');
 assert(teacher.includes('evidence/large-index/'),'teacher does not use lazy classical dictionary index');
+assert(teacher.includes('DecompressionStream'),'the large evidence reader must decode compressed index shards');
+const largeBuilder=fs.readFileSync(root+'scripts/build-large-corpus.mjs','utf8');
+assert(largeBuilder.includes('gzipSync(Buffer.from(JSON.stringify(out)'),'the large index must be gzipped to fit Pages deployment limits');
+assert(largeBuilder.includes('indexEncoding:\'gzip\''),'the manifest must declare compressed-index encoding');
 assert(teacher.includes('editTranslation'),'translated example is required');
 assert(teacher.includes('study-source-filters'),'category tabs must expose both school and history candidates');
 assert(teacher.includes('editQuery'),'grammar searches need a literal source phrase separate from grammar label');
