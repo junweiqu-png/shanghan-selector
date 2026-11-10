@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
-const root='wenyan/',win={},context={window:win};
+const root=process.env.WENYAN_ROOT||'wenyan/',win={},context={window:win};
 const pinyin=fs.readFileSync(root+'pinyin.js','utf8');
 new vm.Script(pinyin).runInNewContext(context);
 assert(win.WENYAN_PINYIN,'pinyin renderer missing');
