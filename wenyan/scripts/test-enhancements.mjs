@@ -31,6 +31,10 @@ const teacher=fs.readFileSync(root+'study-editor.js','utf8');
 assert(teacher.includes('evidence/expanded-manifest.json'),'teacher corpus manifest not read');
 assert(teacher.includes('evidence/large-index/'),'teacher does not use lazy classical dictionary index');
 assert(teacher.includes('editTranslation'),'translated example is required');
+assert(teacher.includes('study-source-filters'),'category tabs must expose both school and history candidates');
+assert(teacher.includes('editQuery'),'grammar searches need a literal source phrase separate from grammar label');
+for(const label of ['小学诗文','高中','史记','资治通鉴','世说新语'])assert(teacher.includes(label),'missing corpus category '+label);
+assert(teacher.includes('blockedWithoutTranslation')===false,'no disposable smoke checks in production');
 const config=fs.readFileSync('.github/workflows/pages.yml','utf8');
 for(const name of ['build-expanded-corpus.mjs','build-large-corpus.mjs','build-poetry-classics.mjs'])
  assert(config.includes('wenyan/scripts/'+name),'Pages workflow missing builder '+name);
