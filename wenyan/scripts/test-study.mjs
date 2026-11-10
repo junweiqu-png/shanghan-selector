@@ -80,6 +80,35 @@ assert(expl.includes('if(r.title===origin.title)continue'),'source work must be 
 assert(expl.includes('function indexOrigin(term)'),'glossary must locate an actual sentence, not the current reading');
 assert(expl.includes('which.closest("#wordList")'),'glossary click needs its own origin context');
 assert(expl.includes('if(!text.includes(term))'),'never display an ancient quote that lacks its purported headword');
-assert(expl.includes('const key=r.title+"|"+r.code'),'identical source senses must be deduplicated');
+assert(expl.includes('const key=r.title+"|"+normalizeSense(r.code)'),'identical source senses must be deduplicated');
+const extendedWindow={};
+for(const file of ['data-basic.js','data-classic.js','data-extra.js']){
+ const source=fs.readFileSync(dir+file,'utf8');
+ new vm.Script(source,{filename:file}).runInNewContext({window:extendedWindow});
+}
+let extraLex=0,extraGram=0;
+for(const [file,key] of [['study-crosslesson.js','WENYAN_CROSSLESSON'],['study-verified-extra.js','WENYAN_VERIFIED_EXTRA'],['study-grammar-more.js','WENYAN_GRAMMAR_MORE']]){
+ const source=fs.readFileSync(dir+file,'utf8');
+ new vm.Script(source,{filename:file}).runInNewContext({window:extendedWindow});
+ assert(app.includes(file),'supplemental corpus not included in HTML '+file);
+ const added=extendedWindow[key];assert(added,'missing data '+key);
+ for(const [word,spec] of Object.entries(added.words||{})){
+  for(const x of spec.examples||[]){
+   assert(x[2]?.includes(word),'quote missing searched word '+word+' '+x[0]);
+   assert(x[3]&&x[4]&&x[5]&&x[6]&&x[7],'unreviewed example in '+word+' '+x[0]);
+   extraLex++;
+  }
+ }
+ for(const [label,spec] of Object.entries(added.grammar||{})){
+  for(const x of spec.examples||[]){
+   assert(x[2]&&x[3]&&x[4]&&x[5],'incomplete grammar '+label+' '+x[0]);extraGram++;
+  }
+ }
+}
+for(const term of ['俄而','未若','诣','疾','顾','引','骤','舍','值']){
+ const rows=extendedWindow.WENYAN_VERIFIED_EXTRA?.words?.[term]?.examples||[];
+ assert(rows.length>=5,'less than five translated verified sources for '+term);
+}
+assert(extraLex>=370&&extraGram>=85,'expanded evidence was not compiled');
 assert(lex>=90&&gram>=70,'unexpected evidence coverage drop');
-console.log(JSON.stringify({ok:true,words:Object.keys(D.words).length,translatedWordExamples:lex,grammarTopics:Object.keys(D.grammar).length,translatedGrammarExamples:gram},null,2));
+console.log(JSON.stringify({ok:true,words:Object.keys(D.words).length,translatedWordExamples:lex,extraWordExamples:extraLex,grammarTopics:Object.keys(D.grammar).length,translatedGrammarExamples:gram,extraGrammarExamples:extraGram},null,2));
