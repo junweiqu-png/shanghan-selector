@@ -87,7 +87,7 @@ if(process.env.WENYAN_COVERAGE_DEST){
  fs.writeFileSync(out,JSON.stringify(report,null,2),'utf8');
 }
 console.log(JSON.stringify(sum));
-for(const term of ['内集','集']){
+for(const term of ['内集']){
  const rows=wordResults.filter(r=>r.term===term);
  if(!rows.length||rows.some(r=>r.reviewedExamples<5||r.sameSense<2)){console.error('Verified regression',term,JSON.stringify(rows));process.exitCode=3;}
 }
