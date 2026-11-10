@@ -10,7 +10,7 @@ let visited=new Set(stored.visited||[]), learned=new Set(stored.learned||[]), co
 function save(){localStorage.setItem(KEY,JSON.stringify({custom,wi,si,whole,show,visited:[...visited],learned:[...learned],completions:[...completions]}));}
 function work(){return works()[wi]||works()[0];}
 function line(){const w=work();si=Math.max(0,Math.min(si,w.lines.length-1));return w.lines[si];}
-function tokensFor(w){return (w.terms||[]).filter(t=>t[0]).sort((a,b)=>b[0].length-a[0].length);}
+function tokensFor(w){const seen=new Set(),res=[];for(const x of [w,...base,...custom])for(const t of x.terms||[]){if(!t[0]||seen.has(t[0]))continue;seen.add(t[0]);res.push(t);}return res.sort((a,b)=>b[0].length-a[0].length);}
 function marked(text,w){
  let i=0,out="",terms=tokensFor(w);
  while(i<text.length){
