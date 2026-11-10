@@ -1,4 +1,4 @@
-/* 根据古籍和中学常见译注审读的关联例句；未标注条目不得自动认定词义或句式。 */
+/* 原典与逐句译文、词义、句式均作人工标注；未标注项不自动判定语义。 */
 window.WENYAN_ANNOTATIONS={
   "words": {
     "因": {
@@ -1120,39 +1120,39 @@ window.WENYAN_ANNOTATIONS={
     "families": {
       "advantage": "rely",
       "depend": "rely",
-      "then": "time",
-      "late": "time",
-      "leave": "movement",
-      "distance": "space",
-      "contrast": "logic",
-      "sequence": "logic",
-      "tool": "method",
-      "think": "judgment",
-      "purpose": "method",
-      "object": "grammar",
-      "inversion": "grammar",
-      "attribute": "grammar",
-      "possession": "grammar",
-      "urge": "grammar",
-      "consequence": "logic",
-      "beneficiary": "relation",
-      "reason": "logic",
-      "passive": "grammar",
-      "location": "space",
-      "destination": "space",
+      "then": "then",
+      "late": "late",
+      "leave": "leave",
+      "distance": "distance",
+      "contrast": "contrast",
+      "sequence": "sequence",
+      "tool": "tool",
+      "think": "think",
+      "purpose": "purpose",
+      "object": "reference",
+      "inversion": "inversion",
+      "attribute": "attribute",
+      "possession": "reference",
+      "urge": "urge",
+      "consequence": "consequence",
+      "beneficiary": "beneficiary",
+      "reason": "reason",
+      "passive": "passive",
+      "location": "spatial",
+      "destination": "spatial",
       "compare": "similarity",
       "similarity": "similarity",
-      "you": "referent",
-      "look": "seeing",
-      "lookback": "seeing",
-      "visit": "social",
-      "run": "movement",
-      "past": "time",
-      "again": "time",
-      "nominal": "grammar",
-      "appoint": "social",
-      "abandon": "action",
-      "relief": "emotion"
+      "you": "you",
+      "look": "visual",
+      "lookback": "visual",
+      "visit": "visit",
+      "run": "run",
+      "past": "past",
+      "again": "again",
+      "nominal": "nominal",
+      "appoint": "appoint",
+      "abandon": "abandon",
+      "relief": "relief"
     }
   },
   "grammar": {
@@ -1285,14 +1285,6 @@ window.WENYAN_ANNOTATIONS={
           "不受时俗的束缚，向我学习。",
           "于字被动",
           "“拘于时”中“于”引出被时俗约束的被动意义；后一句“于余”不是被动。"
-        ],
-        [
-          "鱼我所欲也",
-          "《孟子·告子上》",
-          "使人之所恶莫甚于死者，则凡可以辟患者何不为也？",
-          "如果人们所厌恶的事没有超过死亡的，那么凡是可以躲避祸患的手段有什么不采用呢？",
-          "非被动对照",
-          "本句“为”表示做、采用，并不构成被动句，用于辨析。"
         ]
       ]
     },
@@ -1345,20 +1337,20 @@ window.WENYAN_ANNOTATIONS={
           "前半句省略“朋友”作主语。"
         ],
         [
-          "孙权劝学",
-          "《资治通鉴》",
-          "蒙乃始就学。",
-          "吕蒙于是开始学习。",
-          "语义衔接",
-          "该句本身主语“蒙”明确，不宜硬说省略主语；应结合上下文判断。"
-        ],
-        [
           "杨氏之子",
           "《世说新语·言语》",
           "为设果，果有杨梅。",
           "孩子为客人摆上水果，其中有杨梅。",
           "省略主语与宾语",
           "前一分句省略摆果子的“儿”，也省略“为”的受事对象孔君平。"
+        ],
+        [
+          "王戎不取道旁李",
+          "《世说新语·雅量》",
+          "取之，信然。",
+          "有人摘李子尝了一下，果然是苦的。",
+          "省略主语",
+          "前句省略摘取并验证李子的人。"
         ]
       ]
     },
