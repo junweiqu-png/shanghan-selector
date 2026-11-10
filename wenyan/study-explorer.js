@@ -64,7 +64,7 @@ function tokens(sentence,selected,contextId,grammar=false){
   const t=words.find(word=>s.startsWith(word,i));
   if(t){
     const highlighted=t===selected?" hit-word":"";
-    out+='<button class="study-token'+highlighted+'" type="button" data-study-word="'+esc(t)+'" data-study-offset="'+i+'" data-study-context="'+esc(contextId||"")+'" aria-label="查询“'+esc(t)+'”的不同古文用法">'+esc(t)+'</button>';i+=t.length;
+    let display="";for(let j=0;j<t.length;j++)display+=window.WENYAN_PINYIN?.span(s,i+j)||esc(s[i+j]);out+='<button class="study-token'+highlighted+'" type="button" data-study-word="'+esc(t)+'" data-study-offset="'+i+'" data-study-context="'+esc(contextId||"")+'" aria-label="查询“'+esc(t)+'”的不同古文用法">'+display+'</button>';i+=t.length;
   }else {out+=window.WENYAN_PINYIN?.span(s,i)||esc(s[i]);i++;}
  }
  if(selected&&!s.includes(selected))return esc(s);
