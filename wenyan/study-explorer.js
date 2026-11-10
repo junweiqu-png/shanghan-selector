@@ -75,7 +75,9 @@ function grammarOrigin(pattern,context){
 }
 function relation(origin,example,grammar=false){
  if(!origin.verified)return {type:"unknown",badge:"待核对",diff:"本句的义项还未校定。"};
- const same=origin.code===example.code;
+ const aliases={look:"turn-look",lookback:"turn-look"};
+ const normalize=code=>aliases[code]||code;
+ const same=normalize(origin.code)===normalize(example.code);
  const near=!same&&(grammar?true:family(origin.code)===family(example.code));
  const type=same?"same":near?"near":"diff",badge=
  (grammar?(same?"句式相同":near?"句式相近":"句式不同"):
