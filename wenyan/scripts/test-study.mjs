@@ -87,7 +87,7 @@ for(const file of ['data-basic.js','data-classic.js','data-extra.js']){
  new vm.Script(source,{filename:file}).runInNewContext({window:extendedWindow});
 }
 let extraLex=0,extraGram=0;
-for(const [file,key] of [['study-crosslesson.js','WENYAN_CROSSLESSON'],['study-verified-extra.js','WENYAN_VERIFIED_EXTRA'],['study-grammar-more.js','WENYAN_GRAMMAR_MORE']]){
+for(const [file,key] of [['study-crosslesson.js','WENYAN_CROSSLESSON'],['study-verified-extra.js','WENYAN_VERIFIED_EXTRA'],['study-verified-more2.js','WENYAN_VERIFIED_MORE2'],['study-grammar-more.js','WENYAN_GRAMMAR_MORE']]){
  const source=fs.readFileSync(dir+file,'utf8');
  new vm.Script(source,{filename:file}).runInNewContext({window:extendedWindow});
  assert(app.includes(file),'supplemental corpus not included in HTML '+file);
@@ -109,6 +109,10 @@ for(const term of ['俄而','未若','诣','疾','顾','引','骤','舍','值'])
  const rows=extendedWindow.WENYAN_VERIFIED_EXTRA?.words?.[term]?.examples||[];
  assert(rows.length>=5,'less than five translated verified sources for '+term);
 }
-assert(extraLex>=370&&extraGram>=85,'expanded evidence was not compiled');
+for(const term of ['诸','竞','莫','弗','汝','岂','委']){
+ const rows=extendedWindow.WENYAN_VERIFIED_MORE2?.words?.[term]?.examples||[];
+ assert(rows.length>=5,'less than five translated secondary sources for '+term);
+}
+assert(extraLex>=400&&extraGram>=85,'expanded evidence was not compiled');
 assert(lex>=90&&gram>=70,'unexpected evidence coverage drop');
 console.log(JSON.stringify({ok:true,words:Object.keys(D.words).length,translatedWordExamples:lex,extraWordExamples:extraLex,grammarTopics:Object.keys(D.grammar).length,translatedGrammarExamples:gram,extraGrammarExamples:extraGram},null,2));
