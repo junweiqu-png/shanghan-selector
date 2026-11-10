@@ -97,7 +97,8 @@ function juniorEntries(html,label,page){
  let text=lines.join('\n');
  // Stop at absurdly long chapters; preserve a bounded original slice for context search.
  if(text.length>13000)text=text.slice(0,13000);
- if(text.length<20){const candidate=clean(toCN(rootEl.find('table,.mw-editsection,.mw-references-wrap').remove().end().text()));if(candidate.length>=40&&candidate.length<=13000)text=candidate;}\n if(text.length<20)return [];
+ if(text.length<20){const candidate=clean(toCN(rootEl.find('table,.mw-editsection,.mw-references-wrap').remove().end().text()));if(candidate.length>=40&&candidate.length<=13000)text=candidate;}
+ if(text.length<20)return [];
  return [record({group:'初中文言拓展',title:'《'+(text.length>1900&&page.includes('/')?page.replace('/', '·'):label)+'》',section:label,n:1,text,url:pageURL(page)})].filter(Boolean);
 }
 async function main(){
