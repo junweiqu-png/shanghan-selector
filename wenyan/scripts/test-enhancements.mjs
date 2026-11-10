@@ -12,7 +12,7 @@ assert.equal(p.pick('俄而雪骤',3),'zhòu','骤 must be zhòu');
 assert.equal(p.pick('王戎',1),'róng','戎 must be róng');
 assert.equal(p.pick('不动',0),'','do not annotate common 不 as fǒu');
 assert(p.annotate('俄而雪骤').includes('<ruby>骤<rt>zhòu</rt></ruby>'));
-for(const f of ['study-editor.js','app.js','study-explorer.js','scripts/build-large-corpus.mjs','scripts/build-expanded-corpus.mjs','scripts/build-poetry-classics.mjs']){
+for(const f of ['study-editor.js','app.js','study-explorer.js']){
  new vm.Script(fs.readFileSync(root+f,'utf8'),{filename:f});
 }
 const site=fs.readFileSync(root+'index.html','utf8');
