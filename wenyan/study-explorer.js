@@ -4,8 +4,8 @@
 const $=id=>document.getElementById(id), DB=window.WENYAN_ANNOTATIONS||{words:{},grammar:{},meta:{groups:{},families:{}}};
 const esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const core=[...(window.WENYAN_DATA_1||[]),...(window.WENYAN_DATA_2||[]),...(window.WENYAN_DATA_3||[])];
-const allTerms=[...new Set([...Object.keys(DB.words||{}),...core.flatMap(w=>(w.terms||[]).map(t=>t[0]))])].filter(Boolean).sort((a,b)=>b.length-a.length);
-let chain=[],state=null,requestId=0,rawCatalogPromise=null;
+const allTerms=Object.keys(DB.words||{}).filter(Boolean).sort((a,b)=>b.length-a.length);
+let chain=[],state=null;
 const order={"过秦论":1,"烛之武退秦师":2,"唐雎不辱使命":3,"曹刿论战":4,"孙权劝学":5,"爱莲说":6,"陋室铭":7,"卖油翁":8,"狼":9,"记承天寺夜游":10,"咏雪":40,"陈太丘与友期行":41};
 const sortEntries=(a,b)=>(order[a.title]||20)-(order[b.title]||20)||a.title.localeCompare(b.title,"zh-CN");
 const family=s=>DB.meta?.families?.[s]||s;
@@ -70,6 +70,10 @@ function tokens(sentence,selected,contextId,grammar=false){
  if(selected&&!s.includes(selected))return esc(s);
  return out;
 }
+function displayTitle(name){
+ const title=String(name||"").replace(/^《|》$/g,"");
+ return "《"+esc(title)+"》";
+}
 function sourceLink(url){
  return url?'<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">核对原典 ↗</a>':"";
 }
@@ -78,30 +82,33 @@ function open(title,html){
  $("modalContent").scrollTop=0;
 }
 function wrapHeader(){
- return chain.length?'<div class="study-toolbar"><button type="button" data-study-back>← 返回上一层</button><span>已深入 '+chain.length+' 层</span></div>':"";
+ return chain.length?'<div class="study-toolbar"><button type="button" data-study-back>← 返回</button></div>':"";
 }
 function baseHeader(origin,isGrammar){
- return '<section class="study-origin"><small>从这里开始</small><h3>'+esc(origin.title||"当前古文")+' · <em>'+esc(origin.term)+'</em></h3>'+
+ return '<section class="study-origin">'+
+ '<h3><em>'+esc(origin.term)+'</em><span>'+displayTitle(origin.title||"当前古文")+'</span></h3>'+
  (origin.text?'<p class="study-original">'+tokens(origin.text,origin.term,"source")+'</p>':'')+
- '<p><b>'+(isGrammar?"本句结构：":"本文含义：")+'</b>'+esc(origin.meaning)+'</p>'+
- (isGrammar?"":'<p><b>词性／作用：</b>'+esc(origin.pos)+'</p>')+
- '<p class="study-usage">'+esc(origin.usage)+'</p>'+
- (!origin.verified?'<p class="study-caution">本句尚无经过核对的具体义项；请注意下方译文与义项是独立校核的，不能据此给本句做同义判定。</p>':"")+'</section>';
+ '<p class="study-origin-meaning"><b>'+(isGrammar?"本句句式：":"本文“"+esc(origin.term)+"”：")+'</b>'+esc(origin.meaning)+
+ (isGrammar?"":'<small>'+esc(origin.pos)+'</small>')+'</p></section>';
 }
 function rowCard(row,index,origin,isGrammar){
- const meta=row.record,rel=relation(origin,meta,isGrammar);
- const contextId='r'+index;
- let meaningCompare=isGrammar?
- '<p class="study-sense"><b>此句结构：</b>'+esc(meta.code)+'；'+esc(meta.usage)+'</p>':
- '<p class="study-sense"><b>这里“'+esc(origin.term)+'”的意思：</b>'+esc(meta.meaning)+' <span>（'+esc(meta.pos)+'）</span></p>';
- return '<article class="study-example"><div class="study-example-top"><b>'+esc(meta.title)+'</b><small>'+esc(meta.source)+'</small></div>'+
+ const meta=row.record,rel=relation(origin,meta,isGrammar),contextId="r"+index;
+ const title=displayTitle(meta.title),source=esc(meta.source||"");
+ const desc=isGrammar?'<b>句式：</b>'+esc(meta.code):'<b>'+esc(origin.term)+'：</b>'+esc(meta.meaning);
+ const comparison=origin.verified?'<div class="study-compare '+rel.type+'"><b>'+
+ (rel.type==="same"?"🟢":rel.type==="near"?"🟡":rel.type==="diff"?"🔴":"⚪")+' '+rel.badge+'</b>'+
+ '<p><span class="study-compare-meanings">'+esc(origin.meaning)+' → '+esc(meta.meaning)+'</span> · '+esc(rel.diff)+'</p></div>':
+ '<div class="study-compare unknown"><b>⚪ 待核对</b><p>本句具体义项暂未核定，不推测异同。</p></div>';
+ return '<article class="study-example">'+
+ '<h4 class="study-example-top">'+title+(source?'<small> · '+source+'</small>':'')+'</h4>'+
  '<p class="study-original">'+tokens(meta.text,isGrammar?"":origin.term,contextId,isGrammar)+'</p>'+
- '<p class="study-translation"><strong>翻译：</strong>'+esc(meta.translation)+'</p>'+
- meaningCompare+
- '<div class="study-compare '+rel.type+'"><b>'+(rel.type==="same"?"🟢":rel.type==="near"?"🟡":rel.type==="diff"?"🔴":"⚪")+' '+rel.badge+'</b>'+
- (origin.verified?'<div class="study-double"><span>本句：'+esc(origin.meaning)+'</span><span>此处：'+esc(meta.meaning)+'</span></div>':"")+
- '<p>'+esc(rel.diff)+'</p></div>'+
- '<div class="study-actions">'+sourceLink(meta.url||"")+'<button type="button" data-study-add="'+contextId+'">＋ 加为背诵卡</button>'+(row.grammars||[]).map(g=>'<button type="button" data-study-grammar="'+esc(g)+'" data-study-context="'+contextId+'">学习“'+esc(g)+'”句式 ↗</button>').join("")+'</div></article>';
+ '<p class="study-translation">'+esc(meta.translation)+'</p>'+
+ '<p class="study-sense">'+desc+(isGrammar?'':'<small> · '+esc(meta.pos)+'</small>')+'</p>'+
+ comparison+
+ '<div class="study-actions">'+sourceLink(meta.url||"")+
+ '<button type="button" data-study-add="'+contextId+'">加入背诵 ↗</button>'+
+ (row.grammars||[]).map(g=>'<button type="button" data-study-grammar="'+esc(g)+'" data-study-context="'+contextId+'">'+esc(g)+' ↗</button>').join("")+
+ '</div></article>';
 }
 function enrichGrammars(record){
  const rows=[];for(const [name,spec] of Object.entries(DB.grammar||{})){
@@ -130,42 +137,26 @@ function createGrammarRows(name){
 }
 function renderPage(term,isGrammar,origin,push=true){
  if(push&&state)chain.push(state);
- state={term,isGrammar,origin};requestId++;
- const rows=isGrammar?createGrammarRows(term):createWordRows(term);
- // Avoid repeating the same selected passage.
- const filtered=rows.filter(x=>!(x.record.title===origin.title&&origin.text&&origin.text.includes(x.record.text)));
- const specs=isGrammar?null:knowTerm(term);
- const subtitle=isGrammar?'句式对比：':'古文词义对比：';
- const groups=specs?[...new Map(specs.examples.map(x=>[x[6],x[4]])).entries()].map(([key,val])=>esc(val)).filter((x,i,a)=>a.indexOf(x)===i):[];
- let html=wrapHeader()+baseHeader(origin,isGrammar)+
- '<div class="study-sectionhead"><b>'+subtitle+esc(term)+'</b><small>'+filtered.length+' 条已配译文与释义</small></div>'+
- (groups.length>1?'<p class="study-glosses">本字常见义项：'+groups.join(" · ")+'</p>':"")+
- '<p class="study-help">优先显示初高中常见篇目，再显示《世说新语》及其他古文。每条都含现代汉语翻译；相同、相近、不同仅在原句义项经过核对时判定。</p>'+
- (filtered.length?filtered.map((r,i)=>rowCard(r,i,origin,isGrammar)).join(""):'<p class="study-caution">这个词或句式暂未整理足够的逐句译注。为了避免误教，不会把仅含相同字形的原文当作已经解释清楚的例句。</p>')+
- '<div class="study-corpus"><b>更多原典正在校核</b><p id="rawCount">正在统计《世说新语》36门及初中文言原文中的候选片段……</p>'+
- '<p>原典词形命中并不能证明含义或句式相同。尚无可靠译文、释义对比的片段暂不作为学习例句展示。</p>'+
- '<a href="https://zh.wikisource.org/wiki/世說新語" target="_blank" rel="noopener noreferrer">核对《世说新语》原典 ↗</a></div>';
- open(subtitle+term,html);
+ state={term,isGrammar,origin};
+ const originalRows=isGrammar?createGrammarRows(term):createWordRows(term);
+ // No source passage in results, no two hits for the same sense from the same work.
+ const seen=new Set(),filtered=[];
+ for(const row of originalRows){
+  const r=row.record;
+  if(r.title===origin.title)continue;
+  const key=r.title+"|"+r.code;
+  if(seen.has(key))continue;seen.add(key);filtered.push(row);
+ }
+ const html=wrapHeader()+baseHeader(origin,isGrammar)+
+ '<div class="study-sectionhead"><b>关联古文</b></div>'+
+ (filtered.length?filtered.map((r,i)=>rowCard(r,i,origin,isGrammar)).join(""):
+ '<p class="study-empty">暂无有译文和词义对比的其他古文。</p>');
+ open((isGrammar?"句式：":"词义：")+term,html);
  state.rows=filtered;
- // Click-to-learn contexts support unlimited drill-down.
- state.contexts=new Map(filtered.map((r,i)=>['r'+i,{title:r.record.title,text:r.record.text,annotated:true,annotatedTerm:isGrammar?null:term,
+ state.contexts=new Map(filtered.map((r,i)=>["r"+i,{title:r.record.title,text:r.record.text,annotated:true,annotatedTerm:isGrammar?null:term,
  meaning:r.record.meaning,pos:r.record.pos,code:r.record.code,usage:r.record.usage}]));
  state.contexts.set("source",{title:origin.title,text:origin.text,annotated:true,annotatedTerm:isGrammar?null:term,
  meaning:origin.meaning,pos:origin.pos,code:origin.code,usage:origin.usage});
- const id=requestId;
- if(!rawCatalogPromise)rawCatalogPromise=fetch('evidence/catalog.json?v=20261110b',{cache:"force-cache"}).then(r=>r.ok?r.json():null).catch(()=>null);
- rawCatalogPromise.then(d=>{
-  if(id!==requestId||!$("rawCount"))return;
-  if(!d||!Array.isArray(d.entries)){$("rawCount").textContent="大型古籍原典索引暂不可用；已整理的译注例句仍可正常使用。";return;}
-  let count=0;
-  for(const ent of d.entries){const text=ent.text||"";if(isGrammar){
-   // Grammar retrieval cannot be proven by plain text; report corpus size rather than misleading hit count.
-   continue;
-  }else if(text.includes(term))count++;}
-  $("rawCount").textContent=isGrammar?
-    "已接入《世说新语》"+(d.info?.ssCount||"千余")+"则和初中原典"+(d.info?.juniorCount||"若干")+"篇（句式仍需人工分析）。":
-    "还发现 "+count+" 个古籍篇段含“"+term+"”字形，尚需逐条核对读音、词义、翻译及上下文。";
- });
 }
 
 function addTranslatedCard(key){
