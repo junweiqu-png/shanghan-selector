@@ -9,6 +9,7 @@ let chain=[],state=null;
 const order={"过秦论":1,"烛之武退秦师":2,"唐雎不辱使命":3,"曹刿论战":4,"孙权劝学":5,"爱莲说":6,"陋室铭":7,"卖油翁":8,"狼":9,"记承天寺夜游":10,"咏雪":40,"陈太丘与友期行":41};
 const sortEntries=(a,b)=>(order[a.title]||20)-(order[b.title]||20)||a.title.localeCompare(b.title,"zh-CN");
 const family=s=>DB.meta?.families?.[s]||s;
+const normalizeSense=s=>({look:"turn-look",lookback:"turn-look"}[s]||s);
 function knowTerm(word){
  const builtin=DB.words?.[word],cross=window.WENYAN_CROSSLESSON?.words?.[word],verified=window.WENYAN_VERIFIED_EXTRA?.words?.[word],personal=window.WENYAN_STUDY_EDITOR?.lookupWord(word);
  if(!builtin&&!cross&&!verified&&!personal)return null;
@@ -79,9 +80,7 @@ function grammarOrigin(pattern,context){
 }
 function relation(origin,example,grammar=false){
  if(!origin.verified)return {type:"unknown",badge:"待核对",diff:"本句的义项还未校定。"};
- const aliases={look:"turn-look",lookback:"turn-look"};
- const normalize=code=>aliases[code]||code;
- const same=normalize(origin.code)===normalize(example.code);
+ const same=normalizeSense(origin.code)===normalizeSense(example.code);
  const near=!same&&(grammar?true:family(origin.code)===family(example.code));
  const type=same?"same":near?"near":"diff",badge=
  (grammar?(same?"句式相同":near?"句式相近":"句式不同"):
@@ -95,7 +94,12 @@ function relation(origin,example,grammar=false){
 function tokens(sentence,selected,contextId,grammar=false){
  const s=String(sentence||"");let out="",i=0;const words=allTerms();
  while(i<s.length){
-  const t=words.find(word=>s.startsWith(word,i));
+  let t=words.find(word=>s.startsWith(word,i));
+  if(selected){
+   const nextSelected=s.indexOf(selected,i);
+   if(nextSelected===i)t=selected;
+   else if(t&&nextSelected>i&&nextSelected<i+t.length)t=null;
+  }
   if(t){
     const highlighted=t===selected?" hit-word":"";
     let display="";for(let j=0;j<t.length;j++)display+=window.WENYAN_PINYIN?.span(s,i+j)||esc(s[i+j]);out+='<button class="study-token'+highlighted+'" type="button" data-study-word="'+esc(t)+'" data-study-offset="'+i+'" data-study-context="'+esc(contextId||"")+'" aria-label="查询“'+esc(t)+'”的不同古文用法">'+display+'</button>';i+=t.length;
@@ -178,7 +182,7 @@ function renderPage(term,isGrammar,origin,push=true){
  for(const row of originalRows){
   const r=row.record;
   if(r.title===origin.title)continue;
-  const key=r.title+"|"+r.code;
+  const key=r.title+"|"+normalizeSense(r.code);
   if(seen.has(key))continue;seen.add(key);filtered.push(row);
  }
  // 按学习要求：前两条例句必须与原句同义；后面先看不同义项，再看近义、其他同义。
