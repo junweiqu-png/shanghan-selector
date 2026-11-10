@@ -87,14 +87,14 @@ for(const file of ['data-basic.js','data-classic.js','data-extra.js']){
  new vm.Script(source,{filename:file}).runInNewContext({window:extendedWindow});
 }
 let extraLex=0,extraGram=0;
-for(const [file,key] of [['study-crosslesson.js','WENYAN_CROSSLESSON'],['study-verified-extra.js','WENYAN_VERIFIED_EXTRA'],['study-verified-more2.js','WENYAN_VERIFIED_MORE2'],['study-verified-common3.js','WENYAN_VERIFIED_COMMON3'],['study-grammar-more.js','WENYAN_GRAMMAR_MORE']]){
+for(const [file,key] of [['study-crosslesson.js','WENYAN_CROSSLESSON'],['study-verified-extra.js','WENYAN_VERIFIED_EXTRA'],['study-verified-more2.js','WENYAN_VERIFIED_MORE2'],['study-verified-common3.js','WENYAN_VERIFIED_COMMON3'],['study-verified-corpus.js','WENYAN_VERIFIED_CORPUS'],['study-grammar-more.js','WENYAN_GRAMMAR_MORE']]){
  const source=fs.readFileSync(dir+file,'utf8');
  new vm.Script(source,{filename:file}).runInNewContext({window:extendedWindow});
  assert(app.includes(file),'supplemental corpus not included in HTML '+file);
  const added=extendedWindow[key];assert(added,'missing data '+key);
  for(const [word,spec] of Object.entries(added.words||{})){
   for(const x of spec.examples||[]){
-   assert(x[2]?.includes(word),'quote missing searched word '+word+' '+x[0]);
+   assert(x[2]?.includes(x[9]||word),'quote missing searched/matched word '+word+' '+x[0]);
    assert(x[3]&&x[4]&&x[5]&&x[6]&&x[7],'unreviewed example in '+word+' '+x[0]);
    extraLex++;
   }
@@ -119,6 +119,17 @@ for(const term of ['闻','或','甚','唯']){
  for(const row of x.examples)assert(row[2].includes(term)&&row[3]&&row[6],'missing quote, translation or sense for '+term);
 }
 assert(extendedWindow.WENYAN_VERIFIED_MORE2.words['莫'].examples.some(x=>x[2].includes('莫当就卿谈')&&x[6]==='none'),'莫当 should mean no one, not prohibition');
-assert(extraLex>=420&&extraGram>=85,'expanded evidence was not compiled');
+const inner=extendedWindow.WENYAN_VERIFIED_CORPUS?.words?.['内集'];
+assert(inner?.sources?.some(x=>x[0]==='咏雪'&&x[4]==='gather'),'内集 source sense missing');
+assert(inner?.examples?.length>=5,'内集 needs five translated examples');
+assert(inner.examples[0][6]==='gather'&&inner.examples[1][6]==='gather','内集 first two examples must share gather sense');
+assert(inner.examples[2][6]==='collection','内集 must distinguish book-title/collection sense');
+assert(inner.examples.some(x=>x[2].includes('集')&&x[9]==='集'),'内集 should support a related 集 match');
+const ji=extendedWindow.WENYAN_VERIFIED_CORPUS?.words?.['集'];
+assert(ji?.sources?.some(x=>x[0]==='咏雪'&&x[4]==='gather'),'集 source sense missing');
+assert(ji?.examples?.length>=5,'集 needs five translated examples');
+for(const term of ['内集','集'])for(const x of extendedWindow.WENYAN_VERIFIED_CORPUS.words[term].examples)
+ assert(x[2].includes(x[9]||term)&&x[3]&&x[4]&&x[5]&&x[6]&&x[7]&&x[8],'incomplete related-word example '+term);
+assert(extraLex>=430&&extraGram>=85,'expanded evidence was not compiled');
 assert(lex>=90&&gram>=70,'unexpected evidence coverage drop');
 console.log(JSON.stringify({ok:true,words:Object.keys(D.words).length,translatedWordExamples:lex,extraWordExamples:extraLex,grammarTopics:Object.keys(D.grammar).length,translatedGrammarExamples:gram,extraGrammarExamples:extraGram},null,2));
