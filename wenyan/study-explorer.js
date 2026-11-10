@@ -4,12 +4,17 @@
 const $=id=>document.getElementById(id), DB=window.WENYAN_ANNOTATIONS||{words:{},grammar:{},meta:{groups:{},families:{}}};
 const esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const core=[...(window.WENYAN_DATA_1||[]),...(window.WENYAN_DATA_2||[]),...(window.WENYAN_DATA_3||[])];
-const allTerms=()=>[...new Set([...Object.keys(DB.words||{}),...(window.WENYAN_STUDY_EDITOR?.words()||[])])].filter(Boolean).sort((a,b)=>b.length-a.length);
+const allTerms=()=>[...new Set([...Object.keys(DB.words||{}),...Object.keys(window.WENYAN_CROSSLESSON?.words||{}),...(window.WENYAN_STUDY_EDITOR?.words()||[])])].filter(Boolean).sort((a,b)=>b.length-a.length);
 let chain=[],state=null;
 const order={"过秦论":1,"烛之武退秦师":2,"唐雎不辱使命":3,"曹刿论战":4,"孙权劝学":5,"爱莲说":6,"陋室铭":7,"卖油翁":8,"狼":9,"记承天寺夜游":10,"咏雪":40,"陈太丘与友期行":41};
 const sortEntries=(a,b)=>(order[a.title]||20)-(order[b.title]||20)||a.title.localeCompare(b.title,"zh-CN");
 const family=s=>DB.meta?.families?.[s]||s;
-function knowTerm(word){const builtin=DB.words?.[word]||null,personal=window.WENYAN_STUDY_EDITOR?.lookupWord(word);if(!personal)return builtin;return {sources:[...(personal.sources||[]),...(builtin?.sources||[])],examples:[...(personal.examples||[]),...(builtin?.examples||[])]};}
+function knowTerm(word){
+ const builtin=DB.words?.[word],cross=window.WENYAN_CROSSLESSON?.words?.[word],personal=window.WENYAN_STUDY_EDITOR?.lookupWord(word);
+ if(!builtin&&!cross&&!personal)return null;
+ return {sources:[...(personal?.sources||[]),...(builtin?.sources||[]),...(cross?.sources||[])],
+ examples:[...(personal?.examples||[]),...(builtin?.examples||[]),...(cross?.examples||[])]};
+}
 function grammarSpec(name){const built=DB.grammar?.[name]||null,personal=window.WENYAN_STUDY_EDITOR?.lookupGrammar(name);if(!personal)return built;return {definition:personal.definition||built?.definition||"自定义句式",examples:[...(personal.examples||[]),...(built?.examples||[])]};}
 function grammarNames(){return [...new Set([...Object.keys(DB.grammar||{}),...(window.WENYAN_STUDY_EDITOR?.patterns()||[])])];}
 function localDefs(term){
@@ -170,9 +175,26 @@ function renderPage(term,isGrammar,origin,push=true){
   const key=r.title+"|"+r.code;
   if(seen.has(key))continue;seen.add(key);filtered.push(row);
  }
- // 先同义，再近义，最后异义；同档保持高频篇目的优先顺序。
- const weight={same:0,near:1,diff:2,unknown:3};
- filtered.sort((a,b)=>(weight[relation(origin,a.record,isGrammar).type]??3)-(weight[relation(origin,b.record,isGrammar).type]??3));
+ // 按学习要求：前两条例句必须与原句同义；后面先看不同义项，再看近义、其他同义。
+ const same=[],diff=[],near=[],unknown=[];
+ for(const r of filtered){
+  const category=relation(origin,r.record,isGrammar).type;
+  ({same,diff,near,unknown}[category]||unknown).push(r);
+ }
+ function favorDistinct(items){
+  const seen=new Set(),first=[],later=[];
+  for(const x of items){const key=x.record.title;if(seen.has(key))later.push(x);else{seen.add(key);first.push(x);}}
+  return first.concat(later);
+ }
+ const arranged=[
+  ...favorDistinct(same).slice(0,2),
+  ...favorDistinct(diff),
+  ...favorDistinct(near),
+  ...favorDistinct(same).slice(2),
+  ...unknown
+ ];
+ filtered.splice(0,filtered.length,...arranged);
+
  const html=wrapHeader()+baseHeader(origin,isGrammar)+
  '<div class="study-sectionhead"><b>关联古文</b><button id="editStudyTerm" type="button">＋ 补充例句</button></div>'+
  (filtered.length?filtered.map((r,i)=>rowCard(r,i,origin,isGrammar)).join(""):
