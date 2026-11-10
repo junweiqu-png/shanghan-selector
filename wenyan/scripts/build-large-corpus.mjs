@@ -68,7 +68,16 @@ const searchTerms=[...new Set([
  ...(wordWindow.WENYAN_DATA_3||[]).flatMap(w=>(w.terms||[]).map(t=>t[0])),
  ...[wordWindow.WENYAN_ANNOTATIONS,wordWindow.WENYAN_CROSSLESSON,wordWindow.WENYAN_VERIFIED_EXTRA,wordWindow.WENYAN_VERIFIED_MORE2,wordWindow.WENYAN_VERIFIED_COMMON3,wordWindow.WENYAN_VERIFIED_CORPUS].flatMap(x=>Object.keys(x?.words||{}))
 ])].filter(Boolean);
-const termForms=new Map(searchTerms.map(term=>[term,[...new Set([term,s2t(term)])]]));
+const termAliases={
+ '辩斗':['争辩','辩论','论辩'],'沧沧凉凉':['清凉','凉爽','寒凉'],'揠':['拔','拔起'],
+ '芒芒然':['茫茫然','疲倦','疲惫'],'搐':['收缩','抽动'],'淡泊':['恬淡'],
+ '淫慢':['懈怠','怠惰','放纵'],'险躁':['浮躁','轻薄浮躁'],'刮目':['刮目相待','另眼相看'],
+ '空明':['澄澈','清澈','澄明'],'交辉':['交映','辉映','交相辉映'],'沉鳞':['游鱼','水中之鱼'],
+ '淤泥':['污泥','泥淖'],'亵玩':['狎玩','轻慢'],'崩坠':['崩塌','坠落'],
+ '只使':['即使','纵使','假使'],'舍然':['释然','释怀'],'躇步跐蹈':['行走','践踏','蹈'],
+ '苫蔽':['遮蔽','覆盖','掩蔽'],'眈眈':['虎视','注视','瞪视']
+};
+const termForms=new Map(searchTerms.map(term=>[term,[...new Set([term,s2t(term),...(termAliases[term]||[]),...(termAliases[term]||[]).map(s2t)])]]));
 const termBuckets=Object.create(null);
 const stats={},charsByBook={};
 let rows=0,chars=0,quoteEntries=0,excluded=0;
@@ -92,7 +101,7 @@ for await(const raw of input){
   const arr=termBuckets[term]||(termBuckets[term]=[]);
   const score=(hash(term+'|'+id)/4294967296)*rankGroup(group);
   if(arr.length===MAX_PER_TERM&&arr[arr.length-1][0]<=score)continue;
-  const item=[score,source,chapter,quoteContext(full,at,matched),id,group,matched];
+  const item=[score,source,chapter,quoteContext(full,at,matched),id,group,matched,variants.slice(0,variants.indexOf(matched)).includes(matched)?'exact':(matched===term||matched===s2t(term)?'exact':'related')];
   if(arr.length<MAX_PER_TERM){arr.push(item);arr.sort((a,b)=>a[0]-b[0]);}
   else{arr[arr.length-1]=item;arr.sort((a,b)=>a[0]-b[0]);}
  }
@@ -126,7 +135,7 @@ for(let i=0;i<64;i++){
 const termShards=Array.from({length:64},()=>Object.create(null));let termIndexSamples=0;
 for(const [term,arr]of Object.entries(termBuckets)){
  const shard=hash(term)%64;
- termShards[shard][term]=arr.map(x=>({source:x[1],chapter:x[2],title:x[1]+'·'+x[2],text:x[3],id:x[4],group:x[5],matched:x[6],url:PROVENANCE}));
+ termShards[shard][term]=arr.map(x=>({source:x[1],chapter:x[2],title:x[1]+'·'+x[2],text:x[3],id:x[4],group:x[5],matched:x[6],matchType:x[7],url:PROVENANCE}));
  termIndexSamples+=arr.length;
 }
 for(let i=0;i<64;i++)await fsp.writeFile(path.join(OUT,'large-term-index',i.toString().padStart(2,'0')+'.json.gz'),gzipSync(Buffer.from(JSON.stringify(termShards[i]),'utf8'),{level:6}));
