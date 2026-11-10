@@ -59,6 +59,7 @@ jobs:
           node --check scripts/build-shanghan-recall.mjs
           node --check scripts/build-shanghan-commentaries.mjs
           node --check wenyan/scripts/build-evidence.mjs
+          node --check wenyan/scripts/test-study.mjs
       - name: Restore corpus API cache
         uses: actions/cache@v4
         with:
@@ -68,6 +69,8 @@ jobs:
             corpus-wikisource-v1-
       - name: Install Chinese conversion helper
         run: npm install --no-save opencc-js@1.4.2 pinyin-pro@3.29.5 cheerio@1.0.0
+      - name: Validate Wenyan translated examples and semantic comparison annotations
+        run: node wenyan/scripts/test-study.mjs
       - name: Build local classical corpus
         env:
           CORPUS_MAX_BOOKS: 700
