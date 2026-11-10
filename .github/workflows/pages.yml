@@ -58,6 +58,7 @@ jobs:
           node --check scripts/build-shanghan-catalog.mjs
           node --check scripts/build-shanghan-recall.mjs
           node --check scripts/build-shanghan-commentaries.mjs
+          node --check wenyan/scripts/build-evidence.mjs
       - name: Restore corpus API cache
         uses: actions/cache@v4
         with:
@@ -66,7 +67,7 @@ jobs:
           restore-keys: |
             corpus-wikisource-v1-
       - name: Install Chinese conversion helper
-        run: npm install --no-save opencc-js@1.4.2 pinyin-pro@3.29.5
+        run: npm install --no-save opencc-js@1.4.2 pinyin-pro@3.29.5 cheerio@1.0.0
       - name: Build local classical corpus
         env:
           CORPUS_MAX_BOOKS: 700
@@ -87,6 +88,15 @@ jobs:
         run: node scripts/build-ngram-index.mjs
       - name: Verify duplicate-review logic and bidirectional script matching
         run: node scripts/test-import-and-search.mjs
+      - name: Restore Wenyan evidence cache
+        uses: actions/cache@v4
+        with:
+          path: .evidence-cache
+          key: wenyan-evidence-v1-${{ github.run_id }}
+          restore-keys: |
+            wenyan-evidence-v1-
+      - name: Build Wenyan primary-source evidence corpus
+        run: node wenyan/scripts/build-evidence.mjs
       - name: Remove temporary corpus pages
         run: rm -rf dist/corpus-pages
       - name: Setup Pages

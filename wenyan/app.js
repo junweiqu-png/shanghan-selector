@@ -2,7 +2,7 @@
 "use strict";
 const $=id=>document.getElementById(id);
 const escape=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const base=[...(window.WENYAN_DATA_1||[]),...(window.WENYAN_DATA_2||[])];
+const base=[...(window.WENYAN_DATA_1||[]),...(window.WENYAN_DATA_2||[]),...(window.WENYAN_DATA_3||[])];
 const KEY="wenyan-recall-v1", tryJSON=(v,f)=>{if(typeof v!=="string"||!v.trim())return f;try{const parsed=JSON.parse(v);return parsed&&typeof parsed==="object"&&!Array.isArray(parsed)?parsed:f}catch{return f}};
 let stored=tryJSON(localStorage.getItem(KEY),{}), custom=Array.isArray(stored.custom)?stored.custom:[];
 let works=()=>[...base,...custom], wi=Math.max(0,Math.min(Number(stored.wi)||0,works().length-1)),si=Number(stored.si)||0, whole=!!stored.whole,show=!!stored.show;
@@ -10,7 +10,7 @@ let visited=new Set(stored.visited||[]), learned=new Set(stored.learned||[]), co
 function save(){localStorage.setItem(KEY,JSON.stringify({custom,wi,si,whole,show,visited:[...visited],learned:[...learned],completions:[...completions]}));}
 function work(){return works()[wi]||works()[0];}
 function line(){const w=work();si=Math.max(0,Math.min(si,w.lines.length-1));return w.lines[si];}
-function tokensFor(w){return (w.terms||[]).filter(t=>t[0]).sort((a,b)=>b[0].length-a[0].length);}
+function tokensFor(w){const seen=new Set(),res=[];for(const x of [w,...base,...custom])for(const t of x.terms||[]){if(!t[0]||seen.has(t[0]))continue;seen.add(t[0]);res.push(t);}return res.sort((a,b)=>b[0].length-a[0].length);}
 function marked(text,w){
  let i=0,out="",terms=tokensFor(w);
  while(i<text.length){
