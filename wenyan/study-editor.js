@@ -49,7 +49,7 @@ async function readLarge(term,manifest){
   }
   const indexed=await largeCache[cacheKey],rows=indexed[term]||[];
   if(rows.length)return rows.map(r=>({id:r.id,group:r.group,title:r.title||r.source+'·'+r.chapter,work:r.source+'·'+r.chapter,
-   text:r.text,matched:r.matched||term,url:r.url||'https://github.com/gujilab/chinese-classical-corpus',originId:r.id}));
+   text:r.text,matched:r.matched||term,matchType:r.matchType||'exact',url:r.url||'https://github.com/gujilab/chinese-classical-corpus',originId:r.id}));
  }
  // 自建词或尚未收录的词仍可退回单字候选索引。
  const ch=[...term][0],index=ch.codePointAt(0)%64,key=index.toString().padStart(2,'0');
@@ -209,7 +209,7 @@ async function search(){
     '<div class="study-source-filters">'+
     ["全部",...sections.map(s=>s.label)].map(g=>'<button type="button" class="'+(filter===g?'active':'')+'" data-source="'+esc(g)+'">'+esc(g)+'（'+(g==="全部"?hits.length:hits.filter(h=>groupOf(h)===g).length)+'）</button>').join('')+
     '</div>'+
-    (page.map((item,i)=>'<button class="study-candidate" data-candidate="'+i+'"><b>'+esc(item.r.title)+'</b><small>'+esc(item.r.group)+'</small><span>'+(window.WENYAN_PINYIN?.annotate(item.text)||esc(item.text))+'</span></button>').join("")||'<p class="help">此分类暂无候选原文，可切换其他类别。</p>')+
+    (page.map((item,i)=>'<button class="study-candidate" data-candidate="'+i+'"><b>'+esc(item.r.title)+'</b><small>'+esc(item.r.group)+(item.r.matchType==="related"?' · 语义关联词：'+esc(item.r.matched||term):(item.r.matched&&item.r.matched!==term?' · 原文繁体字形：'+esc(item.r.matched):' · 原词命中'))+'</small><span>'+(window.WENYAN_PINYIN?.annotate(item.text)||esc(item.text))+'</span></button>').join("")||'<p class="help">此分类暂无候选原文，可切换其他类别。</p>')+
     (chosen.length>page.length?'<button id="nextTeacherPage">查看更多（已显示 '+page.length+'/'+chosen.length+'）</button>':'');
     target.querySelectorAll("[data-source]").forEach(b=>b.onclick=()=>{filter=b.dataset.source;offset=0;draw()});
     target.querySelectorAll("[data-candidate]").forEach(b=>b.onclick=()=>{
