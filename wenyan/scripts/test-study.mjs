@@ -43,6 +43,15 @@ assert(suo.sources.some(x=>x[0]==="世说新语·赏誉"&&x[1]==="墓所"&&x[2].
 assert(suo.examples.some(x=>x[0]==="论语·为政"&&x[6]==="place"&&x[3]),"need translated same-sense example for place noun");
 assert(suo.examples.some(x=>x[0]==="刻舟求剑"&&x[6]==="nominal"&&x[3]),"must distinguish nominalizing particle from place noun");
 assert(suo.examples.some(x=>x[0]==="书戴嵩画牛"&&x[6]==="nominal"&&x[3]),"“所宝” nominalizing example needed");
+const qi=D.words["期"];
+assert(qi&&qi.examples.length>=10,"期 needs broad translated cross-text examples");
+assert(qi.sources.some(x=>x[0]==="陈太丘与友期行"&&x[4]==="appoint"),"陈太丘 期 must mean agreed appointment");
+for(const code of ["appoint","appointment","deadline","year","aspire"])
+ assert(qi.examples.some(x=>x[6]===code),"missing 期 semantic class "+code);
+assert(qi.examples.filter(x=>x[0].startsWith("世说新语·")).length>=3,"期 needs 3 independent Shishuo examples");
+assert(qi.examples.filter(x=>x[0].startsWith("史记·")).length>=2,"期 needs examples from Shiji");
+assert(qi.examples.some(x=>x[0]==="邹忌讽齐王纳谏"&&x[4].includes("jī")),"期年 requires jī pronunciation");
+assert(qi.examples.every(x=>x[0]!=="陈太丘与友期行"),"do not repeat clicked origin as related example");
 const ni=D.words["拟"];
 assert(ni && ni.examples.length>=5,"拟 needs several translated cross-text examples");
 assert(ni.sources.some(x=>x[0]==="咏雪"&&x[4]==="compare"),"拟 missing source-lesson meaning");
