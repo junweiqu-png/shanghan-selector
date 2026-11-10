@@ -162,24 +162,35 @@ function renderPage(term,isGrammar,origin,push=true){
  if(push&&state)chain.push(state);
  state={term,isGrammar,origin};
  const originalRows=isGrammar?createGrammarRows(term):createWordRows(term);
- // No source passage in results, no two hits for the same sense from the same work.
+ // 学生只看五个“有原文＋译文＋语义”的独立例子，不能拿同一故事或同一义项重复充数。
  const seen=new Set(),filtered=[];
  for(const row of originalRows){
   const r=row.record;
   if(r.title===origin.title)continue;
+  if(origin.text&&r.text&&(r.text.includes(origin.text)||origin.text.includes(r.text)))continue;
   const key=r.title+"|"+r.code;
   if(seen.has(key))continue;seen.add(key);filtered.push(row);
  }
- // 先同义，再近义，最后异义；同档保持高频篇目的优先顺序。
- const weight={same:0,near:1,diff:2,unknown:3};
- filtered.sort((a,b)=>(weight[relation(origin,a.record,isGrammar).type]??3)-(weight[relation(origin,b.record,isGrammar).type]??3));
+ // 前两例尽量与所点击的原句同义（以已校核的义项码判定），
+ // 后三例优先各展示一个不同义项；没有足够已校核证据时不伪装“同义”。
+ const same=filtered.filter(row=>relation(origin,row.record,isGrammar).type==="same");
+ const other=filtered.filter(row=>relation(origin,row.record,isGrammar).type!=="same");
+ const chosen=same.slice(0,2);
+ const picked=new Set(chosen),senses=new Set([origin.code]);
+ for(const row of other){
+   if(chosen.length===5)break;
+   if(senses.has(row.record.code))continue;
+   chosen.push(row);picked.add(row);senses.add(row.record.code);
+ }
+ for(const row of other){if(chosen.length>=5)break;if(!picked.has(row)){chosen.push(row);picked.add(row)}}
+ for(const row of same.slice(2)){if(chosen.length>=5)break;if(!picked.has(row)){chosen.push(row);picked.add(row)}}
+ const short=chosen.length<5?'<p class="study-empty">目前只有 '+chosen.length+' 条经过逐句核对的跨篇例证，尚缺 '+(5-chosen.length)+' 条。后台原典检索命中不代表语义一致，未核定译文的资料不计入。</p>':"";
  const html=wrapHeader()+baseHeader(origin,isGrammar)+
- '<div class="study-sectionhead"><b>关联古文</b><button id="editStudyTerm" type="button">＋ 补充例句</button></div>'+
- (filtered.length?filtered.map((r,i)=>rowCard(r,i,origin,isGrammar)).join(""):
- '<p class="study-empty">暂无有译文和词义对比的其他古文。</p>');
+ '<div class="study-sectionhead"><b>关联古文 · '+chosen.length+' 例</b><button id="editStudyTerm" type="button">＋ 补充例句</button></div>'+
+ (chosen.length?chosen.map((r,i)=>rowCard(r,i,origin,isGrammar)).join(""):'<p class="study-empty">尚无经过核对的跨篇释义，请补充准确古文和译文。</p>')+short;
  open((isGrammar?"句式：":"词义：")+term,html);$("editStudyTerm").onclick=()=>window.WENYAN_STUDY_EDITOR?.open({kind:isGrammar?"grammar":"word",name:term,title:origin.title,original:origin.text});
- state.rows=filtered;
- state.contexts=new Map(filtered.map((r,i)=>["r"+i,{title:r.record.title,text:r.record.text,annotated:true,annotatedTerm:isGrammar?null:term,
+ state.rows=chosen;
+ state.contexts=new Map(chosen.map((r,i)=>["r"+i,{title:r.record.title,text:r.record.text,annotated:true,annotatedTerm:isGrammar?null:term,
  meaning:r.record.meaning,pos:r.record.pos,code:r.record.code,usage:r.record.usage}]));
  state.contexts.set("source",{title:origin.title,text:origin.text,annotated:true,annotatedTerm:isGrammar?null:term,
  meaning:origin.meaning,pos:origin.pos,code:origin.code,usage:origin.usage});
