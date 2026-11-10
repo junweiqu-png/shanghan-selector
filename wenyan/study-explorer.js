@@ -44,19 +44,17 @@ function grammarOrigin(pattern,context){
  return {title,text,term:pattern,meaning:DB.grammar?.[pattern]?.definition||"需结合上下文分析",code:a?.[4]||null,pos:"句式",usage:a?.[5]||"本句的具体结构暂未逐句核注",verified:!!a};
 }
 function relation(origin,example,grammar=false){
- if(!origin.verified)return {type:"unknown",badge:"待核对",diff:"本句的具体义项或句式功能尚未完成逐句校核，因此不以字形或标签相同推断关系。"};
+ if(!origin.verified)return {type:"unknown",badge:"待核对",diff:"本句的义项还未校定。"};
  const same=origin.code===example.code;
- const near=!same&&(grammar?!/^非/.test(example.code):family(origin.code)===family(example.code));
- const type=same?"same":near?"near":"diff",badge=same?"含义相同":near?"含义相近":"含义不同";
- const name=grammar?"结构":"词义";
- if(same)return {type,badge:grammar?"句式相同":"含义相同",
- diff:grammar?"都属于“"+origin.code+"”这一"+name+"。本文："+origin.usage+"；例句："+example.usage+"。":
- "两处都表示“"+origin.meaning+"”。本文："+origin.usage+"；例句："+example.usage+"。"};
- if(near)return {type,badge:grammar?"句式相近":"含义相近",
- diff:grammar?"都可归入“"+origin.term+"”，但本文采用“"+origin.code+"”，例句采用“"+example.code+"”。本文："+origin.usage+"；例句："+example.usage+"。":
- "两处属于相近的语义范围，但不宜直接互换。本文："+origin.usage+"；例句："+example.usage+"。"};
- return {type,badge:grammar?"句式不同":"含义不同",
- diff:"本文“"+origin.term+"”是"+origin.pos+"，表示“"+origin.meaning+"”，主要用于"+origin.usage+"；例句中是"+example.pos+"，表示“"+example.meaning+"”，主要用于"+example.usage+"。"};
+ const near=!same&&(grammar?true:family(origin.code)===family(example.code));
+ const type=same?"same":near?"near":"diff",badge=
+ (grammar?(same?"句式相同":near?"句式相近":"句式不同"):
+ same?"含义相同":near?"含义相近":"含义不同");
+ const subject=grammar?"句式":"用法";
+ const diff=same?"都采用这一"+subject+"；本文："+origin.usage+"；此句："+example.usage+"。":
+ near?"本文侧重"+origin.usage+"；此句侧重"+example.usage+"。":
+ "本文"+origin.usage+"；此处"+example.usage+"。"+(origin.pos!==example.pos?"（词性："+origin.pos+" → "+example.pos+"）":"");
+ return {type,badge,diff};
 }
 function tokens(sentence,selected,contextId,grammar=false){
  const s=String(sentence||"");let out="",i=0;
@@ -179,6 +177,8 @@ function navigateBack(){
  if(!chain.length){$("close").click();return;}
  const previous=chain.pop();renderPage(previous.term,previous.isGrammar,previous.origin,false);
 }
+document.getElementById("close")?.addEventListener("click",()=>{chain=[];state=null;});
+document.getElementById("overlay")?.addEventListener("click",e=>{if(e.target.id==="overlay"){chain=[];state=null;}});
 document.addEventListener('click',e=>{
  const add=e.target.closest?.('[data-study-add]');
  if(add){e.preventDefault();e.stopImmediatePropagation();addTranslatedCard(add.dataset.studyAdd);return;}
