@@ -6,12 +6,14 @@ import path from 'node:path';
 import vm from 'node:vm';
 const root=process.env.WENYAN_ROOT||'wenyan/';
 const win={},ctx={window:win};
-for(const f of ['data-basic.js','data-classic.js','data-extra.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js']){
+for(const f of ['data-basic.js','data-classic.js','data-extra.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-grammar-more.js']){
  vm.runInNewContext(fs.readFileSync(path.join(root,f),'utf8'),ctx,{filename:f});
 }
 const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[])];
 const db=win.WENYAN_ANNOTATIONS,lists=[db,win.WENYAN_CROSSLESSON,win.WENYAN_VERIFIED_EXTRA];
 const merged={};
+const grammarMore=win.WENYAN_GRAMMAR_MORE?.grammar||{};
+const normalizeSense=code=>({look:'turn-look',lookback:'turn-look'}[code]||code);
 for(const src of lists){for(const [term,s] of Object.entries(src.words||{})){
  const entry=merged[term]||={sources:[],examples:[]};
  entry.sources.push(...(s.sources||[]));entry.examples.push(...(s.examples||[]));
@@ -38,7 +40,7 @@ for(const w of works){
    const key=x[0]+'|'+x[6];
    if(seen.has(key))continue;seen.add(key);rows.push(x);
   }
-  const same=originCode?rows.filter(x=>x[6]===originCode):[];
+  const same=originCode?rows.filter(x=>normalizeSense(x[6])===normalizeSense(originCode)):[];
   const different=originCode?rows.filter(x=>x[6]!==originCode):[];
   wordResults.push({work:w.title,term,part,sense,
    originAnnotated:!!context,originCode,
@@ -48,9 +50,10 @@ for(const w of works){
  }
  for(const [text,translation,g] of w.lines||[]){
   if(!g)continue;
-  const spec=db.grammar[g],origin=spec?.examples?.find(x=>x[0]===w.title&&(text.includes(x[2])||x[2].includes(text)));
+  const joined=[...(db.grammar[g]?.examples||[]),...(grammarMore[g]?.examples||[])];
+  const origin=joined.find(x=>x[0]===w.title&&(text.includes(x[2])||x[2].includes(text)));
   const seen=new Set(),rows=[];
-  for(const x of spec?.examples||[]){
+  for(const x of joined){
    if(x[0]===w.title||!x[2]||!x[3])continue;
    const key=x[0]+'|'+x[4];if(seen.has(key))continue;seen.add(key);rows.push(x);
   }
@@ -59,7 +62,7 @@ for(const w of works){
    fiveExamples:rows.length>=5,shortfall:Math.max(0,5-rows.length)});
  }
 }
-function firstTwoSame(rows,code){return !!code&&rows.filter(x=>x[6]===code).length>=2}
+function firstTwoSame(rows,code){return !!code&&rows.filter(x=>normalizeSense(x[6])===normalizeSense(code)).length>=2}
 const sum={
  generatedAt:new Date().toISOString(),
  works:works.length,distinctWordTerms:discovered.size,wordLessonEntries:wordResults.length,
@@ -71,6 +74,8 @@ const sum={
  grammarOccurrences:grammarResults.length,
  grammarWithAtLeastFive:grammarResults.filter(x=>x.fiveExamples).length,
  grammarWithVerifiedOrigin:grammarResults.filter(x=>x.originAnnotated).length,
+ grammarTopicsExpanded:Object.keys(grammarMore).length,
+ verifiedSupplementalExamples:Object.values(win.WENYAN_VERIFIED_EXTRA?.words||{}).reduce((n,x)=>n+x.examples.length,0),
  strictRule:'Goal: >= 5 distinct reviewed source-text/sense pairs, first 2 SAME sense as origin. Do not count raw corpus hits or fabricate a translation.',
  warnings:errors
 };
