@@ -1,4 +1,4 @@
-/* 每条原文与翻译、词义均逐句录入；不编造未核校的跨篇用法。 */
+/* 已核对古籍异文与重要虚词义项；词形相同不等于义项相同。 */
 window.WENYAN_ANNOTATIONS={
   "words": {
     "因": {
@@ -40,7 +40,7 @@ window.WENYAN_ANNOTATIONS={
           "介词",
           "advantage",
           "利用有利形势与便利条件",
-          "https://www.chinakongzi.org/kzsf/wxxs/zuozhe/jiayi/200705/t20070523_20032.htm"
+          "https://zh.wikisource.org/zh-hans/過秦論"
         ],
         [
           "烛之武退秦师",
@@ -73,6 +73,28 @@ window.WENYAN_ANNOTATIONS={
           "连词性副词",
           "then",
           "顺承前面兔子撞死的事件"
+        ],
+        [
+          "过秦论",
+          "贾谊",
+          "因遗策，南取汉中，西举巴蜀。",
+          "沿袭前代的策略，向南夺取汉中，向西攻取巴蜀。",
+          "沿袭、继承",
+          "动词",
+          "inherit",
+          "承接并沿用先前的策略",
+          "https://zh.wikisource.org/zh-hans/過秦論"
+        ],
+        [
+          "过秦论",
+          "贾谊",
+          "因河为池。",
+          "依托黄河作为护城河。",
+          "凭借、依靠",
+          "动词",
+          "depend",
+          "凭借黄河作为天然防御屏障",
+          "https://zh.wikisource.org/zh-hans/過秦論"
         ]
       ]
     },
@@ -1706,7 +1728,8 @@ window.WENYAN_ANNOTATIONS={
       "demonstrative": "demonstrative",
       "only": "only",
       "more": "more",
-      "benefit": "benefit"
+      "benefit": "benefit",
+      "inherit": "inherit"
     }
   },
   "grammar": {
