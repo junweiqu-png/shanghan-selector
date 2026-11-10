@@ -125,7 +125,8 @@ function wire(){
   const anchor=v.anchor&&v.original.includes(v.anchor)?v.anchor:v.original.includes(v.term)?v.original.slice(Math.max(0,v.original.indexOf(v.term)-6),v.original.indexOf(v.term)+v.term.length+6):(v.anchor||v.term);
   const s=[v.title,anchor,v.meaning,v.category||"实词",v.variant,v.usage];
   if(!spec.sources.some(x=>x[0]===s[0]&&x[1]===s[1]&&x[4]===s[4]))spec.sources.push(s);
-  const e=[v.title,v.source||"个人校录",v.original,v.translation,v.meaning,v.category||"实词",v.variant,v.usage,v.sourceURL];
+  const matchedWord=v.original.includes(v.term)?v.term:(v.anchor||v.term);
+  const e=[v.title,v.source||"个人校录",v.original,v.translation,v.meaning,v.category||"实词",v.variant,v.usage,v.sourceURL,matchedWord];
   if(!spec.examples.some(x=>x[0]===e[0]&&x[2]===e[2]))spec.examples.push(e);
  }else{
   spec.definition=spec.definition||v.meaning;
