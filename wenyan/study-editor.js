@@ -144,7 +144,7 @@ async function search(){
  const term=$("editName").value.trim();if(!term)return error("请先输入要检索的词或句式名。");
  const target=$("studyCandidates");target.innerHTML='<p class="help">正在检索后台古籍……</p>';
  try{
-  const all=await readCatalog(),hits=[],sort={"小学":0,"初中":1,"高中":2,"名言原典":3,"经史名言":3,"史记":4,"汉书":4,"资治通鉴":4,"史籍":4,"二十四史及古籍":5,"世说新语":6,"初中文言拓展":1};
+  const all=await readCatalog(),hits=[],sort={"小学":0,"小学诗文":0,"蒙学经典":1,"初中":1,"高中":2,"古文名篇":2,"古人名言":3,"名言原典":3,"经史名言":3,"史记":4,"汉书":4,"资治通鉴":4,"史籍":4,"二十四史及古籍":5,"世说新语":6,"初中文言拓展":1};
   let count=0,large=[];
   try{large=await readLarge(term,all.manifest);}catch(e){console.warn("large index unavailable:",e.message);}
   for(const r of [...all.entries,...large])if(String(r.text||"").includes(term)){
