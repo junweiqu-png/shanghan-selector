@@ -27,12 +27,23 @@ function readCatalog(){
  return catalogPromise;
 }
 const largeCache={};
+async function fetchClassicsIndex(url){
+ const r=await fetch(url,{cache:"default"});
+ if(!r.ok)throw Error("经史索引 HTTP "+r.status);
+ const bytes=new Uint8Array(await r.arrayBuffer());
+ let raw;
+ if(bytes[0]===0x1f&&bytes[1]===0x8b){
+  if(typeof DecompressionStream==="undefined")throw Error("当前浏览器不支持压缩古籍索引，仍可使用教材与世说新语候选");
+  raw=await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
+ }else raw=new TextDecoder().decode(bytes);
+ return JSON.parse(raw);
+}
 async function readLarge(term,manifest){
  if(!manifest?.large?.available||!term)return [];
  const ch=[...term][0],index=ch.codePointAt(0)%64,key=index.toString().padStart(2,'0');
  if(!largeCache[key]){
-  largeCache[key]=fetch('evidence/large-index/'+key+'.json',{cache:'default'})
-   .then(r=>{if(!r.ok)throw Error('经史索引 HTTP '+r.status);return r.json()}).catch(e=>{delete largeCache[key];throw e});
+  const ext=manifest.large.indexEncoding==="gzip"?".json.gz":".json";
+  largeCache[key]=fetchClassicsIndex('evidence/large-index/'+key+ext).catch(e=>{delete largeCache[key];throw e});
  }
  const data=await largeCache[key];
  return (data[ch]||[]).filter(r=>r.text?.includes(term)).map(r=>({
