@@ -33,5 +33,5 @@ assert(teacher.includes('evidence/large-index/'),'teacher does not use lazy clas
 assert(teacher.includes('editTranslation'),'translated example is required');
 const config=fs.readFileSync('.github/workflows/pages.yml','utf8');
 for(const name of ['build-expanded-corpus.mjs','build-large-corpus.mjs','build-poetry-classics.mjs'])
- assert(config.includes('node '+name.replace(/^/, 'wenyan/scripts/')),'Pages workflow missing builder '+name);
+ assert(config.includes('wenyan/scripts/'+name),'Pages workflow missing builder '+name);
 console.log(JSON.stringify({ok:true,pinyin:'context-correct',manualEditor:'wired',backgroundIndex:'lazy',workflow:'complete'}));
