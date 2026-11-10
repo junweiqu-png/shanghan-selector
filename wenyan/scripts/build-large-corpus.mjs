@@ -10,12 +10,13 @@ import fsp from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import readline from 'node:readline';
+import {gzipSync} from 'node:zlib';
 import {Readable} from 'node:stream';
 import {pipeline} from 'node:stream/promises';
 const SOURCE='https://huggingface.co/datasets/gujilab/chinese-classical-corpus/resolve/main/corpus.jsonl';
 const PROVENANCE='https://github.com/gujilab/chinese-classical-corpus';
 const RAW=process.env.WENYAN_LARGE_SOURCE||'.evidence-cache/gujilab-corpus-v13.jsonl';
-const OUT='dist/wenyan/evidence',MAX_PER_CHAR=150;
+const OUT='dist/wenyan/evidence',MAX_PER_CHAR=64;
 const sha=s=>crypto.createHash('sha1').update(String(s)).digest('hex');
 function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
 const clean=s=>String(s||'').replace(/\u200b/g,'').replace(/[ \t]+/g,' ').replace(/\r\n/g,'\n').trim();
@@ -81,22 +82,25 @@ for await(const raw of input){
  }
  if(rows%2500===0)console.log('large index',rows,'rows',Object.keys(stats).length,'books');
 }
-await fsp.mkdir(path.join(OUT,'large-index'),{recursive:true});
-await fsp.mkdir(path.join(OUT,'large-texts'),{recursive:true});
+for(const folder of ['large-index','large-texts']){
+ await fsp.rm(path.join(OUT,folder),{recursive:true,force:true});
+ await fsp.mkdir(path.join(OUT,folder),{recursive:true});
+}
 const indexFiles=[];
 for(let i=0;i<64;i++){
- const name=i.toString().padStart(2,'0')+'.json';
+ const name=i.toString().padStart(2,'0')+'.json.gz';
  const out={};for(const [ch,arr] of Object.entries(buckets[i])){
   out[ch]=arr.map(x=>({source:x[1],chapter:x[2],text:x[3],id:x[4],group:x[5]}));
   quoteEntries+=arr.length;
  }
- await fsp.writeFile(path.join(OUT,'large-index',name),JSON.stringify(out),'utf8');
+ await fsp.writeFile(path.join(OUT,'large-index',name),gzipSync(Buffer.from(JSON.stringify(out),'utf8'),{level:6}));
  indexFiles.push(name);
 }
-for(let i=0;i<32;i++)await fsp.writeFile(path.join(OUT,'large-texts',i.toString().padStart(2,'0')+'.json'),JSON.stringify(texts[i]),'utf8');
+for(let i=0;i<32;i++)await fsp.writeFile(path.join(OUT,'large-texts',i.toString().padStart(2,'0')+'.json.gz'),gzipSync(Buffer.from(JSON.stringify(texts[i]),'utf8'),{level:6}));
 manifest.large={available:true,source:PROVENANCE,license:'CC0 1.0（数据集标识）；古籍底本另见数据集出处',
  sourceRecords:rows,sourceBooks:Object.keys(stats).length,originalChars:chars,
  indexedSnippets:quoteEntries,excluded,indexShards:64,textShards:32,maxSamplesPerCharacter:MAX_PER_CHAR,
+ indexEncoding:'gzip',fullTextEncoding:'gzip',
  bookCounts:stats,bookChars:charsByBook,
  explain:'原典全文和单字候选索引仅供教师查询；未逐句确认翻译和字义者不会自动作为学生关联学习答案展示'};
 await fsp.writeFile(manifestPath,JSON.stringify(manifest,null,2),'utf8');
