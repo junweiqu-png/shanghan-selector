@@ -10,13 +10,13 @@ let visited=new Set(stored.visited||[]), learned=new Set(stored.learned||[]), co
 function save(){localStorage.setItem(KEY,JSON.stringify({custom,wi,si,whole,show,visited:[...visited],learned:[...learned],completions:[...completions]}));}
 function work(){return works()[wi]||works()[0];}
 function line(){const w=work();si=Math.max(0,Math.min(si,w.lines.length-1));return w.lines[si];}
-function tokensFor(w){const seen=new Set(),res=[];for(const x of [w,...base,...custom])for(const t of x.terms||[]){if(!t[0]||seen.has(t[0]))continue;seen.add(t[0]);res.push(t);}return res.sort((a,b)=>b[0].length-a[0].length);}
+function tokensFor(w){const seen=new Set(),res=[];for(const x of [w,...base,...custom])for(const t of x.terms||[]){if(!t[0]||seen.has(t[0]))continue;seen.add(t[0]);res.push(t);}for(const s of window.WENYAN_STUDY_EDITOR?.indexTerms()||[]){if(!s||seen.has(s))continue;seen.add(s);res.push([s,"可学习","点击查看跨篇词义"]);}return res.sort((a,b)=>b[0].length-a[0].length);}
 function marked(text,w){
  let i=0,out="",terms=tokensFor(w);
  while(i<text.length){
    let t=terms.find(x=>text.startsWith(x[0],i));
-   if(t){out+='<span class="token" role="button" tabindex="0" data-term="'+escape(t[0])+'">'+escape(t[0])+'</span>';i+=t[0].length;}
-   else {out+=escape(text[i]);i++;}
+   if(t){let rendered="";for(let j=0;j<t[0].length;j++)rendered+=window.WENYAN_PINYIN?.span(text,i+j,w)||escape(text[i+j]);out+='<span class="token" role="button" tabindex="0" data-term="'+escape(t[0])+'">'+rendered+'</span>';i+=t[0].length;}
+   else {out+=window.WENYAN_PINYIN?.span(text,i,w)||escape(text[i]);i++;}
  }return out;
 }
 function bindTokens(root,w){root.querySelectorAll(".token").forEach(n=>{n.addEventListener("click",e=>{e.stopPropagation();openTerm(n.dataset.term,w)});n.addEventListener("keydown",e=>{if(e.key==="Enter"){e.stopPropagation();openTerm(n.dataset.term,w)}})});}
@@ -29,16 +29,16 @@ function render(){
  if(!whole){
  $("title").textContent=w.title;$("source").textContent=w.source;$("level").textContent=w.level;
  $("progress").textContent="第 "+(si+1)+" / "+w.lines.length+" 句";
- $("sentence").innerHTML=marked(row[0],w);
+ $("sentence").dataset.plain=row[0];$("sentence").innerHTML=marked(row[0],w);
  $("translation").textContent=row[1];$("translation").hidden=!show;
  $("tapHelp").textContent=show?"轻点空白处隐藏译文 · 上滑下一句":"轻点空白处看译文 · 上滑下一句";
- $("grammarRow").innerHTML=(row[2]?[row[2]]:[]).map(g=>'<button data-pattern="'+escape(g)+'">'+escape(g)+" · 学句式 ↗</button>").join("");
+ $("grammarRow").innerHTML=[...new Set([...(row[2]?[row[2]]:[]),...(window.WENYAN_STUDY_EDITOR?.grammarForText(row[0])||[])])].map(g=>'<button data-pattern="'+escape(g)+'">'+escape(g)+" · 学句式 ↗</button>").join("");
  $("grammarRow").querySelectorAll("button").forEach(b=>b.onclick=()=>openPattern(b.dataset.pattern));
  $("dots").textContent=(si+1)+" / "+w.lines.length;
  bindTokens($("sentence"),w);
  } else {
  $("wholeTitle").textContent=w.title;$("wholeLevel").textContent=w.level;$("wholeSource").textContent=w.source;
- $("wholeBody").innerHTML=w.lines.map((x,i)=>'<article class="wholepara" data-i="'+i+'"><div class="wholetext">'+marked(x[0],w)+'</div><div class="wholetranslation" hidden>'+escape(x[1])+'</div></article>').join("");
+ $("wholeBody").innerHTML=w.lines.map((x,i)=>'<article class="wholepara" data-i="'+i+'"><div class="wholetext" data-plain="'+escape(x[0])+'">'+marked(x[0],w)+'</div><div class="wholetranslation" hidden>'+escape(x[1])+'</div></article>').join("");
  $("wholeBody").querySelectorAll(".wholepara").forEach(n=>n.onclick=()=>{const target=n.querySelector(".wholetranslation");target.hidden=!target.hidden;});
  bindTokens($("wholeBody"),w);
  }
@@ -79,14 +79,14 @@ function openPattern(name){
 }
 function review(){
  const stats='<div class="stats"><div><strong>'+works().length+'</strong><small>收录篇目</small></div><div><strong>'+visited.size+'</strong><small>已学习篇</small></div><div><strong>'+learned.size+'</strong><small>掌握词语</small></div></div>';
- const words=[...new Set(works().flatMap(w=>(w.terms||[]).map(t=>t[0])))];
- let html=stats+'<div class="sectionLabel">词汇索引 · '+words.length+' 词</div><input id="wordSearch" class="search" placeholder="查实词 / 虚词"><div id="wordList"></div><div class="sectionLabel">句式专题</div><div id="patterns"></div>';
+ const words=[...new Set([...works().flatMap(w=>(w.terms||[]).map(t=>t[0])),...(window.WENYAN_STUDY_EDITOR?.indexTerms()||[])])];
+ let html=stats+'<div class="sectionLabel">词汇索引 · '+words.length+' 词</div><input id="wordSearch" class="search" placeholder="查实词 / 虚词"><div id="wordList"></div><div class="sectionLabel">句式专题</div><div id="patterns"></div><div class="row"><button id="studyEditReview">＋ 录入新实词、虚词、句式</button></div>';
  modal("积累 · 实词虚词与句式",html,root=>{
  let draw=(q="")=>{$("wordList").innerHTML=words.filter(s=>s.includes(q)).map(s=>'<button class="pill" data-term="'+escape(s)+'">'+escape(s)+(learned.has(s)?" ✓":"")+'</button>').join("")||"暂无";$("wordList").querySelectorAll("[data-term]").forEach(b=>b.onclick=()=>{let ref=works().find(w=>(w.terms||[]).some(t=>t[0]===b.dataset.term));openTerm(b.dataset.term,ref);});};
  $("wordSearch").oninput=e=>draw(e.target.value.trim());draw();
- const pats=[...new Set(works().flatMap(w=>w.lines.map(l=>l[2]).filter(Boolean)))];
+ const pats=[...new Set([...works().flatMap(w=>w.lines.map(l=>l[2]).filter(Boolean)),...(window.WENYAN_STUDY_EDITOR?.indexPatterns()||[])])];
  $("patterns").innerHTML=pats.map(p=>'<button class="pill" data-p="'+escape(p)+'">'+escape(p)+'</button>').join("");
- $("patterns").querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>openPattern(b.dataset.p));
+ $("patterns").querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>openPattern(b.dataset.p));$("studyEditReview").onclick=()=>window.WENYAN_STUDY_EDITOR?.open();
  });
 }
 function showAdd(){
@@ -104,15 +104,15 @@ function showAdd(){
 }
 function settings(){
  const html='<p class="notice">学习数据、手动添加的文章仅保存在当前浏览器的 localStorage。清理网站数据、换手机、换浏览器可能导致丢失。建议定期导出备份。</p>'+
- '<div class="sectionLabel">数据管理</div><div class="row"><button id="add">＋ 新增文章</button><button id="export">导出全部数据</button></div>'+
+ '<div class="sectionLabel">数据管理</div><div class="row"><button id="add">＋ 新增文章</button><button id="studyEditSettings">＋ 实词／虚词／句式</button><button id="export">导出全部数据</button></div>'+
  '<label class="item" style="cursor:pointer">导入备份 JSON（将替换当前数据）<input id="import" type="file" accept="application/json,.json" style="display:block;margin-top:9px"></label>'+
  '<div class="sectionLabel">我的文章</div>'+(custom.length?custom.map((w,i)=>'<div class="item"><b>'+escape(w.title)+'</b><small>'+w.lines.length+'句　<button data-remove="'+i+'">删除此自定义篇目</button></small></div>').join(""):'<p class="help">暂无自定义文章。</p>')+
  '<div class="sectionLabel">使用说明</div><p class="help">逐句模式：上滑下一句，下滑上一句；轻点正文空白区域展开译文；点带点线的实词、虚词可看本句释义及跨篇古文；点句式标签查其他古文中的应用。整篇模式可逐句点开译文。学习状态自动保存。</p>'+
  '<p class="help">内置篇目、注释与例句为首版学习底稿，尚非经过出版社审定的权威教材。遇到古籍版本差异，以教材指定版本为准。</p>';
  modal("我的 · 添加与备份",html,root=>{
- $("add").onclick=showAdd;
- $("export").onclick=()=>{const blob=new Blob([JSON.stringify({version:1,data:stored={custom,wi,si,whole,show,visited:[...visited],learned:[...learned],completions:[...completions]}},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="文言拾句-学习备份-"+new Date().toISOString().slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);};
- $("import").onchange=async e=>{try{const data=JSON.parse(await e.target.files[0].text());if(data.version!==1||!data.data||!Array.isArray(data.data.custom))throw Error("文件格式不正确");if(!confirm("导入将替换当前学习进度与自定义篇目，确认继续？"))return;localStorage.setItem(KEY,JSON.stringify(data.data));location.reload();}catch(err){alert("导入失败："+err.message)}};
+ $("add").onclick=showAdd;$("studyEditSettings").onclick=()=>window.WENYAN_STUDY_EDITOR?.open();
+ $("export").onclick=()=>{const blob=new Blob([JSON.stringify({version:1,data:stored={custom,wi,si,whole,show,visited:[...visited],learned:[...learned],completions:[...completions]},study:window.WENYAN_STUDY_EDITOR?.data()||null},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="文言拾句-学习备份-"+new Date().toISOString().slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);};
+ $("import").onchange=async e=>{try{const data=JSON.parse(await e.target.files[0].text());if(data.version!==1||!data.data||!Array.isArray(data.data.custom))throw Error("文件格式不正确");if(!confirm("导入将替换当前学习进度与自定义篇目，确认继续？"))return;localStorage.setItem(KEY,JSON.stringify(data.data));if(data.study?.version===1&&data.study.words&&data.study.grammar)localStorage.setItem("wenyan-recall-study-v1",JSON.stringify(data.study));location.reload();}catch(err){alert("导入失败："+err.message)}};
  root.querySelectorAll("[data-remove]").forEach(b=>b.onclick=()=>{if(!confirm("确定删除这篇自定义文章？"))return;custom.splice(Number(b.dataset.remove),1);wi=Math.min(wi,works().length-1);si=0;save();settings();});
  });
 }

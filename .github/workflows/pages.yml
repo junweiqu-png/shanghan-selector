@@ -60,6 +60,13 @@ jobs:
           node --check scripts/build-shanghan-commentaries.mjs
           node --check wenyan/scripts/build-evidence.mjs
           node --check wenyan/scripts/test-study.mjs
+          node --check wenyan/scripts/build-expanded-corpus.mjs
+          node --check wenyan/scripts/build-large-corpus.mjs
+          node --check wenyan/scripts/build-poetry-classics.mjs
+          node --check wenyan/scripts/test-enhancements.mjs
+          node --check wenyan/study-editor.js
+          node --check wenyan/study-explorer.js
+          node --check wenyan/pinyin.js
       - name: Restore corpus API cache
         uses: actions/cache@v4
         with:
@@ -70,7 +77,9 @@ jobs:
       - name: Install Chinese conversion helper
         run: npm install --no-save opencc-js@1.4.2 pinyin-pro@3.29.5 cheerio@1.0.0
       - name: Validate Wenyan translated examples and semantic comparison annotations
-        run: node wenyan/scripts/test-study.mjs
+        run: |
+          node wenyan/scripts/test-study.mjs
+          node wenyan/scripts/test-enhancements.mjs
       - name: Build local classical corpus
         env:
           CORPUS_MAX_BOOKS: 700
@@ -100,6 +109,12 @@ jobs:
             wenyan-evidence-v1-
       - name: Build Wenyan primary-source evidence corpus
         run: node wenyan/scripts/build-evidence.mjs
+      - name: Build expanded school and classics corpus for background annotation
+        run: node wenyan/scripts/build-expanded-corpus.mjs
+      - name: Build Tang poems classical prose and Chinese aphorisms index
+        run: node wenyan/scripts/build-poetry-classics.mjs
+      - name: Index full CC0 thirteen classics, ancient histories and Zizhi Tongjian
+        run: node --max-old-space-size=2048 wenyan/scripts/build-large-corpus.mjs
       - name: Remove temporary corpus pages
         run: rm -rf dist/corpus-pages
       - name: Setup Pages
