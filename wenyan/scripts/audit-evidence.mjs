@@ -92,7 +92,7 @@ for(const term of ['内集','集']){
  if(!rows.length||rows.some(r=>r.reviewedExamples<5||r.sameSense<2)){console.error('Verified regression',term,JSON.stringify(rows));process.exitCode=3;}
 }
 if(errors.length)process.exitCode=2;
-for(const term of ['俄而','未若','诣','疾','顾','引','骤','舍','值','诸','竞','莫','弗','汝','岂','委','闻','或','甚','唯','内集','集']){
+for(const term of ['俄而','未若','诣','疾','顾','引','骤','舍','值','诸','竞','莫','弗','汝','岂','委','闻','或','甚','唯','内集']){
  const rows=wordResults.filter(r=>r.term===term);
  if(!rows.length||rows.some(r=>r.reviewedExamples<5||r.sameSense<2))
  {console.error('Verified regression',term,JSON.stringify(rows));process.exitCode=3;}
