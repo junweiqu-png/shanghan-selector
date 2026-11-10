@@ -4,7 +4,7 @@
 const dict={
  "不":{base:["否定：不、没有","否定副词","not","否定后面的动作、状态或判断"],exception:[
   ["尊君在不","通“否”，表示是否（读fǒu）","疑问语气词","fou","用于询问是否在家"]]},
- "而":{base:["连接前后动作","连词","sequence","连接相继发生的动作或情况"],exception:[
+ "而":{skip:["俄而"],base:["连接前后动作","连词","sequence","连接相继发生的动作或情况"],exception:[
   ["俄而","不久","时间词语后部","short-time","“俄而”表示不久，整词理解"],
   ["而身为宋国笑","却、反而","连词","contrast","表示出人意料的相反结果"],
   ["而不","却、但是","连词","contrast","前后语义构成转折"],
@@ -96,7 +96,7 @@ const dict={
  "去":{base:["离开","动词","leave","从原地离开"],exception:[
   ["去人近","距离","动词","distance","表示与人的远近"],
   ["去人远","距离","动词","distance","表示与人的远近"]]},
- "夫":{base:["那、这","指示词","demonstrative","引出所谈论的对象"],exception:[
+ "夫":{skip:["夫子"],base:["那、这","指示词","demonstrative","引出所谈论的对象"],exception:[
   ["夫子","先生、您","敬称","sir","尊称对方"],
   ["夫不可陷","句首发语词","语气助词","intro","引出议论"],
   ["夫君子","句首发语词","语气助词","intro","放在句首引起议论"]]},
@@ -105,7 +105,7 @@ const dict={
   ["无信","诚信","名词","trust","指是否守信用"],
   ["宁信","相信","动词","believe","相信所量的尺寸"]]},
  "俱":{base:["一起、全都","副词","together","表示一同或全部"],exception:[]},
- "宁":{base:["宁愿","副词","rather","在两种情况间作出取舍"],exception:[
+ "宁":{skip:["管宁"],base:["宁愿","副词","rather","在两种情况间作出取舍"],exception:[
   ["管宁","人物名字的一部分","专名成分","proper-name","管宁是姓名，不宜按普通实词释义"]]},
  "之":{strict:true,base:["的","结构助词","attribute","修饰后面的名词"],exception:[
  ["取之","它","代词","object","代指前面的事物"],["引之","他","代词","object","指元方"],["问之","他、这件事","代词","object","询问的对象"],
@@ -167,6 +167,7 @@ for(const [term,profile] of Object.entries(dict)){
    const positions=[];let at=line.indexOf(term);while(at>=0){positions.push(at);at=line.indexOf(term,at+term.length);}
    const unique=new Map();
    for(const index of positions){
+    if((profile.skip||[]).some(phrase=>{const start=line.indexOf(phrase);return start>=0&&index>=start&&index<start+phrase.length;}))continue;
     let picked=null;
     for(const row of profile.exception){
      const [phrase,...fields]=row;let start=line.indexOf(phrase);
