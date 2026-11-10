@@ -15,8 +15,12 @@ function knowTerm(word){
  return {sources:[...(personal?.sources||[]),...(builtin?.sources||[]),...(verified?.sources||[]),...(cross?.sources||[])],
  examples:[...(personal?.examples||[]),...(builtin?.examples||[]),...(verified?.examples||[]),...(cross?.examples||[])]};
 }
-function grammarSpec(name){const built=DB.grammar?.[name]||null,personal=window.WENYAN_STUDY_EDITOR?.lookupGrammar(name);if(!personal)return built;return {definition:personal.definition||built?.definition||"自定义句式",examples:[...(personal.examples||[]),...(built?.examples||[])]};}
-function grammarNames(){return [...new Set([...Object.keys(DB.grammar||{}),...(window.WENYAN_STUDY_EDITOR?.patterns()||[])])];}
+function grammarSpec(name){
+ const built=DB.grammar?.[name]||null,added=window.WENYAN_GRAMMAR_MORE?.grammar?.[name]||null,personal=window.WENYAN_STUDY_EDITOR?.lookupGrammar(name);
+ if(!built&&!added&&!personal)return null;
+ return {definition:personal?.definition||built?.definition||added?.definition||"自定义句式",examples:[...(personal?.examples||[]),...(built?.examples||[]),...(added?.examples||[])]};
+}
+function grammarNames(){return [...new Set([...Object.keys(DB.grammar||{}),...Object.keys(window.WENYAN_GRAMMAR_MORE?.grammar||{}),...(window.WENYAN_STUDY_EDITOR?.patterns()||[])])];}
 function localDefs(term){
  const out=[];for(const w of core){const d=(w.terms||[]).find(t=>t[0]===term);if(d)out.push({w,d})}return out;
 }
