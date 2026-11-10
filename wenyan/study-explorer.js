@@ -101,7 +101,7 @@ function rowCard(row,index,origin,isGrammar){
  '<div class="study-compare '+rel.type+'"><b>'+(rel.type==="same"?"🟢":rel.type==="near"?"🟡":rel.type==="diff"?"🔴":"⚪")+' '+rel.badge+'</b>'+
  (origin.verified?'<div class="study-double"><span>本句：'+esc(origin.meaning)+'</span><span>此处：'+esc(meta.meaning)+'</span></div>':"")+
  '<p>'+esc(rel.diff)+'</p></div>'+
- '<div class="study-actions">'+sourceLink(meta.url||"")+(row.grammars||[]).map(g=>'<button type="button" data-study-grammar="'+esc(g)+'" data-study-context="'+contextId+'">学习“'+esc(g)+'”句式 ↗</button>').join("")+'</div></article>';
+ '<div class="study-actions">'+sourceLink(meta.url||"")+'<button type="button" data-study-add="'+contextId+'">＋ 加为背诵卡</button>'+(row.grammars||[]).map(g=>'<button type="button" data-study-grammar="'+esc(g)+'" data-study-context="'+contextId+'">学习“'+esc(g)+'”句式 ↗</button>').join("")+'</div></article>';
 }
 function enrichGrammars(record){
  const rows=[];for(const [name,spec] of Object.entries(DB.grammar||{})){
@@ -160,6 +160,21 @@ function renderPage(term,isGrammar,origin,push=true){
     "还发现 "+count+" 个古籍篇段含“"+term+"”字形，尚需逐条核对读音、词义、翻译及上下文。";
  });
 }
+
+function addTranslatedCard(key){
+ const entry=state?.contexts?.get(key),row=state?.rows?.find((_,i)=>'r'+i===key);
+ if(!entry||!row)return;
+ const e=row.record;
+ let value={};try{value=JSON.parse(localStorage.getItem('wenyan-recall-v1')||'{}')||{}}catch{}
+ if(!Array.isArray(value.custom))value.custom=[];
+ if(value.custom.some(w=>w.lines?.some(l=>l[0]===e.text)&&w.source===e.source)){
+  alert("这条有翻译的古文已加入背诵卡。");return;
+ }
+ value.custom.push({title:e.title+"·关联精读",source:e.source+(e.url?" · "+e.url:""),level:"关联学习",lines:[[e.text,e.translation,""]],terms:[],ruby:{},hint:"来自已整理的逐句原典比较"});
+ localStorage.setItem("wenyan-recall-v1",JSON.stringify(value));
+ alert("已加入背诵卡（含原文和翻译）。下次打开篇目列表即可查看；页面会更新新增篇目。");
+ location.reload();
+}
 function openWord(word,context){renderPage(word,false,termOrigin(word,context));}
 function openGrammar(gram,context){renderPage(gram,true,grammarOrigin(gram,context));}
 function navigateBack(){
@@ -167,6 +182,8 @@ function navigateBack(){
  const previous=chain.pop();renderPage(previous.term,previous.isGrammar,previous.origin,false);
 }
 document.addEventListener('click',e=>{
+ const add=e.target.closest?.('[data-study-add]');
+ if(add){e.preventDefault();e.stopImmediatePropagation();addTranslatedCard(add.dataset.studyAdd);return;}
  const back=e.target.closest?.('[data-study-back]');
  if(back){e.preventDefault();e.stopImmediatePropagation();navigateBack();return;}
  const t=e.target.closest?.('[data-study-word],[data-term]'),
