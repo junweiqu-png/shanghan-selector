@@ -3,7 +3,7 @@
 const $=id=>document.getElementById(id);
 const escape=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const base=[...(window.WENYAN_DATA_1||[]),...(window.WENYAN_DATA_2||[])];
-const KEY="wenyan-recall-v1", tryJSON=(v,f)=>{try{return JSON.parse(v)}catch{return f}};
+const KEY="wenyan-recall-v1", tryJSON=(v,f)=>{if(typeof v!=="string"||!v.trim())return f;try{const parsed=JSON.parse(v);return parsed&&typeof parsed==="object"&&!Array.isArray(parsed)?parsed:f}catch{return f}};
 let stored=tryJSON(localStorage.getItem(KEY),{}), custom=Array.isArray(stored.custom)?stored.custom:[];
 let works=()=>[...base,...custom], wi=Math.max(0,Math.min(Number(stored.wi)||0,works().length-1)),si=Number(stored.si)||0, whole=!!stored.whole,show=!!stored.show;
 let visited=new Set(stored.visited||[]), learned=new Set(stored.learned||[]), completions=new Set(stored.completions||[]);
