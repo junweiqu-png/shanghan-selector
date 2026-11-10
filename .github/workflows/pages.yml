@@ -63,6 +63,7 @@ jobs:
           node --check wenyan/scripts/build-expanded-corpus.mjs
           node --check wenyan/scripts/build-large-corpus.mjs
           node --check wenyan/scripts/build-poetry-classics.mjs
+          node --check wenyan/scripts/test-enhancements.mjs
           node --check wenyan/study-editor.js
           node --check wenyan/study-explorer.js
           node --check wenyan/pinyin.js
@@ -76,7 +77,9 @@ jobs:
       - name: Install Chinese conversion helper
         run: npm install --no-save opencc-js@1.4.2 pinyin-pro@3.29.5 cheerio@1.0.0
       - name: Validate Wenyan translated examples and semantic comparison annotations
-        run: node wenyan/scripts/test-study.mjs
+        run: |
+          node wenyan/scripts/test-study.mjs
+          node wenyan/scripts/test-enhancements.mjs
       - name: Build local classical corpus
         env:
           CORPUS_MAX_BOOKS: 700
