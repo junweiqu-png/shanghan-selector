@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
-const dir='wenyan/',dbWindow={};
+const dir=process.env.WENYAN_ROOT||'wenyan/',dbWindow={};
 const js=fs.readFileSync(dir+'study-annotations.js','utf8');
 new vm.Script(js,{filename:'study-annotations.js'}).runInNewContext({window:dbWindow});
 const D=dbWindow.WENYAN_ANNOTATIONS;
