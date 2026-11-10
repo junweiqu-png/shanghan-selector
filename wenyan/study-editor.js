@@ -186,7 +186,7 @@ async function search(){
     '<div class="study-source-filters">'+
     ["全部",...sections.map(s=>s.label)].map(g=>'<button type="button" class="'+(filter===g?'active':'')+'" data-source="'+esc(g)+'">'+esc(g)+'（'+(g==="全部"?hits.length:hits.filter(h=>groupOf(h)===g).length)+'）</button>').join('')+
     '</div>'+
-    (page.map((item,i)=>'<button class="study-candidate" data-candidate="'+i+'"><b>'+esc(item.r.title)+'</b><small>'+esc(item.r.group)+'</small><span>'+esc(item.text)+'</span></button>').join("")||'<p class="help">此分类暂无候选原文，可切换其他类别。</p>')+
+    (page.map((item,i)=>'<button class="study-candidate" data-candidate="'+i+'"><b>'+esc(item.r.title)+'</b><small>'+esc(item.r.group)+'</small><span>'+(window.WENYAN_PINYIN?.annotate(item.text)||esc(item.text))+'</span></button>').join("")||'<p class="help">此分类暂无候选原文，可切换其他类别。</p>')+
     (chosen.length>page.length?'<button id="nextTeacherPage">查看更多（已显示 '+page.length+'/'+chosen.length+'）</button>':'');
     target.querySelectorAll("[data-source]").forEach(b=>b.onclick=()=>{filter=b.dataset.source;offset=0;draw()});
     target.querySelectorAll("[data-candidate]").forEach(b=>b.onclick=()=>{
