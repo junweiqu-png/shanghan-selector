@@ -82,8 +82,10 @@ for await(const raw of input){
  }
  if(rows%2500===0)console.log('large index',rows,'rows',Object.keys(stats).length,'books');
 }
-await fsp.mkdir(path.join(OUT,'large-index'),{recursive:true});
-await fsp.mkdir(path.join(OUT,'large-texts'),{recursive:true});
+for(const folder of ['large-index','large-texts']){
+ await fsp.rm(path.join(OUT,folder),{recursive:true,force:true});
+ await fsp.mkdir(path.join(OUT,folder),{recursive:true});
+}
 const indexFiles=[];
 for(let i=0;i<64;i++){
  const name=i.toString().padStart(2,'0')+'.json.gz';
