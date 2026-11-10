@@ -43,6 +43,17 @@ assert(suo.sources.some(x=>x[0]==="世说新语·赏誉"&&x[1]==="墓所"&&x[2].
 assert(suo.examples.some(x=>x[0]==="论语·为政"&&x[6]==="place"&&x[3]),"need translated same-sense example for place noun");
 assert(suo.examples.some(x=>x[0]==="刻舟求剑"&&x[6]==="nominal"&&x[3]),"must distinguish nominalizing particle from place noun");
 assert(suo.examples.some(x=>x[0]==="书戴嵩画牛"&&x[6]==="nominal"&&x[3]),"“所宝” nominalizing example needed");
+const yu=D.words["与"];
+assert(yu&&yu.sources.length>=7&&yu.examples.length>=7,"与 must have cross-text verified meanings");
+for(const [work,phrase,sense] of [
+ ["咏雪","与儿女讲论文义","with"],["陈太丘与友期行","与友期行","with"],
+ ["学弈","虽与之俱学","with"],["学弈","智弗若与","question"],
+ ["答谢中书书","能与其奇者","appreciate"]]){
+ assert(yu.sources.some(x=>x[0]===work&&x[1]===phrase&&x[4]===sense),"与 missing source sense "+work+" "+phrase);
+}
+for(const code of ["with","agree","give","appreciate","question"])
+ assert(yu.examples.some(x=>x[6]===code&&x[3]),"与 missing translated sense "+code);
+assert(!"荀巨伯远看友人疾，值胡贼攻郡。".includes("与"),"regression setup requires an unrelated active sentence");
 const qi=D.words["期"];
 assert(qi&&qi.examples.length>=10,"期 needs broad translated cross-text examples");
 assert(qi.sources.some(x=>x[0]==="陈太丘与友期行"&&x[4]==="appoint"),"陈太丘 期 must mean agreed appointment");
@@ -66,6 +77,9 @@ new vm.Script(expl,{filename:'study-explorer.js'});
 assert(!/上句|下句|命中句/.test(expl),'old up/down/target labels present in visible UI code');
 assert(!/rawCount|原典命中|字形匹配/.test(expl),'uncurated raw hits or background counts leaked to learning page');
 assert(expl.includes('if(r.title===origin.title)continue'),'source work must be excluded from associated list');
+assert(expl.includes('function indexOrigin(term)'),'glossary must locate an actual sentence, not the current reading');
+assert(expl.includes('which.closest("#wordList")'),'glossary click needs its own origin context');
+assert(expl.includes('if(!text.includes(term))'),'never display an ancient quote that lacks its purported headword');
 assert(expl.includes('const key=r.title+"|"+r.code'),'identical source senses must be deduplicated');
 assert(lex>=90&&gram>=70,'unexpected evidence coverage drop');
 console.log(JSON.stringify({ok:true,words:Object.keys(D.words).length,translatedWordExamples:lex,grammarTopics:Object.keys(D.grammar).length,translatedGrammarExamples:gram},null,2));

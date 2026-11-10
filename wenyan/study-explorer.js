@@ -21,11 +21,34 @@ function activeOrigin(){
  let text=whole?($("wholeBody")?.querySelector(".wholepara:focus-within .wholetext")?.dataset.plain||""):$("sentence").dataset.plain||$("sentence").textContent;
  return {title,text};
 }
+function indexOrigin(term){
+ // “积累”的词表不指向当前阅读进度：必须从真正含该字的原句取得语境。
+ let personal=[];
+ try{const s=JSON.parse(localStorage.getItem("wenyan-recall-v1")||"{}");if(Array.isArray(s.custom))personal=s.custom}catch{}
+ const spec=knowTerm(term),results=[];
+ for(const [wi,w] of [...core,...personal].entries()){
+  for(const [li,row] of (w.lines||[]).entries()){
+   const text=String(row?.[0]||"");if(!text.includes(term))continue;
+   const source=(spec?.sources||[]).find(s=>s[0]===w.title&&s[1]&&s[1].includes(term)&&text.includes(s[1]));
+   const index=source?text.indexOf(source[1])+source[1].indexOf(term):text.indexOf(term);
+   // 优先人工标注原句，其次课本自带词条解释，再其次普通正文命中。
+   const hasDefinition=(w.terms||[]).some(t=>t[0]===term);
+   results.push({title:w.title,text,offset:index,score:source?0:hasDefinition?1:2,wi,li});
+  }
+ }
+ results.sort((a,b)=>a.score-b.score||a.wi-b.wi||a.li-b.li);
+ if(results.length){const {title,text,offset}=results[0];return {title,text,offset};}
+ // 某些扩展字词只在有译文的精选材料里出现，也必须以真实例句定位。
+ const source=(spec?.examples||[]).find(x=>x[2]?.includes(term)&&x[3]);
+ return source?{title:source[0],text:source[2],offset:source[2].indexOf(term)}:null;
+}
 function termOrigin(term,context){
  const spec=knowTerm(term);
  if(context?.annotated&&context.annotatedTerm===term)return {
  title:context.title,text:context.text,term,meaning:context.meaning,pos:context.pos,code:context.code,usage:context.usage,verified:true};
  const title=context?.title||activeOrigin().title,text=context?.text||activeOrigin().text;
+ // 任何入口都不能把不含该字的当前句当成“原字原文”。
+ if(!text.includes(term))return {title:"词语索引",text:"",term,meaning:"尚未定位到含此字的原句",pos:"",code:null,usage:"请选择或录入包含此字的古文及准确译文。",verified:false};
  if(spec){
   const candidates=(spec.sources||[]).filter(s=>s[0]===title&&(!s[1]||text.includes(s[1])));
   const hit=candidates.find(s=>{
@@ -93,7 +116,7 @@ function baseHeader(origin,isGrammar){
 }
 function rowCard(row,index,origin,isGrammar){
  const meta=row.record,rel=relation(origin,meta,isGrammar),contextId="r"+index;
- const title=displayTitle(meta.title),source=esc(meta.source||"");
+ const title=displayTitle(meta.title),rawSource=String(meta.source||"").trim(),source=rawSource.replace(/[《》]/g,"")===String(meta.title).replace(/[《》]/g,"")?"":esc(rawSource);
  const desc=isGrammar?'<b>句式：</b>'+esc(meta.code):'<b>'+esc(origin.term)+'：</b>'+esc(meta.meaning);
  const comparison=origin.verified?'<div class="study-compare '+rel.type+'"><b>'+
  (rel.type==="same"?"🟢":rel.type==="near"?"🟡":rel.type==="diff"?"🔴":"⚪")+' '+rel.badge+'</b>'+
@@ -196,9 +219,10 @@ document.addEventListener('click',e=>{
  const name=t?(t.dataset.studyWord||t.dataset.term):(g.dataset.studyGrammar||g.dataset.pattern||g.dataset.p);
  if(!name)return;
  const which=t||g, contextId=which.dataset.studyContext;
- let context=contextId&&state?.contexts?.get(contextId);
+ const fromIndex=!!t&&!!which.closest("#wordList");
+ let context=fromIndex?indexOrigin(name):(contextId&&state?.contexts?.get(contextId));
  if(t){
-  if(context)context={...context,offset:Number.isFinite(Number(which.dataset.studyOffset))?Number(which.dataset.studyOffset):null};
+  if(context&&!fromIndex)context={...context,offset:Number.isFinite(Number(which.dataset.studyOffset))?Number(which.dataset.studyOffset):null};
   else {
    const wholeNode=which.closest('.wholepara');
    const container=wholeNode?.querySelector('.wholetext')||(which.closest('#sentence')?$('sentence'):null);
@@ -213,6 +237,7 @@ document.addEventListener('click',e=>{
   }
  }
  e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+ if(t&&fromIndex&&!context){open("词语索引",'<p class="study-empty">尚未找到确实包含“'+esc(name)+'”的古文原句，请先在“我的”中补充经核校的例句。</p>');return;}
  if(t)openWord(name,context);else openGrammar(name,context);
 },true);
 window.WENYAN_STUDY_DEBUG={terms:()=>allTerms(),patterns:()=>grammarNames(),getState:()=>state&&({term:state.term,count:state.rows?.length,origin:state.origin})};
