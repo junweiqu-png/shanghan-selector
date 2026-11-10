@@ -69,6 +69,7 @@ jobs:
           node --check wenyan/study-crosslesson.js
           node --check wenyan/study-verified-extra.js
           node --check wenyan/study-verified-more2.js
+          node --check wenyan/study-verified-common3.js
           node --check wenyan/study-grammar-more.js
           node --check wenyan/scripts/audit-evidence.mjs
           node --check wenyan/pinyin.js
