@@ -1,0 +1,25 @@
+
+/* Teacher-only corpus annotation: minimal fields, unobtrusive local controls. */
+#studyEditSettings,#studyEditReview,#editStudyTerm{background:#eaf4ec;border-color:#c5dec8;color:#226545}
+#studyEditSettings{font-weight:700}
+#modalContent .form textarea{min-height:74px;line-height:1.55}
+#modalContent .form label{margin-top:12px}
+#modalContent .form button.current{background:#2e724f;color:white;border-color:#2e724f}
+.study-candidate{display:block;width:100%;text-align:left;background:#fffefa;border:1px solid #e2e9df;margin:8px 0;padding:11px;border-radius:10px}
+.study-candidate b{display:block;font-size:14px;color:#315c42}
+.study-candidate small{display:block;color:#889489;margin:2px 0 7px}
+.study-candidate span{display:block;font-family:"Songti SC","STSong",serif;font-size:17px;line-height:1.75}
+.study-candidate:hover{background:#f0f7f0}
+.study-saved{display:flex;gap:12px;align-items:center;justify-content:space-between;border-bottom:1px solid #e5e7df;padding:10px 0}
+.study-saved b{font-size:14px;color:#30573e}
+.study-saved small{font-size:12px;color:#809084;flex:1}
+.study-saved button{font-size:12px;color:#a24e40;padding:5px 10px}
+.study-import-button{border:1px solid #d5e3d5;padding:10px;background:#f9fbf8;border-radius:9px;display:flex!important;align-items:center;gap:5px;margin:0!important;cursor:pointer;flex:1}
+.study-import-button input{width:100%;max-width:130px;border:0;background:none;padding:3px;font-size:10px}
+.study-success{font-size:14px;color:#2b7846;background:#e8f6e9;border-radius:10px;padding:11px;line-height:1.7}
+ruby{ruby-position:over;white-space:nowrap}rt{font-family:system-ui,-apple-system,"Microsoft YaHei",sans-serif;font-size:.43em;color:#537c64;letter-spacing:0;line-height:1}
+.sentence:has(ruby){line-height:2.25}
+.wholetext:has(ruby){line-height:2.2}
+.study-original:has(ruby){line-height:2.15}
+.study-token ruby{line-height:inherit}
+.study-sectionhead #editStudyTerm{font-size:12px;padding:5px 10px;margin-left:auto}
