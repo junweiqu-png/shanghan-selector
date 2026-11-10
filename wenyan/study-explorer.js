@@ -25,7 +25,12 @@ function termOrigin(term,context){
  title:context.title,text:context.text,term,meaning:context.meaning,pos:context.pos,code:context.code,usage:context.usage,verified:true};
  const title=context?.title||activeOrigin().title,text=context?.text||activeOrigin().text;
  if(spec){
-  const hit=(spec.sources||[]).find(s=>s[0]===title&&(!s[1]||text.includes(s[1])));
+  const candidates=(spec.sources||[]).filter(s=>s[0]===title&&(!s[1]||text.includes(s[1])));
+  const hit=candidates.find(s=>{
+    if(!Number.isInteger(context?.offset)||!s[1])return false;
+    let start=text.indexOf(s[1]);while(start!==-1){if(context.offset>=start&&context.offset+term.length<=start+s[1].length)return true;start=text.indexOf(s[1],start+1);}
+    return false;
+  })||(Number.isInteger(context?.offset)&&candidates.length>1?null:candidates[0]);
   if(hit)return {title,text,term,meaning:hit[2],pos:hit[3],code:hit[4],usage:hit[5],verified:true};
   const example=(spec.examples||[]).find(x=>x[0]===title&&(text.includes(x[2])||x[2].includes(text)));
   if(example)return {title,text,term,meaning:example[4],pos:example[5],code:example[6],usage:example[7],verified:true};
@@ -41,7 +46,7 @@ function grammarOrigin(pattern,context){
 function relation(origin,example,grammar=false){
  if(!origin.verified)return {type:"unknown",badge:"待核对",diff:"本句的具体义项或句式功能尚未完成逐句校核，因此不以字形或标签相同推断关系。"};
  const same=origin.code===example.code;
- const near=!same&&(grammar?true:family(origin.code)===family(example.code));
+ const near=!same&&(grammar?!/^非/.test(example.code):family(origin.code)===family(example.code));
  const type=same?"same":near?"near":"diff",badge=same?"含义相同":near?"含义相近":"含义不同";
  const name=grammar?"结构":"词义";
  if(same)return {type,badge:grammar?"句式相同":"含义相同",
@@ -50,7 +55,7 @@ function relation(origin,example,grammar=false){
  if(near)return {type,badge:grammar?"句式相近":"含义相近",
  diff:grammar?"都可归入“"+origin.term+"”，但本文采用“"+origin.code+"”，例句采用“"+example.code+"”。本文："+origin.usage+"；例句："+example.usage+"。":
  "两处属于相近的语义范围，但不宜直接互换。本文："+origin.usage+"；例句："+example.usage+"。"};
- return {type,badge:"含义不同",
+ return {type,badge:grammar?"句式不同":"含义不同",
  diff:"本文“"+origin.term+"”是"+origin.pos+"，表示“"+origin.meaning+"”，主要用于"+origin.usage+"；例句中是"+example.pos+"，表示“"+example.meaning+"”，主要用于"+example.usage+"。"};
 }
 function tokens(sentence,selected,contextId,grammar=false){
@@ -59,7 +64,7 @@ function tokens(sentence,selected,contextId,grammar=false){
   const t=allTerms.find(word=>s.startsWith(word,i));
   if(t){
     const highlighted=t===selected?" hit-word":"";
-    out+='<button class="study-token'+highlighted+'" type="button" data-study-word="'+esc(t)+'" data-study-context="'+esc(contextId||"")+'" aria-label="查询“'+esc(t)+'”的不同古文用法">'+esc(t)+'</button>';i+=t.length;
+    out+='<button class="study-token'+highlighted+'" type="button" data-study-word="'+esc(t)+'" data-study-offset="'+i+'" data-study-context="'+esc(contextId||"")+'" aria-label="查询“'+esc(t)+'”的不同古文用法">'+esc(t)+'</button>';i+=t.length;
   }else {out+=esc(s[i]);i++;}
  }
  if(selected&&!s.includes(selected))return esc(s);
@@ -100,7 +105,7 @@ function rowCard(row,index,origin,isGrammar){
 }
 function enrichGrammars(record){
  const rows=[];for(const [name,spec] of Object.entries(DB.grammar||{})){
-  if(spec.examples?.some(x=>x[0]===record.title&&(x[2]===record.text||record.text.includes(x[2]))))rows.push(name);
+  if(spec.examples?.some(x=>x[0]===record.title&&(x[2]===record.text||record.text.includes(x[2])||x[2].includes(record.text))))rows.push(name);
  }
  return rows.slice(0,2);
 }
@@ -171,7 +176,22 @@ document.addEventListener('click',e=>{
  const name=t?(t.dataset.studyWord||t.dataset.term):(g.dataset.studyGrammar||g.dataset.pattern||g.dataset.p);
  if(!name)return;
  const which=t||g, contextId=which.dataset.studyContext;
- const context=contextId&&state?.contexts?.get(contextId);
+ let context=contextId&&state?.contexts?.get(contextId);
+ if(t){
+  if(context)context={...context,offset:Number.isFinite(Number(which.dataset.studyOffset))?Number(which.dataset.studyOffset):null};
+  else {
+   const wholeNode=which.closest('.wholepara');
+   const container=wholeNode?.querySelector('.wholetext')||(which.closest('#sentence')?$('sentence'):null);
+   if(container){
+    const text=container.textContent||"";
+    const title=wholeNode?$('wholeTitle').textContent:$('title').textContent;
+    const same=[...container.querySelectorAll('[data-term]')].filter(n=>n.dataset.term===name);
+    const n=Math.max(0,same.indexOf(which));
+    let start=-1;for(let i=0;i<=n;i++)start=text.indexOf(name,start+1);
+    context={title,text,offset:start>=0?start:null};
+   }
+  }
+ }
  e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
  if(t)openWord(name,context);else openGrammar(name,context);
 },true);
