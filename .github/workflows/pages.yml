@@ -66,6 +66,10 @@ jobs:
           node --check wenyan/scripts/test-enhancements.mjs
           node --check wenyan/study-editor.js
           node --check wenyan/study-explorer.js
+          node --check wenyan/study-crosslesson.js
+          node --check wenyan/study-verified-extra.js
+          node --check wenyan/study-grammar-more.js
+          node --check wenyan/scripts/audit-evidence.mjs
           node --check wenyan/pinyin.js
       - name: Restore corpus API cache
         uses: actions/cache@v4
@@ -109,6 +113,10 @@ jobs:
             wenyan-evidence-v1-
       - name: Build Wenyan primary-source evidence corpus
         run: node wenyan/scripts/build-evidence.mjs
+      - name: Audit exact five-example and first-two-same coverage
+        env:
+          WENYAN_COVERAGE_DEST: dist/wenyan/evidence/coverage-report.json
+        run: node wenyan/scripts/audit-evidence.mjs
       - name: Build expanded school and classics corpus for background annotation
         run: node wenyan/scripts/build-expanded-corpus.mjs
       - name: Build Tang poems classical prose and Chinese aphorisms index
