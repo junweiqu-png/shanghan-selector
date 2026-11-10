@@ -32,8 +32,9 @@ for(const [term,s]of Object.entries(merged)){
 for(const w of works){
  for(const [term,part,sense]of w.terms||[]){
   const spec=merged[term]||{sources:[],examples:[]};
-  const context=spec.sources.find(x=>x[0]===w.title&&w.lines.some(l=>l[0].includes(x[1]))),
-        originCode=context?.[4]||null;
+  const fromSource=spec.sources.find(x=>x[0]===w.title&&w.lines.some(l=>l[0].includes(x[1])));
+  const fromExample=spec.examples.find(x=>x[0]===w.title&&w.lines.some(l=>l[0].includes(x[2])||x[2].includes(l[0])));
+  const context=fromSource||fromExample,originCode=fromSource?.[4]||fromExample?.[6]||null;
   const seen=new Set(),rows=[];
   for(const x of spec.examples||[]){
    if(x[0]===w.title||!x[2]?.includes(term)||!x[3]?.trim())continue;
