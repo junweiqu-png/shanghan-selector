@@ -101,7 +101,7 @@ for await(const raw of input){
   const arr=termBuckets[term]||(termBuckets[term]=[]);
   const score=(hash(term+'|'+id)/4294967296)*rankGroup(group);
   if(arr.length===MAX_PER_TERM&&arr[arr.length-1][0]<=score)continue;
-  const item=[score,source,chapter,quoteContext(full,at,matched),id,group,matched,variants.slice(0,variants.indexOf(matched)).includes(matched)?'exact':(matched===term||matched===s2t(term)?'exact':'related')];
+  const item=[score,source,chapter,quoteContext(full,at,matched),id,group,matched,(matched===term||matched===s2t(term))?'exact':'related'];
   if(arr.length<MAX_PER_TERM){arr.push(item);arr.sort((a,b)=>a[0]-b[0]);}
   else{arr[arr.length-1]=item;arr.sort((a,b)=>a[0]-b[0]);}
  }
