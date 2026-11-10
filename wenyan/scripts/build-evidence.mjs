@@ -98,7 +98,7 @@ function juniorEntries(html,label,page){
  // Stop at absurdly long chapters; preserve a bounded original slice for context search.
  if(text.length>13000)text=text.slice(0,13000);
  if(text.length<20){const candidate=clean(toCN(rootEl.find('table,.mw-editsection,.mw-references-wrap').remove().end().text()));if(candidate.length>=40&&candidate.length<=13000)text=candidate;}\n if(text.length<20)return [];
- return [record({group:'初中文言拓展',title:'《'+(text.length>1900&&page.includes('/')?page.split('/').slice(-1)[0]:label)+'》',section:label,n:1,text,url:pageURL(page)})].filter(Boolean);
+ return [record({group:'初中文言拓展',title:'《'+(text.length>1900&&page.includes('/')?page.replace('/', '·'):label)+'》',section:label,n:1,text,url:pageURL(page)})].filter(Boolean);
 }
 async function main(){
  await fs.mkdir(output,{recursive:true});
@@ -112,8 +112,11 @@ async function main(){
    }catch(e){missing.push({group:'世说新语',page,error:e.message});console.warn('MISSING SECTION',page,e.message);}
    await sleep(150);
  }
+ const seenJuniorPages=new Set();
  for(let i=0;i<junior.length;i++){
    const [label,page]=junior[i];
+   if(seenJuniorPages.has(page))continue;
+   seenJuniorPages.add(page);
    try{const entries=juniorEntries(await fetchPage(page),label,page);
      if(!entries.length)throw new Error('no reliable body');
      jh.push(...entries);
