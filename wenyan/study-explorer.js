@@ -81,7 +81,17 @@ function grammarOrigin(pattern,context){
 function relation(origin,example,grammar=false){
  if(!origin.verified)return {type:"unknown",badge:"待核对",diff:"本句的义项还未校定。"};
  const same=normalizeSense(origin.code)===normalizeSense(example.code);
- const near=!same&&(grammar?true:family(origin.code)===family(example.code));
+ const grammarKind=s=>{
+  s=String(s||"");
+  for(const [expr,code] of [[/省略主语/,"subject"],[/省略介词/,"preposition"],[/省略宾语/,"object"],
+    [/名词作状语/,"adverbial-noun"],[/名词作动词/,"verbal-noun"],[/使动/,"causative"],[/意动/,"putative"],
+    [/于表地点|于表趋向/,"place"],[/以表工具/,"tool"]]){
+    if(expr.test(s))return code;
+  }
+  return null;
+ };
+ const g1=grammar?grammarKind(origin.code):null,g2=grammar?grammarKind(example.code):null;
+ const near=!same&&(grammar?!(g1&&g2&&g1!==g2):family(origin.code)===family(example.code));
  const type=same?"same":near?"near":"diff",badge=
  (grammar?(same?"句式相同":near?"句式相近":"句式不同"):
  same?"含义相同":near?"含义相近":"含义不同");
