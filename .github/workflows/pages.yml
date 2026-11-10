@@ -60,6 +60,10 @@ jobs:
           node --check scripts/build-shanghan-commentaries.mjs
           node --check wenyan/scripts/build-evidence.mjs
           node --check wenyan/scripts/test-study.mjs
+          node --check wenyan/scripts/build-expanded-corpus.mjs
+          node --check wenyan/study-editor.js
+          node --check wenyan/study-explorer.js
+          node --check wenyan/pinyin.js
       - name: Restore corpus API cache
         uses: actions/cache@v4
         with:
@@ -100,6 +104,8 @@ jobs:
             wenyan-evidence-v1-
       - name: Build Wenyan primary-source evidence corpus
         run: node wenyan/scripts/build-evidence.mjs
+      - name: Build expanded school and classics corpus for background annotation
+        run: node wenyan/scripts/build-expanded-corpus.mjs
       - name: Remove temporary corpus pages
         run: rm -rf dist/corpus-pages
       - name: Setup Pages
