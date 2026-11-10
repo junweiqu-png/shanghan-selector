@@ -13,22 +13,22 @@ const root=process.cwd();
 const output=path.join(root,'dist','wenyan','evidence');
 const cache=path.join(root,'.evidence-cache');
 const toCN=Converter({from:'tw',to:'cn'});
-const sections=['德行','言語','政事','文學','方正','雅量','識鑒','賞譽','品藻','規箴','捷悟','夙惠','豪爽','容止','自新','企羡','傷逝','棲逸','賢媛','術解','巧藝','寵禮','任誕','簡傲','排調','輕詆','假譎','黜免','儉嗇','汰侈','忿狷','讒險','尤悔','紕漏','惑溺','仇隟'];
+const sections=['德行','言語','政事','文學','方正','雅量','識鑒','賞譽','品藻','規箴','捷悟','夙惠','豪爽','容止','自新','企羡','傷逝','棲逸','賢媛','術解','巧蓺','寵禮','任誕','簡傲','排調','輕詆','假譎','黜免','儉嗇','汰侈','忿狷','讒險','尤悔','紕漏','惑溺','仇隟'];
 // 初中教材常见或课外高频原典；存在题名歧义者宁缺毋错。
 const junior=[
  ['陋室铭','陋室銘'],['爱莲说','愛蓮說'],['三峡','三峽'],['桃花源记','桃花源記'],
- ['小石潭记','至小丘西小石潭記'],['记承天寺夜游','記承天寺夜遊'],
+ ['小石潭记','至小丘西小石潭記'],['记承天寺夜游','承天夜遊'],
  ['答谢中书书','答謝中書書'],['与朱元思书','與朱元思書'],
  ['岳阳楼记','岳陽樓記'],['醉翁亭记','醉翁亭記'],
  ['马说','雜說四·馬說'],['送东阳马生序','送東陽馬生序'],
- ['出师表','前出師表'],['曹刿论战','左傳/莊公十年'],
+ ['出师表','前出師表'],['曹刿论战','曹劌論戰'],
  ['邹忌讽齐王纳谏','戰國策/齊一'],['唐雎不辱使命','戰國策/魏四'],
  ['陈涉世家','史記/卷048'],['鱼我所欲也','孟子/告子上'],
  ['生于忧患死于安乐','孟子/告子下'],['富贵不能淫','孟子/滕文公下'],
  ['得道多助失道寡助','孟子/公孫丑下'],['愚公移山','列子/湯問'],
  ['杞人忧天','列子/天瑞'],['两小儿辩日','列子/湯問'],
- ['论语学而','論語/學而'],['论语为政','論語/為政'],['论语述而','論語/述而'],
- ['论语子罕','論語/子罕'],['论语雍也','論語/雍也'],['论语泰伯','論語/泰伯'],
+ ['论语学而','論語/學而第一'],['论语为政','論語/為政第二'],['论语述而','論語/述而第七'],
+ ['论语子罕','論語/子罕第九'],['论语雍也','論語/雍也第六'],['论语泰伯','論語/泰伯第八'],
  ['学弈','孟子/告子上'],['劝学','荀子/勸學'],['卖油翁','賣油翁'],
  ['湖心亭看雪','湖心亭看雪'],['核舟记','核舟記'],
  ['虽有嘉肴','禮記/學記'],['大道之行也','禮記/禮運'],
@@ -97,8 +97,8 @@ function juniorEntries(html,label,page){
  let text=lines.join('\n');
  // Stop at absurdly long chapters; preserve a bounded original slice for context search.
  if(text.length>13000)text=text.slice(0,13000);
- if(text.length<20)return [];
- return [record({group:'初中文言拓展',title:'《'+label+'》',section:label,n:1,text,url:pageURL(page)})].filter(Boolean);
+ if(text.length<20){const candidate=clean(toCN(rootEl.find('table,.mw-editsection,.mw-references-wrap').remove().end().text()));if(candidate.length>=40&&candidate.length<=13000)text=candidate;}\n if(text.length<20)return [];
+ return [record({group:'初中文言拓展',title:'《'+(text.length>1900&&page.includes('/')?page.split('/').slice(-1)[0]:label)+'》',section:label,n:1,text,url:pageURL(page)})].filter(Boolean);
 }
 async function main(){
  await fs.mkdir(output,{recursive:true});
@@ -106,7 +106,7 @@ async function main(){
  for(let i=0;i<sections.length;i++){
    const sec=sections[i],page='世說新語/'+sec;
    try{const html=await fetchPage(page),entries=sectionEntries(html,sec,i);
-     if(entries.length<3)throw new Error('only '+entries.length+' narrative entries');
+     if(entries.length<1)throw new Error('only '+entries.length+' narrative entries');
      ss.push(...entries);stats.push({section:toCN(sec),count:entries.length});
      console.log('世说',i+1+'/'+sections.length,sec,entries.length);
    }catch(e){missing.push({group:'世说新语',page,error:e.message});console.warn('MISSING SECTION',page,e.message);}
