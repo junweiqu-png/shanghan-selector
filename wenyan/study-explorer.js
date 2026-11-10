@@ -4,17 +4,17 @@
 const $=id=>document.getElementById(id), DB=window.WENYAN_ANNOTATIONS||{words:{},grammar:{},meta:{groups:{},families:{}}};
 const esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const core=[...(window.WENYAN_DATA_1||[]),...(window.WENYAN_DATA_2||[]),...(window.WENYAN_DATA_3||[])];
-const allTerms=()=>[...new Set([...Object.keys(DB.words||{}),...Object.keys(window.WENYAN_CROSSLESSON?.words||{}),...Object.keys(window.WENYAN_VERIFIED_EXTRA?.words||{}),...Object.keys(window.WENYAN_VERIFIED_MORE2?.words||{}),...Object.keys(window.WENYAN_VERIFIED_COMMON3?.words||{}),...core.flatMap(w=>(w.terms||[]).map(t=>t[0])),...(window.WENYAN_STUDY_EDITOR?.words()||[])])].filter(Boolean).sort((a,b)=>b.length-a.length);
+const allTerms=()=>[...new Set([...Object.keys(DB.words||{}),...Object.keys(window.WENYAN_CROSSLESSON?.words||{}),...Object.keys(window.WENYAN_VERIFIED_EXTRA?.words||{}),...Object.keys(window.WENYAN_VERIFIED_MORE2?.words||{}),...Object.keys(window.WENYAN_VERIFIED_COMMON3?.words||{}),...Object.keys(window.WENYAN_VERIFIED_CORPUS?.words||{}),...core.flatMap(w=>(w.terms||[]).map(t=>t[0])),...(window.WENYAN_STUDY_EDITOR?.words()||[])])].filter(Boolean).sort((a,b)=>b.length-a.length);
 let chain=[],state=null;
 const order={"过秦论":1,"烛之武退秦师":2,"唐雎不辱使命":3,"曹刿论战":4,"孙权劝学":5,"爱莲说":6,"陋室铭":7,"卖油翁":8,"狼":9,"记承天寺夜游":10,"咏雪":40,"陈太丘与友期行":41};
 const sortEntries=(a,b)=>(order[a.title]||20)-(order[b.title]||20)||a.title.localeCompare(b.title,"zh-CN");
 const family=s=>DB.meta?.families?.[s]||s;
 const normalizeSense=s=>({look:"turn-look",lookback:"turn-look"}[s]||s);
 function knowTerm(word){
- const builtin=DB.words?.[word],cross=window.WENYAN_CROSSLESSON?.words?.[word],verified=window.WENYAN_VERIFIED_EXTRA?.words?.[word],more=window.WENYAN_VERIFIED_MORE2?.words?.[word],common=window.WENYAN_VERIFIED_COMMON3?.words?.[word],personal=window.WENYAN_STUDY_EDITOR?.lookupWord(word);
- if(!builtin&&!cross&&!verified&&!more&&!common&&!personal)return null;
- return {sources:[...(personal?.sources||[]),...(builtin?.sources||[]),...(verified?.sources||[]),...(more?.sources||[]),...(common?.sources||[]),...(cross?.sources||[])],
- examples:[...(personal?.examples||[]),...(builtin?.examples||[]),...(verified?.examples||[]),...(more?.examples||[]),...(common?.examples||[]),...(cross?.examples||[])]};
+ const builtin=DB.words?.[word],cross=window.WENYAN_CROSSLESSON?.words?.[word],verified=window.WENYAN_VERIFIED_EXTRA?.words?.[word],more=window.WENYAN_VERIFIED_MORE2?.words?.[word],common=window.WENYAN_VERIFIED_COMMON3?.words?.[word],corpus=window.WENYAN_VERIFIED_CORPUS?.words?.[word],personal=window.WENYAN_STUDY_EDITOR?.lookupWord(word);
+ if(!builtin&&!cross&&!verified&&!more&&!common&&!corpus&&!personal)return null;
+ return {sources:[...(personal?.sources||[]),...(builtin?.sources||[]),...(verified?.sources||[]),...(more?.sources||[]),...(common?.sources||[]),...(corpus?.sources||[]),...(cross?.sources||[])],
+ examples:[...(personal?.examples||[]),...(builtin?.examples||[]),...(verified?.examples||[]),...(more?.examples||[]),...(common?.examples||[]),...(corpus?.examples||[]),...(cross?.examples||[])]};
 }
 function grammarSpec(name){
  const built=DB.grammar?.[name]||null,added=window.WENYAN_GRAMMAR_MORE?.grammar?.[name]||null,personal=window.WENYAN_STUDY_EDITOR?.lookupGrammar(name);
@@ -142,14 +142,14 @@ function baseHeader(origin,isGrammar){
 function rowCard(row,index,origin,isGrammar){
  const meta=row.record,rel=relation(origin,meta,isGrammar),contextId="r"+index;
  const title=displayTitle(meta.title),rawSource=String(meta.source||"").trim(),source=rawSource.replace(/[《》]/g,"")===String(meta.title).replace(/[《》]/g,"")?"":esc(rawSource);
- const desc=isGrammar?'<b>句式：</b>'+esc(meta.code):'<b>'+esc(origin.term)+'：</b>'+esc(meta.meaning);
+ const desc=isGrammar?'<b>句式：</b>'+esc(meta.code):(meta.match&&meta.match!==origin.term?'<b>关联词“'+esc(meta.match)+'”：</b>':'<b>'+esc(origin.term)+'：</b>')+esc(meta.meaning);
  const comparison=origin.verified?'<div class="study-compare '+rel.type+'"><b>'+
  (rel.type==="same"?"🟢":rel.type==="near"?"🟡":rel.type==="diff"?"🔴":"⚪")+' '+rel.badge+'</b>'+
  '<p><span class="study-compare-meanings">'+esc(origin.meaning)+' → '+esc(meta.meaning)+'</span> · '+esc(rel.diff)+'</p></div>':
  '<div class="study-compare unknown"><b>⚪ 待核对</b><p>本句具体义项暂未核定，不推测异同。</p></div>';
  return '<article class="study-example">'+
  '<h4 class="study-example-top">'+title+(source?'<small> · '+source+'</small>':'')+'</h4>'+
- '<p class="study-original">'+tokens(meta.text,isGrammar?"":origin.term,contextId,isGrammar)+'</p>'+
+ '<p class="study-original">'+tokens(meta.text,isGrammar?"":(meta.match||origin.term),contextId,isGrammar)+'</p>'+
  '<p class="study-translation">'+esc(meta.translation)+'</p>'+
  '<p class="study-sense">'+desc+(isGrammar?'':'<small> · '+esc(meta.pos)+'</small>')+'</p>'+
  comparison+
@@ -167,15 +167,15 @@ function enrichGrammars(record){
 function createWordRows(term){
  const spec=knowTerm(term);
  if(!spec)return [];
- return (spec.examples||[]).filter(x=>x[2]&&x[3]&&x[4]&&x[5]&&x[6]).map(x=>({
- title:x[0],record:{title:x[0],source:x[1],text:x[2],translation:x[3],meaning:x[4],pos:x[5],code:x[6],usage:x[7],url:x[8]||""}
+ return (spec.examples||[]).filter(x=>x[2]&&x[3]&&x[4]&&x[5]&&x[6]&&x[2].includes(x[9]||term)).map(x=>({
+ title:x[0],record:{title:x[0],source:x[1],text:x[2],translation:x[3],meaning:x[4],pos:x[5],code:x[6],usage:x[7],url:x[8]||"",match:x[9]||term,rank:Number.isFinite(x[10])?x[10]:999}
  })).map(x=>({...x,grammars:enrichGrammars(x.record)})).sort((a,b)=>{
    if(term==="因"){
      const popular=["因利乘便","因人之力而敝之","安陵君因使唐雎","因遗策","因河为池"];
      const rank=x=>{const i=popular.findIndex(t=>x.record.text.includes(t));return i<0?100:i;};
      if(rank(a)!==rank(b))return rank(a)-rank(b);
    }
-   return sortEntries(a,b);
+   return (a.record.rank-b.record.rank)||sortEntries(a,b);
  });
 }
 function createGrammarRows(name){
@@ -218,10 +218,10 @@ function renderPage(term,isGrammar,origin,push=true){
  const html=wrapHeader()+baseHeader(origin,isGrammar)+
  '<div class="study-sectionhead"><b>关联古文</b><button id="editStudyTerm" type="button">＋ 补充例句</button></div>'+
  (filtered.length?filtered.map((r,i)=>rowCard(r,i,origin,isGrammar)).join(""):
- '<p class="study-empty">暂无有译文和词义对比的其他古文。</p>');
+ '<p class="study-empty">暂无已校译的关联例句。可点击“补充例句”检索后台经史原典；完成原文、译文和词义核校后，才会加入学习内容。</p>');
  open((isGrammar?"句式：":"词义：")+term,html);$("editStudyTerm").onclick=()=>window.WENYAN_STUDY_EDITOR?.open({kind:isGrammar?"grammar":"word",name:term,title:origin.title,original:origin.text});
  state.rows=filtered;
- state.contexts=new Map(filtered.map((r,i)=>["r"+i,{title:r.record.title,text:r.record.text,annotated:true,annotatedTerm:isGrammar?null:term,
+ state.contexts=new Map(filtered.map((r,i)=>["r"+i,{title:r.record.title,text:r.record.text,annotated:true,annotatedTerm:isGrammar?null:(r.record.match||term),
  meaning:r.record.meaning,pos:r.record.pos,code:r.record.code,usage:r.record.usage}]));
  state.contexts.set("source",{title:origin.title,text:origin.text,annotated:true,annotatedTerm:isGrammar?null:term,
  meaning:origin.meaning,pos:origin.pos,code:origin.code,usage:origin.usage});
