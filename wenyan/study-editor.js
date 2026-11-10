@@ -26,6 +26,21 @@ function readCatalog(){
  })().catch(err=>{catalogPromise=null;throw err});
  return catalogPromise;
 }
+const largeCache={};
+async function readLarge(term,manifest){
+ if(!manifest?.large?.available||!term)return [];
+ const ch=[...term][0],index=ch.codePointAt(0)%64,key=index.toString().padStart(2,'0');
+ if(!largeCache[key]){
+  largeCache[key]=fetch('evidence/large-index/'+key+'.json',{cache:'default'})
+   .then(r=>{if(!r.ok)throw Error('经史索引 HTTP '+r.status);return r.json()}).catch(e=>{delete largeCache[key];throw e});
+ }
+ const data=await largeCache[key];
+ return (data[ch]||[]).filter(r=>r.text?.includes(term)).map(r=>({
+  id:r.id,group:r.group,title:r.source+'·'+r.chapter,work:r.source+'·'+r.chapter,
+  text:r.text,url:'https://github.com/gujilab/chinese-classical-corpus',
+  originId:r.id
+ }));
+}
 function contextSnippet(r,term){
  const text=String(r.text||"").replace(/\s+/g,' '),pos=text.indexOf(term);
  if(pos<0)return "";
@@ -129,17 +144,18 @@ async function search(){
  const term=$("editName").value.trim();if(!term)return error("请先输入要检索的词或句式名。");
  const target=$("studyCandidates");target.innerHTML='<p class="help">正在检索后台古籍……</p>';
  try{
-  const all=await readCatalog(),hits=[],sort={"小学":0,"初中":1,"高中":2,"名言原典":3,"史籍":4,"世说新语":5,"初中文言拓展":1};
-  let count=0;
-  for(const r of all.entries)if(String(r.text||"").includes(term)){
+  const all=await readCatalog(),hits=[],sort={"小学":0,"初中":1,"高中":2,"名言原典":3,"经史名言":3,"史记":4,"汉书":4,"资治通鉴":4,"史籍":4,"二十四史及古籍":5,"世说新语":6,"初中文言拓展":1};
+  let count=0,large=[];
+  try{large=await readLarge(term,all.manifest);}catch(e){console.warn("large index unavailable:",e.message);}
+  for(const r of [...all.entries,...large])if(String(r.text||"").includes(term)){
     count++;
     hits.push({r,score:sort[r.group]??7,text:contextSnippet(r,term)});
   }
   hits.sort((a,b)=>a.score-b.score||a.text.length-b.text.length);
-  candidateRecords=hits.slice(0,50).map(x=>x.r);
-  target.innerHTML='<div class="sectionLabel">后台原典候选：'+count+' 篇段（优先列前 '+candidateRecords.length+' 条）</div>'+
+  candidateRecords=hits.slice(0,60).map(x=>x.r);
+  target.innerHTML='<div class="sectionLabel">后台原典候选：'+count+' 篇段（显示前 '+candidateRecords.length+' 条）</div>'+
   '<p class="help">以下只有真实原文，未经译注。选中一条后，请自己核对并填写翻译、当前字义和用法，保存后才会加入正式关联结果。</p>'+
-  (hits.slice(0,50).map((item,i)=>'<button class="study-candidate" data-candidate="'+i+'"><b>'+esc(item.r.title)+'</b><small>'+esc(item.r.group)+'</small><span>'+esc(item.text)+'</span></button>').join("")||'<p class="help">目前后台库没有命中。你也可以手动输入可靠古文。</p>');
+  (hits.slice(0,60).map((item,i)=>'<button class="study-candidate" data-candidate="'+i+'"><b>'+esc(item.r.title)+'</b><small>'+esc(item.r.group)+'</small><span>'+esc(item.text)+'</span></button>').join("")||'<p class="help">目前后台库没有命中。你也可以手动输入可靠古文。</p>');
   target.querySelectorAll("[data-candidate]").forEach(b=>b.onclick=()=>{
    const r=candidateRecords[Number(b.dataset.candidate)];
    const selected=hits[Number(b.dataset.candidate)];
