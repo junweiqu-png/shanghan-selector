@@ -6,11 +6,11 @@ import path from 'node:path';
 import vm from 'node:vm';
 const root=process.env.WENYAN_ROOT||'wenyan/';
 const win={},ctx={window:win};
-for(const f of ['data-basic.js','data-classic.js','data-extra.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-grammar-more.js']){
+for(const f of ['data-basic.js','data-classic.js','data-extra.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-verified-batch6.js','study-grammar-more.js']){
  vm.runInNewContext(fs.readFileSync(path.join(root,f),'utf8'),ctx,{filename:f});
 }
 const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[])];
-const db=win.WENYAN_ANNOTATIONS,lists=[db,win.WENYAN_CROSSLESSON,win.WENYAN_VERIFIED_EXTRA,win.WENYAN_VERIFIED_MORE2,win.WENYAN_VERIFIED_COMMON3];
+const db=win.WENYAN_ANNOTATIONS,lists=[db,win.WENYAN_CROSSLESSON,win.WENYAN_VERIFIED_EXTRA,win.WENYAN_VERIFIED_MORE2,win.WENYAN_VERIFIED_COMMON3,win.WENYAN_VERIFIED_CORPUS,win.WENYAN_VERIFIED_BATCH4,win.WENYAN_VERIFIED_BATCH5,win.WENYAN_VERIFIED_BATCH6];
 const merged={};
 const grammarMore=win.WENYAN_GRAMMAR_MORE?.grammar||{};
 const normalizeSense=code=>({look:'turn-look',lookback:'turn-look'}[code]||code);
@@ -22,7 +22,7 @@ const discovered=new Set(works.flatMap(w=>(w.terms||[]).map(x=>x[0])));
 const errors=[],wordResults=[],grammarResults=[];
 for(const [term,s]of Object.entries(merged)){
  for(const [i,x]of s.examples.entries()){
-  if(!x[2]?.includes(term))errors.push(term+': example #'+i+' does not contain word');
+  if(!x[2]?.includes(x[9]||term))errors.push(term+': example #'+i+' does not contain matched word');
   if(!x[3]?.trim()||!x[4]?.trim()||!x[5]?.trim()||!x[6]?.trim()||!x[7]?.trim())errors.push(term+': example #'+i+' missing teaching metadata');
  }
  for(const [i,x]of s.sources.entries()){
@@ -37,7 +37,7 @@ for(const w of works){
   const context=fromSource||fromExample,originCode=fromSource?.[4]||fromExample?.[6]||null;
   const seen=new Set(),rows=[];
   for(const x of spec.examples||[]){
-   if(x[0]===w.title||!x[2]?.includes(term)||!x[3]?.trim())continue;
+   if(x[0]===w.title||!x[2]?.includes(x[9]||term)||!x[3]?.trim())continue;
    const key=x[0]+'|'+x[6];
    if(seen.has(key))continue;seen.add(key);rows.push(x);
   }
@@ -76,7 +76,7 @@ const sum={
  grammarWithAtLeastFive:grammarResults.filter(x=>x.fiveExamples).length,
  grammarWithVerifiedOrigin:grammarResults.filter(x=>x.originAnnotated).length,
  grammarTopicsExpanded:Object.keys(grammarMore).length,
- verifiedSupplementalExamples:[win.WENYAN_VERIFIED_EXTRA,win.WENYAN_VERIFIED_MORE2,win.WENYAN_VERIFIED_COMMON3].reduce((n,list)=>n+Object.values(list?.words||{}).reduce((m,x)=>m+x.examples.length,0),0),
+ verifiedSupplementalExamples:[win.WENYAN_VERIFIED_EXTRA,win.WENYAN_VERIFIED_MORE2,win.WENYAN_VERIFIED_COMMON3,win.WENYAN_VERIFIED_CORPUS,win.WENYAN_VERIFIED_BATCH4,win.WENYAN_VERIFIED_BATCH5,win.WENYAN_VERIFIED_BATCH6].reduce((n,list)=>n+Object.values(list?.words||{}).reduce((m,x)=>m+x.examples.length,0),0),
  strictRule:'Goal: >= 5 distinct reviewed source-text/sense pairs, first 2 SAME sense as origin. Do not count raw corpus hits or fabricate a translation.',
  warnings:errors
 };
@@ -87,8 +87,12 @@ if(process.env.WENYAN_COVERAGE_DEST){
  fs.writeFileSync(out,JSON.stringify(report,null,2),'utf8');
 }
 console.log(JSON.stringify(sum));
+for(const term of ['内集']){
+ const rows=wordResults.filter(r=>r.term===term);
+ if(!rows.length||rows.some(r=>r.reviewedExamples<5||r.sameSense<2)){console.error('Verified regression',term,JSON.stringify(rows));process.exitCode=3;}
+}
 if(errors.length)process.exitCode=2;
-for(const term of ['俄而','未若','诣','疾','顾','引','骤','舍','值','诸','竞','莫','弗','汝','岂','委','闻','或','甚','唯']){
+for(const term of ['俄而','未若','诣','疾','顾','引','骤','舍','值','诸','竞','莫','弗','汝','岂','委','闻','或','甚','唯','内集']){
  const rows=wordResults.filter(r=>r.term===term);
  if(!rows.length||rows.some(r=>r.reviewedExamples<5||r.sameSense<2))
  {console.error('Verified regression',term,JSON.stringify(rows));process.exitCode=3;}

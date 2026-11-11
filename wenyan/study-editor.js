@@ -13,7 +13,7 @@ function getSpec(type,name){return (type==="word"?data.words:data.grammar)[name]
 function readCatalog(){
  if(catalogPromise)return catalogPromise;
  catalogPromise=(async()=>{
-  const resp=await fetch("evidence/expanded-manifest.json?v=20261110expand1",{cache:"default"});
+  const resp=await fetch("evidence/expanded-manifest.json?v=20261111termindex1",{cache:"default"});
   if(!resp.ok)throw Error("后台原典索引未部署("+resp.status+")");
   const m=await resp.json();
   const files=["catalog.json",...(m.files||[]).map(x=>x.file)];
@@ -38,8 +38,20 @@ async function fetchClassicsIndex(url){
  }else raw=new TextDecoder().decode(bytes);
  return JSON.parse(raw);
 }
+function stableHash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
 async function readLarge(term,manifest){
  if(!manifest?.large?.available||!term)return [];
+ if(manifest.large.termIndexShards){
+  const shard=(stableHash(term)%manifest.large.termIndexShards).toString().padStart(2,'0'),cacheKey='term:'+shard;
+  if(!largeCache[cacheKey]){
+   const ext=manifest.large.termIndexEncoding==="gzip"?".json.gz":".json";
+   largeCache[cacheKey]=fetchClassicsIndex('evidence/large-term-index/'+shard+ext).catch(e=>{delete largeCache[cacheKey];throw e});
+  }
+  const indexed=await largeCache[cacheKey],rows=indexed[term]||[];
+  if(rows.length)return rows.map(r=>({id:r.id,group:r.group,title:r.title||r.source+'·'+r.chapter,work:r.source+'·'+r.chapter,
+   text:r.text,matched:r.matched||term,matchType:r.matchType||'exact',url:r.url||'https://github.com/gujilab/chinese-classical-corpus',originId:r.id}));
+ }
+ // 自建词或尚未收录的词仍可退回单字候选索引。
  const ch=[...term][0],index=ch.codePointAt(0)%64,key=index.toString().padStart(2,'0');
  if(!largeCache[key]){
   const ext=manifest.large.indexEncoding==="gzip"?".json.gz":".json";
@@ -48,16 +60,15 @@ async function readLarge(term,manifest){
  const data=await largeCache[key];
  return (data[ch]||[]).filter(r=>r.text?.includes(term)).map(r=>({
   id:r.id,group:r.group,title:r.source+'·'+r.chapter,work:r.source+'·'+r.chapter,
-  text:r.text,url:'https://github.com/gujilab/chinese-classical-corpus',
-  originId:r.id
+  text:r.text,matched:term,url:'https://github.com/gujilab/chinese-classical-corpus',originId:r.id
  }));
 }
 function contextSnippet(r,term){
- const text=String(r.text||"").replace(/\s+/g,' '),pos=text.indexOf(term);
+ const text=String(r.text||"").replace(/\s+/g,' '),matched=r.matched||term,pos=text.indexOf(matched);
  if(pos<0)return "";
- const before=text.slice(Math.max(0,pos-105),pos),after=text.slice(pos+term.length,Math.min(text.length,pos+term.length+145));
+ const before=text.slice(Math.max(0,pos-105),pos),after=text.slice(pos+matched.length,Math.min(text.length,pos+matched.length+145));
  // Extend one sentence before/after, truncated only in editor candidates.
- return (pos>105?"…":"")+before+term+after+(pos+term.length+145<text.length?"…":"");
+ return (pos>105?"…":"")+before+matched+after+(pos+matched.length+145<text.length?"…":"");
 }
 function formValues(){
  const title=$("editTitle")?.value.trim(),term=$("editName")?.value.trim();
@@ -106,15 +117,16 @@ function wire(){
  const v=formValues();
  if(!v.term||v.term.length>15||!v.title||!v.original||!v.translation||!v.meaning||!v.variant||!v.usage)
   return error("请填完整词语/句式、篇名、原文、翻译、义项编号、解释和侧重点。");
- if(kind==="word"&&!v.original.includes(v.term))return error("例句原文中没有这个字或词；不能建立错误关联。");
+ if(kind==="word"&&!v.original.includes(v.term)&&!(v.anchor&&v.original.includes(v.anchor)))return error("例句原文中没有这个字或词的原字形；不能建立错误关联。");
  if(v.original.length>650||v.translation.length>1100)return error("原文请取 650 字以内的句段，翻译不超过 1100 字。");
  if(!urlOK(v.sourceURL))return error("原典链接必须是 HTTPS 地址。");
  const spec=kind==="word"?(data.words[v.term]||={sources:[],examples:[]}):(data.grammar[v.term]||={definition:v.meaning,examples:[]});
  if(kind==="word"){
-  const anchor=v.anchor&&v.anchor.includes(v.term)?v.anchor:v.original.includes(v.term)?v.original.slice(Math.max(0,v.original.indexOf(v.term)-6),v.original.indexOf(v.term)+v.term.length+6):v.term;
+  const anchor=v.anchor&&v.original.includes(v.anchor)?v.anchor:v.original.includes(v.term)?v.original.slice(Math.max(0,v.original.indexOf(v.term)-6),v.original.indexOf(v.term)+v.term.length+6):(v.anchor||v.term);
   const s=[v.title,anchor,v.meaning,v.category||"实词",v.variant,v.usage];
   if(!spec.sources.some(x=>x[0]===s[0]&&x[1]===s[1]&&x[4]===s[4]))spec.sources.push(s);
-  const e=[v.title,v.source||"个人校录",v.original,v.translation,v.meaning,v.category||"实词",v.variant,v.usage,v.sourceURL];
+  const matchedWord=v.original.includes(v.term)?v.term:(v.anchor||v.term);
+  const e=[v.title,v.source||"个人校录",v.original,v.translation,v.meaning,v.category||"实词",v.variant,v.usage,v.sourceURL,matchedWord];
   if(!spec.examples.some(x=>x[0]===e[0]&&x[2]===e[2]))spec.examples.push(e);
  }else{
   spec.definition=spec.definition||v.meaning;
@@ -160,7 +172,7 @@ async function search(){
   const all=await readCatalog(),hits=[],scores={"小学":0,"小学诗文":0,"蒙学经典":1,"初中":1,"高中":2,"古文名篇":2,"古人名言":3,"名言原典":3,"经史名言":3,"史记":4,"汉书":4,"资治通鉴":4,"史籍":4,"二十四史及古籍":5,"世说新语":6,"初中文言拓展":1};
   let large=[];
   try{large=await readLarge(term,all.manifest);}catch(e){console.warn("background index:",e.message);}
-  for(const r of [...all.entries,...large])if(String(r.text||"").includes(term)){
+  for(const r of [...all.entries,...large])if(String(r.text||"").includes(r.matched||term)){
     hits.push({r,score:scores[r.group]??7,text:contextSnippet(r,term)});
   }
   hits.sort((a,b)=>a.score-b.score||a.text.length-b.text.length);
@@ -197,7 +209,7 @@ async function search(){
     '<div class="study-source-filters">'+
     ["全部",...sections.map(s=>s.label)].map(g=>'<button type="button" class="'+(filter===g?'active':'')+'" data-source="'+esc(g)+'">'+esc(g)+'（'+(g==="全部"?hits.length:hits.filter(h=>groupOf(h)===g).length)+'）</button>').join('')+
     '</div>'+
-    (page.map((item,i)=>'<button class="study-candidate" data-candidate="'+i+'"><b>'+esc(item.r.title)+'</b><small>'+esc(item.r.group)+'</small><span>'+(window.WENYAN_PINYIN?.annotate(item.text)||esc(item.text))+'</span></button>').join("")||'<p class="help">此分类暂无候选原文，可切换其他类别。</p>')+
+    (page.map((item,i)=>'<button class="study-candidate" data-candidate="'+i+'"><b>'+esc(item.r.title)+'</b><small>'+esc(item.r.group)+(item.r.matchType==="related"?' · 语义关联词：'+esc(item.r.matched||term):(item.r.matched&&item.r.matched!==term?' · 原文繁体字形：'+esc(item.r.matched):' · 原词命中'))+'</small><span>'+(window.WENYAN_PINYIN?.annotate(item.text)||esc(item.text))+'</span></button>').join("")||'<p class="help">此分类暂无候选原文，可切换其他类别。</p>')+
     (chosen.length>page.length?'<button id="nextTeacherPage">查看更多（已显示 '+page.length+'/'+chosen.length+'）</button>':'');
     target.querySelectorAll("[data-source]").forEach(b=>b.onclick=()=>{filter=b.dataset.source;offset=0;draw()});
     target.querySelectorAll("[data-candidate]").forEach(b=>b.onclick=()=>{
@@ -206,7 +218,7 @@ async function search(){
       $("editSource").value=r.title;
       $("editURL").value=r.url;
       $("editOriginal").value=item.text.replace(/^…|…$/g,'');
-      $("editAnchor").value=kind==="word"?$("editName").value.trim():term;
+      $("editAnchor").value=kind==="word"?(r.matched||$("editName").value.trim()):term;
       $("editTranslation").value="";
       $("editError").hidden=false;$("editError").textContent="已选择原文。须核对并填写译文及此处义项，才可加入正式关联。";
       $("editTranslation").focus();$("modalContent").scrollTo({top:0,behavior:"smooth"});

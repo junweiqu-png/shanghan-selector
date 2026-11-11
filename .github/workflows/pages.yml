@@ -72,6 +72,11 @@ jobs:
           node --check wenyan/study-verified-common3.js
           node --check wenyan/study-grammar-more.js
           node --check wenyan/scripts/audit-evidence.mjs
+          node --check wenyan/scripts/audit-keyword-coverage.mjs
+          node --check wenyan/study-verified-corpus.js
+          node --check wenyan/study-verified-batch4.js
+          node --check wenyan/study-verified-batch5.js
+          node --check wenyan/study-verified-batch6.js
           node --check wenyan/pinyin.js
       - name: Restore corpus API cache
         uses: actions/cache@v4
@@ -125,6 +130,10 @@ jobs:
         run: node wenyan/scripts/build-poetry-classics.mjs
       - name: Index full CC0 thirteen classics, ancient histories and Zizhi Tongjian
         run: node --max-old-space-size=2048 wenyan/scripts/build-large-corpus.mjs
+      - name: Audit every curriculum keyword against full-text candidates and reviewed translations
+        env:
+          WENYAN_KEYWORD_AUDIT_DEST: dist/wenyan/evidence/keyword-coverage-report.json
+        run: node wenyan/scripts/audit-keyword-coverage.mjs
       - name: Remove temporary corpus pages
         run: rm -rf dist/corpus-pages
       - name: Setup Pages
