@@ -1,7 +1,7 @@
 /* 原典来源见 https://zh.wikisource.org/，均附逐句核译和义项；非原典字形批量匹配。 */
 (()=>{
 "use strict";
-const src=(section)=>section?(/^https?:\\/\\//.test(section)?section:"https://zh.wikisource.org/wiki/"+section):"";
+const src=(section)=>section?(section.startsWith("http")?section:"https://zh.wikisource.org/wiki/"+section):"";
 const raw={
  "俄":{
   origin:["咏雪","俄而雪骤","不久、片刻之后","时间副词","soon","“俄”表示时间短暂，指不久、片刻之后。"],
