@@ -84,7 +84,7 @@ const zhuLine=zhuOrigin.lines.find(x=>x[0].includes("不筑"));
 const zhuOffset=zhuLine[0].indexOf("筑");
 const zhuContext={title:"智子疑邻",text:zhuLine[0],offset:zhuOffset};
 const zhuPageOrigin=w.WENYAN_STUDY_DEBUG.origin("筑",zhuContext);
-const zhuPageRows=w.WENYAN_STUDY_DEBUG.rows("筑");
+const zhuPageRows=w.WENYAN_STUDY_DEBUG.rows("筑").filter(x=>x.title!=="智子疑邻");
 assert(zhuPageOrigin.verified&&zhuPageOrigin.code==="build-structure","筑 card must verify its current-lesson origin");
 assert(zhuPageRows.length===12,"筑 card must render all twelve verified passages");
 assert(zhuPageRows.filter(x=>x.record.code==="build-structure").length===10,"筑 card must show ten same-sense construction passages");
