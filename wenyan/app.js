@@ -79,7 +79,7 @@ function openTerm(term,w){
  '<div class="sectionLabel">全站释义 · '+definitions.length+' 条</div>'+
  (definitions.map(x=>'<div class="evidence"><b>'+escape(x.w.title)+'</b>　'+escape(x.t[1])+'：'+escape(x.t[2])+'</div>').join("")||'<p class="help">暂无其他篇的校核释义。</p>')+
  '<div class="sectionLabel">跨篇原文应用 · '+examples.length+' 句</div>'+
- '<p class="help">以下是目前收录古文的原文命中，不代表每个例句里的词义都相同。例句不够时可以添加更多古文，不能自动虚构。</p>'+
+ '<p class="help">以下是目前收录古文的原文命中，不代表每个例句中的字义都相同。例句不够时可以添加更多古文，不能自动虚构。</p>'+
  (examples.length?evidenceMarkup(examples):'<p>暂无命中。</p>');
  modal("字义 · 实词虚词 · 跨篇例句",html,root=>{$("markWord").onclick=()=>{if(learned.has(term))learned.delete(term);else learned.add(term);save();$("markWord").textContent=learned.has(term)?"✓ 已掌握":"标记为已掌握";};bindEvidence(root);});
 }
