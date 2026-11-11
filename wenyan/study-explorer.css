@@ -82,3 +82,15 @@
 .study-coverage.ready{background:#eef7ef;color:#255331;}
 .study-coverage.partial{background:#fff4df;color:#765222;}
 .study-coverage b{font-weight:600;}
+
+.study-grammar-guide{background:#eff6f3;border:1px solid #c9dfd3;border-radius:14px;padding:12px 14px;margin:14px 0;color:#365646;line-height:1.65}
+.study-grammar-guide>b{font-size:17px}
+.study-grammar-guide p{margin:8px 0;line-height:1.6}
+.study-grammar-guide details{margin-top:7px}
+.study-grammar-guide summary{cursor:pointer;font-weight:600;padding:8px 0;min-height:40px}
+.study-grammar-guide li{padding:3px 0}
+.study-grammar-guide blockquote{font-family:"STSong","Songti SC",serif;font-size:18px;margin:10px 0;padding:10px;border-left:3px solid #82a591;background:#fff;border-radius:7px}
+.study-grammar-guide .study-guide-warning{color:#96572d;background:#fff7e8;padding:8px;border-radius:6px}
+.study-guide-choice{display:block;width:100%;text-align:left;border:1px solid #bed7c8;border-radius:9px;background:white;padding:11px;margin:7px 0;cursor:pointer;min-height:44px}
+.study-guide-feedback{color:#895824;margin-top:8px;line-height:1.5}
+.study-guide-feedback.ready{color:#21603e}
