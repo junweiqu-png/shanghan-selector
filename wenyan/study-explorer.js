@@ -4,17 +4,18 @@
 const $=id=>document.getElementById(id), DB=window.WENYAN_ANNOTATIONS||{words:{},grammar:{},meta:{groups:{},families:{}}};
 const esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const core=[...(window.WENYAN_DATA_1||[]),...(window.WENYAN_DATA_2||[]),...(window.WENYAN_DATA_3||[])];
-const allTerms=()=>[...new Set([...Object.keys(DB.words||{}),...Object.keys(window.WENYAN_CROSSLESSON?.words||{}),...Object.keys(window.WENYAN_VERIFIED_EXTRA?.words||{}),...Object.keys(window.WENYAN_VERIFIED_MORE2?.words||{}),...Object.keys(window.WENYAN_VERIFIED_COMMON3?.words||{}),...Object.keys(window.WENYAN_VERIFIED_CORPUS?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH4?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH5?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH6?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH7?.words||{}),...core.flatMap(w=>(w.terms||[]).map(t=>t[0])),...(window.WENYAN_STUDY_EDITOR?.words()||[])])].filter(Boolean).sort((a,b)=>b.length-a.length);
+const rawTerms=()=>[...new Set([...Object.keys(DB.words||{}),...Object.keys(window.WENYAN_CROSSLESSON?.words||{}),...Object.keys(window.WENYAN_VERIFIED_EXTRA?.words||{}),...Object.keys(window.WENYAN_VERIFIED_MORE2?.words||{}),...Object.keys(window.WENYAN_VERIFIED_COMMON3?.words||{}),...Object.keys(window.WENYAN_VERIFIED_CORPUS?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH4?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH5?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH6?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH7?.words||{}),...core.flatMap(w=>(w.terms||[]).map(t=>t[0])),...(window.WENYAN_STUDY_EDITOR?.words()||[])])].filter(Boolean);
+const allTerms=()=>[...new Set(rawTerms().flatMap(t=>[...String(t)].filter(c=>/\p{Script=Han}/u.test(c))))].sort((a,b)=>a.localeCompare(b,"zh-CN"));
 let chain=[],state=null;
 const order={"过秦论":1,"烛之武退秦师":2,"唐雎不辱使命":3,"曹刿论战":4,"孙权劝学":5,"爱莲说":6,"陋室铭":7,"卖油翁":8,"狼":9,"记承天寺夜游":10,"咏雪":40,"陈太丘与友期行":41};
 const sortEntries=(a,b)=>(order[a.title]||20)-(order[b.title]||20)||a.title.localeCompare(b.title,"zh-CN");
 const family=s=>DB.meta?.families?.[s]||s;
 const normalizeSense=s=>({look:"turn-look",lookback:"turn-look"}[s]||s);
 function knowTerm(word){
- const builtin=DB.words?.[word],cross=window.WENYAN_CROSSLESSON?.words?.[word],verified=window.WENYAN_VERIFIED_EXTRA?.words?.[word],more=window.WENYAN_VERIFIED_MORE2?.words?.[word],common=window.WENYAN_VERIFIED_COMMON3?.words?.[word],corpus=window.WENYAN_VERIFIED_CORPUS?.words?.[word],batch=window.WENYAN_VERIFIED_BATCH4?.words?.[word],batch5=window.WENYAN_VERIFIED_BATCH5?.words?.[word],batch6=window.WENYAN_VERIFIED_BATCH6?.words?.[word],batch7=window.WENYAN_VERIFIED_BATCH7?.words?.[word],personal=window.WENYAN_STUDY_EDITOR?.lookupWord(word);
- if(!builtin&&!cross&&!verified&&!more&&!common&&!corpus&&!batch&&!batch5&&!batch6&&!batch7&&!personal)return null;
- return {sources:[...(personal?.sources||[]),...(builtin?.sources||[]),...(verified?.sources||[]),...(more?.sources||[]),...(common?.sources||[]),...(corpus?.sources||[]),...(batch?.sources||[]),...(batch5?.sources||[]),...(batch6?.sources||[]),...(batch7?.sources||[]),...(cross?.sources||[])],
- examples:[...(personal?.examples||[]),...(builtin?.examples||[]),...(verified?.examples||[]),...(more?.examples||[]),...(common?.examples||[]),...(corpus?.examples||[]),...(batch?.examples||[]),...(batch5?.examples||[]),...(batch6?.examples||[]),...(batch7?.examples||[]),...(cross?.examples||[])]};
+ const builtin=DB.words?.[word],cross=window.WENYAN_CROSSLESSON?.words?.[word],verified=window.WENYAN_VERIFIED_EXTRA?.words?.[word],more=window.WENYAN_VERIFIED_MORE2?.words?.[word],common=window.WENYAN_VERIFIED_COMMON3?.words?.[word],corpus=window.WENYAN_VERIFIED_CORPUS?.words?.[word],batch=window.WENYAN_VERIFIED_BATCH4?.words?.[word],batch5=window.WENYAN_VERIFIED_BATCH5?.words?.[word],batch6=window.WENYAN_VERIFIED_BATCH6?.words?.[word],batch7=window.WENYAN_VERIFIED_BATCH7?.words?.[word],characters=window.WENYAN_VERIFIED_CHARACTERS?.words?.[word],personal=window.WENYAN_STUDY_EDITOR?.lookupWord(word);
+ if(!builtin&&!cross&&!verified&&!more&&!common&&!corpus&&!batch&&!batch5&&!batch6&&!batch7&&!characters&&!personal)return null;
+ return {sources:[...(personal?.sources||[]),...(builtin?.sources||[]),...(verified?.sources||[]),...(more?.sources||[]),...(common?.sources||[]),...(corpus?.sources||[]),...(batch?.sources||[]),...(batch5?.sources||[]),...(batch6?.sources||[]),...(batch7?.sources||[]),...(characters?.sources||[]),...(cross?.sources||[])],
+ examples:[...(personal?.examples||[]),...(builtin?.examples||[]),...(verified?.examples||[]),...(more?.examples||[]),...(common?.examples||[]),...(corpus?.examples||[]),...(batch?.examples||[]),...(batch5?.examples||[]),...(batch6?.examples||[]),...(batch7?.examples||[]),...(characters?.examples||[]),...(cross?.examples||[])]};
 }
 function grammarSpec(name){
  const built=DB.grammar?.[name]||null,added=window.WENYAN_GRAMMAR_MORE?.grammar?.[name]||null,personal=window.WENYAN_STUDY_EDITOR?.lookupGrammar(name);
@@ -23,7 +24,10 @@ function grammarSpec(name){
 }
 function grammarNames(){return [...new Set([...Object.keys(DB.grammar||{}),...Object.keys(window.WENYAN_GRAMMAR_MORE?.grammar||{}),...(window.WENYAN_STUDY_EDITOR?.patterns()||[])])];}
 function localDefs(term){
- const out=[];for(const w of core){const d=(w.terms||[]).find(t=>t[0]===term);if(d)out.push({w,d})}return out;
+ const out=[];for(const w of core){
+  const d=(w.terms||[]).find(t=>t[0]===term)||(w.terms||[]).find(t=>t[0]?.includes(term));
+  if(d)out.push({w,d,compound:d[0]!==term});
+ }return out;
 }
 function activeOrigin(){
  const whole= !$("whole").hidden;
@@ -71,7 +75,11 @@ function termOrigin(term,context){
   if(example)return {title,text,term,meaning:example[4],pos:example[5],code:example[6],usage:example[7],verified:true};
  }
  const defs=localDefs(term),entry=defs.find(x=>x.w.title===title);
- return {title,text,term,meaning:entry?.d[2]||"当前原文的具体义项尚待校核",pos:entry?.d[1]||"未标注",code:null,usage:entry?"本句采用课文已给出的词义解释，跨篇义项关系尚未独立校定。":"本句词义尚待逐句校核。",verified:!!entry,sourceLevel:entry?"lesson-gloss":"unverified"};
+ return {title,text,term,
+  meaning:entry?.compound?("所在语境“"+entry.d[0]+"”整体意为："+entry.d[2]+"；“"+term+"”的独立义项待校核。"):entry?.d[2]||"当前原文的具体字义尚待校核",
+  pos:entry?.compound?"待分字":entry?.d[1]||"未标注",code:null,
+  usage:entry?.compound?"只使用原课文词语的整体译注作上下文，不能把整词意思自动赋给其中一个字。":entry?"课文已提供本字释义，但还未独立核对跨篇同异。":"本字在当前句子的义项尚待逐字核校。",
+  verified:!!entry&&!entry.compound,sourceLevel:entry?(entry.compound?"phrase-context":"lesson-gloss"):"unverified"};
 }
 function grammarOrigin(pattern,context){
  const title=context?.title||activeOrigin().title,text=context?.text||activeOrigin().text;
@@ -136,7 +144,7 @@ function baseHeader(origin,isGrammar){
  return '<section class="study-origin">'+
  '<h3><em>'+esc(origin.term)+'</em><span>'+displayTitle(origin.title||"当前古文")+'</span></h3>'+
  (origin.text?'<p class="study-original">'+tokens(origin.text,origin.term,"source")+'</p>':'')+
- '<p class="study-origin-meaning"><b>'+(isGrammar?"本句句式：":"本文“"+esc(origin.term)+"”：")+'</b>'+esc(origin.meaning)+
+ '<p class="study-origin-meaning"><b>'+(isGrammar?"本句句式：":"本文“"+esc(origin.term)+"”字：")+'</b>'+esc(origin.meaning)+
  (isGrammar?"":'<small>'+esc(origin.pos)+'</small>')+'</p></section>';
 }
 function rowCard(row,index,origin,isGrammar){
@@ -234,7 +242,7 @@ function renderPage(term,isGrammar,origin,push=true){
  '<div class="study-sectionhead"><b>关联古文</b><button id="editStudyTerm" type="button">＋ 补充例句</button></div>'+
  (filtered.length?filtered.map((r,i)=>rowCard(r,i,origin,isGrammar)).join(""):
  '<p class="study-empty">暂无已校译的关联例句。可点击“补充例句”检索后台经史原典；完成原文、译文和词义核校后，才会加入学习内容。</p>');
- open((isGrammar?"句式：":"词义：")+term,html);$("editStudyTerm").onclick=()=>window.WENYAN_STUDY_EDITOR?.open({kind:isGrammar?"grammar":"word",name:term,title:origin.title,original:origin.text});
+ open((isGrammar?"句式：":"字义：")+term,html);$("editStudyTerm").onclick=()=>window.WENYAN_STUDY_EDITOR?.open({kind:isGrammar?"grammar":"word",name:term,title:origin.title,original:origin.text});
  state.rows=filtered;
  state.contexts=new Map(filtered.map((r,i)=>["r"+i,{title:r.record.title,text:r.record.text,annotated:true,annotatedTerm:isGrammar?null:(r.record.match||term),
  meaning:r.record.meaning,pos:r.record.pos,code:r.record.code,usage:r.record.usage}]));
@@ -294,7 +302,7 @@ document.addEventListener('click',e=>{
   }
  }
  e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
- if(t&&fromIndex&&!context){open("词语索引",'<p class="study-empty">尚未找到确实包含“'+esc(name)+'”的古文原句，请先在“我的”中补充经核校的例句。</p>');return;}
+ if(t&&fromIndex&&!context){open("单字索引",'<p class="study-empty">尚未找到确实包含“'+esc(name)+'”的古文原句，请先补充经核校的例句。</p>');return;}
  if(t)openWord(name,context);else openGrammar(name,context);
 },true);
 window.WENYAN_STUDY_DEBUG={terms:()=>allTerms(),patterns:()=>grammarNames(),getState:()=>state&&({term:state.term,count:state.rows?.length,origin:state.origin})};
@@ -304,7 +312,7 @@ if(linkedTerm && allTerms().includes(linkedTerm)){
  queueMicrotask(()=>{
   const origin=indexOrigin(linkedTerm);
   if(origin)openWord(linkedTerm,origin);
-  else open("词语索引",'<p class="study-empty">“'+esc(linkedTerm)+'”尚无可定位的原句。请先补齐原文和准确释义。</p>');
+  else open("单字索引",'<p class="study-empty">“'+esc(linkedTerm)+'”尚无可定位的原句。请先补齐原文和准确释义。</p>');
  });
 }
 })();
