@@ -86,6 +86,7 @@ const expl=fs.readFileSync(dir+'study-explorer.js','utf8');
 new vm.Script(expl,{filename:'study-explorer.js'});
 assert(!/上句|下句|命中句/.test(expl),'old up/down/target labels present in visible UI code');
 assert(!/rawCount|原典命中|字形匹配/.test(expl),'uncurated raw hits or background counts leaked to learning page');
+assert(expl.includes('active.contexts.set("lc"+i'),"expanded corpus candidates must retain their own source context");
 assert(expl.includes("loadLargeCandidates(term,origin,filtered,previews,active)")&&expl.includes("studyLargeCandidates"),
  'single-character study cards must load the expanded classical corpus asynchronously');
 assert(expl.includes("不计入上方已校译篇数或同义篇数"),
