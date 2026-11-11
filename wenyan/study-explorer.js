@@ -71,7 +71,7 @@ function termOrigin(term,context){
   if(example)return {title,text,term,meaning:example[4],pos:example[5],code:example[6],usage:example[7],verified:true};
  }
  const defs=localDefs(term),entry=defs.find(x=>x.w.title===title);
- return {title,text,term,meaning:entry?.d[2]||"当前原文的具体义项尚待校核",pos:entry?.d[1]||"未标注",code:null,usage:"本句目前只有课文释义或尚未完成词义定位，不能用它自动判断其他句子的词义关系。",verified:false};
+ return {title,text,term,meaning:entry?.d[2]||"当前原文的具体义项尚待校核",pos:entry?.d[1]||"未标注",code:null,usage:entry?"本句采用课文已给出的词义解释，跨篇义项关系尚未独立校定。":"本句词义尚待逐句校核。",verified:!!entry,sourceLevel:entry?"lesson-gloss":"unverified"};
 }
 function grammarOrigin(pattern,context){
  const title=context?.title||activeOrigin().title,text=context?.text||activeOrigin().text;
@@ -79,7 +79,7 @@ function grammarOrigin(pattern,context){
  return {title,text,term:pattern,meaning:grammarSpec(pattern)?.definition||"需结合上下文分析",code:a?.[4]||null,pos:"句式",usage:a?.[5]||"本句的具体结构暂未逐句核注",verified:!!a};
 }
 function relation(origin,example,grammar=false){
- if(!origin.verified)return {type:"unknown",badge:"待核对",diff:"本句的义项还未校定。"};
+ if(!origin.verified||!origin.code)return {type:"unknown",badge:"待核对",diff:origin.verified?"本句有课文释义，但尚未完成跨篇义项同异核对。":"本句的具体义项尚未校定。"};
  const same=normalizeSense(origin.code)===normalizeSense(example.code);
  const grammarKind=s=>{
   s=String(s||"");
