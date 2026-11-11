@@ -298,4 +298,13 @@ document.addEventListener('click',e=>{
  if(t)openWord(name,context);else openGrammar(name,context);
 },true);
 window.WENYAN_STUDY_DEBUG={terms:()=>allTerms(),patterns:()=>grammarNames(),getState:()=>state&&({term:state.term,count:state.rows?.length,origin:state.origin})};
+// 从“关键词校译进度”页直接打开对应学习卡片，不依赖当前阅读进度。
+const linkedTerm=new URLSearchParams(location.search).get("term");
+if(linkedTerm && allTerms().includes(linkedTerm)){
+ queueMicrotask(()=>{
+  const origin=indexOrigin(linkedTerm);
+  if(origin)openWord(linkedTerm,origin);
+  else open("词语索引",'<p class="study-empty">“'+esc(linkedTerm)+'”尚无可定位的原句。请先补齐原文和准确释义。</p>');
+ });
+}
 })();
