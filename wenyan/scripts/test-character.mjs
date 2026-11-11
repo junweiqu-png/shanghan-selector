@@ -25,8 +25,9 @@ const lexicalStores=[
  ["verified-batch5",w.WENYAN_VERIFIED_BATCH5],["verified-batch6",w.WENYAN_VERIFIED_BATCH6],
  ["verified-batch7",w.WENYAN_VERIFIED_BATCH7],["junior-glosses",w.WENYAN_JUNIOR_GLOSSES]
 ];
+const isSingleHan=k=>{const a=[...k];if(a.length!==1)return false;const cp=a[0].codePointAt(0);return (cp>=0x3400&&cp<=0x9fff)||(cp>=0xf900&&cp<=0xfaff)||(cp>=0x20000&&cp<=0x323af);};
 for(const [name,store] of lexicalStores){
- const bad=Object.keys(store?.words||{}).filter(k=>[...k].length!==1||!/[\\u3400-\\u9fff]/u.test(k));
+ const bad=Object.keys(store?.words||{}).filter(k=>!isSingleHan(k));
  assert.deepEqual(bad,[],name+" must index one Han character per key");
 }
 assert(!("内集" in w.WENYAN_VERIFIED_CORPUS.words));
