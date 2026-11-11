@@ -91,7 +91,7 @@ function openPattern(name){
 function review(){
  const stats='<div class="stats"><div><strong>'+works().length+'</strong><small>收录篇目</small></div><div><strong>'+visited.size+'</strong><small>已学习篇</small></div><div><strong>'+learned.size+'</strong><small>掌握词语</small></div></div>';
  const words=[...new Set([...works().flatMap(w=>(w.terms||[]).flatMap(t=>[...t[0]].filter(hanCharacter))),...(window.WENYAN_STUDY_EDITOR?.indexTerms()||[]).flatMap(t=>[...t].filter(hanCharacter))])].sort((a,b)=>a.localeCompare(b,"zh-CN"));
- let html=stats+'<div class="sectionLabel">单字索引 · '+words.length+' 字</div><input id="wordSearch" class="search" placeholder="按字查实词 / 虚词"><div id="wordList"></div><div class="row"><a class="pill" href="coverage.html" target="_blank" rel="noopener noreferrer">查看全部关键词的校译进度 ↗</a></div><div class="sectionLabel">句式专题</div><div id="patterns"></div><div class="row"><button id="studyEditReview">＋ 录入新实词、虚词、句式</button></div>';
+ let html=stats+'<div class="sectionLabel">单字索引 · '+words.length+' 字</div><input id="wordSearch" class="search" placeholder="按字查实词 / 虚词"><div id="wordList"></div><div class="row"><a class="pill" href="coverage.html" target="_blank" rel="noopener noreferrer">查看全部单字的校译进度 ↗</a></div><div class="sectionLabel">句式专题</div><div id="patterns"></div><div class="row"><button id="studyEditReview">＋ 录入新实词、虚词、句式</button></div>';
  modal("积累 · 实词虚词与句式",html,root=>{
  let draw=(q="")=>{$("wordList").innerHTML=words.filter(s=>s.includes(q)).map(s=>'<button class="pill" data-term="'+escape(s)+'">'+escape(s)+(learned.has(s)?" ✓":"")+'</button>').join("")||"暂无";$("wordList").querySelectorAll("[data-term]").forEach(b=>b.onclick=()=>{let ref=works().find(w=>(w.terms||[]).some(t=>t[0].includes(b.dataset.term)))||work();openTerm(b.dataset.term,ref);});};
  $("wordSearch").oninput=e=>draw(e.target.value.trim());draw();
@@ -115,7 +115,7 @@ function showAdd(){
 }
 function settings(){
  const html='<p class="notice">学习数据、手动添加的文章仅保存在当前浏览器的 localStorage。清理网站数据、换手机、换浏览器可能导致丢失。建议定期导出备份。</p>'+
- '<div class="row"><a class="pill" href="coverage.html" target="_blank" rel="noopener noreferrer">查看 203 个关键词校译进度 ↗</a></div><div class="sectionLabel">数据管理</div><div class="row"><button id="add">＋ 新增文章</button><button id="studyEditSettings">＋ 实词／虚词／句式</button><button id="export">导出全部数据</button></div>'+
+ '<div class="row"><a class="pill" href="coverage.html" target="_blank" rel="noopener noreferrer">查看所有课内单字校译进度 ↗</a></div><div class="sectionLabel">数据管理</div><div class="row"><button id="add">＋ 新增文章</button><button id="studyEditSettings">＋ 实词／虚词／句式</button><button id="export">导出全部数据</button></div>'+
  '<label class="item" style="cursor:pointer">导入备份 JSON（将替换当前数据）<input id="import" type="file" accept="application/json,.json" style="display:block;margin-top:9px"></label>'+
  '<div class="sectionLabel">我的文章</div>'+(custom.length?custom.map((w,i)=>'<div class="item"><b>'+escape(w.title)+'</b><small>'+w.lines.length+'句　<button data-remove="'+i+'">删除此自定义篇目</button></small></div>').join(""):'<p class="help">暂无自定义文章。</p>')+
  '<div class="sectionLabel">使用说明</div><p class="help">逐句模式：上滑下一句，下滑上一句；轻点正文空白区域展开译文；点带点线的实词、虚词可看本句释义及跨篇古文；点句式标签查其他古文中的应用。整篇模式可逐句点开译文。学习状态自动保存。</p>'+
