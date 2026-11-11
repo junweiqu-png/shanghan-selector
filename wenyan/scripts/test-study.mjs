@@ -110,10 +110,13 @@ for(const [file,key] of [['study-crosslesson.js','WENYAN_CROSSLESSON'],['study-v
   }
  }
 }
-for(const term of ['俄而','未若','诣','疾','顾','引','骤','舍','值']){
+for(const term of ['俄','未','诣','疾','顾','引','骤','舍','值']){
  const rows=extendedWindow.WENYAN_VERIFIED_EXTRA?.words?.[term]?.examples||[];
  assert(rows.length>=5,'less than five translated verified sources for '+term);
+ assert(new Set(rows.map(x=>x[0])).size>=5,'need five distinct source passages for '+term);
 }
+assert(!('俄而' in extendedWindow.WENYAN_VERIFIED_EXTRA.words)&&!('未若' in extendedWindow.WENYAN_VERIFIED_EXTRA.words),
+ 'compound expressions must not be evidence-store keys');
 for(const term of ['诸','竞','莫','弗','汝','岂','委']){
  const rows=extendedWindow.WENYAN_VERIFIED_MORE2?.words?.[term]?.examples||[];
  assert(rows.length>=5,'less than five translated secondary sources for '+term);
@@ -124,27 +127,32 @@ for(const term of ['闻','或','甚','唯']){
  for(const row of x.examples)assert(row[2].includes(term)&&row[3]&&row[6],'missing quote, translation or sense for '+term);
 }
 assert(extendedWindow.WENYAN_VERIFIED_MORE2.words['莫'].examples.some(x=>x[2].includes('莫当就卿谈')&&x[6]==='none'),'莫当 should mean no one, not prohibition');
-const inner=extendedWindow.WENYAN_VERIFIED_CORPUS?.words?.['内集'];
-assert(inner?.sources?.some(x=>x[0]==='咏雪'&&x[4]==='gather'),'内集 source sense missing');
-assert(inner?.examples?.length>=5,'内集 needs five translated examples');
-assert(inner.examples[0][6]==='gather'&&inner.examples[1][6]==='gather','内集 first two examples must share gather sense');
-assert(inner.examples[2][6]==='collection','内集 must distinguish book-title/collection sense');
-assert(inner.examples.some(x=>x[2].includes('集')&&x[9]==='集'),'内集 should support a related 集 match');
+const nei=extendedWindow.WENYAN_VERIFIED_CORPUS?.words?.['内'];
+assert(nei?.sources?.some(x=>x[0]==='咏雪'&&x[4]==='inside'),'内 source sense missing');
+assert(nei?.examples?.length>=5,'内 needs five translated examples');
+assert(new Set(nei.examples.map(x=>x[0])).size>=5,'内 needs five distinct source passages');
+assert(nei.examples[0][6]==='inside'&&nei.examples[1][6]==='inside','内 first two examples must share the same inside sense');
+assert(nei.examples.some(x=>x[6]==='introspect'),'内 must distinguish inward reflection from place meaning');
 const ji=extendedWindow.WENYAN_VERIFIED_CORPUS?.words?.['集'];
 assert(ji?.sources?.some(x=>x[0]==='咏雪'&&x[4]==='gather'),'集 source sense missing');
 assert(ji?.examples?.length>=5,'集 needs five translated examples');
-for(const term of ['内集','集'])for(const x of extendedWindow.WENYAN_VERIFIED_CORPUS.words[term].examples)
- assert(x[2].includes(x[9]||term)&&x[3]&&x[4]&&x[5]&&x[6]&&x[7]&&x[8],'incomplete related-word example '+term);
-for(const term of ['儿女','鬻','誉','陷']){
+assert(new Set(ji.examples.map(x=>x[0])).size>=5,'集 needs five distinct source passages');
+assert(ji.examples[0][6]==='gather'&&ji.examples[1][6]==='gather','集 first two examples must share gather sense');
+for(const code of ['perch','complete','collection','market'])assert(ji.examples.some(x=>x[6]===code),'集 must distinguish '+code+' sense');
+for(const term of ['内','集'])for(const x of extendedWindow.WENYAN_VERIFIED_CORPUS.words[term].examples)
+ assert(x[2].includes(x[9]||term)&&x[3]&&x[4]&&x[5]&&x[6]&&x[7]&&x[8],'incomplete single-character example '+term);
+assert(!('内集' in extendedWindow.WENYAN_VERIFIED_CORPUS.words),'compound 内集 must not be an evidence key');
+for(const term of ['儿','女','鬻','誉','陷']){
  const spec=extendedWindow.WENYAN_VERIFIED_BATCH4.words[term];
  assert(spec?.sources?.length>0&&spec.examples?.length>=5,'curated batch4 must provide 5 examples '+term);
  assert(spec.examples.every(x=>x[2].includes(x[9]||term)&&x[3]&&x[8]),'unverified original or translation '+term);
 }
-for(const term of ['儿女','鬻','誉']){
+for(const term of ['儿','女','鬻','誉']){
  const item=extendedWindow.WENYAN_VERIFIED_BATCH4.words[term];
  assert(item.examples[0][6]===item.sources[0][4]&&item.examples[1][6]===item.sources[0][4],
   'first two examples must match source sense '+term);
 }
+assert(!('儿女' in extendedWindow.WENYAN_VERIFIED_BATCH4.words),'compound 儿女 must not be an evidence key');
 for(const term of ['株','触','释','耒','冀']){
  const spec=extendedWindow.WENYAN_VERIFIED_BATCH5.words[term];
  assert(spec?.sources?.length>0&&spec.examples?.length>=5,'reviewed batch5 requires five examples '+term);
