@@ -272,6 +272,7 @@ async function loadLargeCandidates(term,origin,reviewed,previews,active){
    if(candidates.length>=8)break;
   }
   active.largeCandidates=candidates;
+  candidates.forEach((row,i)=>active.contexts.set("lc"+i,{title:row.title,text:row.text,annotated:false}));
   if(!candidates.length){
    host.innerHTML='<div class="study-sectionhead"><b>扩展古籍全文库候选（待逐字校译）</b></div><p class="study-caution">全文库检索已完成。与当前已展示篇目重复的原句已自动去重；未校译的全文命中不会冒充已核义例句。</p>';
    return;
