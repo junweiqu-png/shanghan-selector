@@ -19,11 +19,11 @@ function tokensFor(w){
  return out;
 }
 function marked(text,w){
- const known=tokensFor(w);let out="",i=0;
+ const known=tokensFor(w),priority=new Set((w.terms||[]).flatMap(t=>[...t[0]].filter(hanCharacter)));let out="",i=0;
  for(const ch of text){
   const shown=window.WENYAN_PINYIN?.span(text,i,w)||escape(ch);
   if(known.has(ch)){
-   out+='<span class="token" role="button" tabindex="0" data-term="'+escape(ch)+'" data-study-offset="'+i+'" aria-label="查看“'+escape(ch)+'”的字义和关联古文">'+shown+'</span>';
+   out+='<span class="token'+(priority.has(ch)?" keychar":"")+'" role="button" tabindex="0" data-term="'+escape(ch)+'" data-study-offset="'+i+'" aria-label="查看“'+escape(ch)+'”的字义和关联古文">'+shown+'</span>';
   }else out+=shown;
   i+=ch.length;
  }
@@ -41,7 +41,8 @@ function render(){
  $("progress").textContent="第 "+(si+1)+" / "+w.lines.length+" 句";
  $("sentence").dataset.plain=row[0];$("sentence").innerHTML=marked(row[0],w);
  $("translation").textContent=row[1];$("translation").hidden=!show;
- $("tapHelp").textContent=show?"轻点空白处隐藏译文 · 上滑下一句":"轻点空白处看译文 · 上滑下一句";
+ $("tapHelp").textContent="点击汉字查义 · 点下方按钮看译文 · 上滑下一句";
+ $("showTranslation").textContent=show?"收起译文 ↑":"👁 查看这句译文";
  $("grammarRow").innerHTML=[...new Set([...(row[2]?[row[2]]:[]),...(window.WENYAN_STUDY_EDITOR?.grammarForText(row[0])||[])])].map(g=>'<button data-pattern="'+escape(g)+'">'+escape(g)+" · 学句式 ↗</button>").join("");
  $("grammarRow").querySelectorAll("button").forEach(b=>b.onclick=()=>openPattern(b.dataset.pattern));
  $("missionLaunch").hidden=!(w.missions?.length);
@@ -49,7 +50,7 @@ function render(){
  bindTokens($("sentence"),w);
  } else {
  $("wholeTitle").textContent=w.title;$("wholeLevel").textContent=w.level;$("wholeSource").textContent=w.source;
- $("wholeBody").innerHTML=w.lines.map((x,i)=>'<article class="wholepara" data-i="'+i+'"><div class="wholetext" data-plain="'+escape(x[0])+'">'+marked(x[0],w)+'</div><div class="wholetranslation" hidden>'+escape(x[1])+'</div></article>').join("");
+ $("wholeBody").innerHTML=w.lines.map((x,i)=>'<article class="wholepara" data-i="'+i+'"><div class="wholetext" data-plain="'+escape(x[0])+'">'+marked(x[0],w)+'</div><button class="reveal-line" type="button" aria-label="显示或隐藏本句译文">译文 ▾</button><div class="wholetranslation" hidden>'+escape(x[1])+'</div></article>').join("");
  $("wholeBody").querySelectorAll(".wholepara").forEach(n=>n.onclick=()=>{const target=n.querySelector(".wholetranslation");target.hidden=!target.hidden;});
  bindTokens($("wholeBody"),w);
  $("missionLaunchWhole").hidden=!(w.missions?.length);
@@ -177,6 +178,7 @@ $("card").addEventListener("touchstart",e=>{start={x:e.touches[0].clientX,y:e.to
 $("card").addEventListener("touchend",e=>{if(!start||e.target.closest(".token")){start=null;return;}const delta=e.changedTouches[0].clientY-start.y,h=Math.abs(e.changedTouches[0].clientX-start.x);if(Math.abs(delta)>65&&Math.abs(delta)>h*1.2){e.preventDefault();move(delta<0?1:-1);}start=null;},{passive:false});
 document.addEventListener("keydown",e=>{if($("overlay").hidden&& !whole && !["INPUT","TEXTAREA"].includes(document.activeElement.tagName)){if(e.key==="ArrowDown"){e.preventDefault();move(1)}if(e.key==="ArrowUp"){e.preventDefault();move(-1)}}if(e.key==="Escape")close();});
 $("prev").onclick=()=>move(-1);$("next").onclick=()=>move(1);
+ $("showTranslation").onclick=()=>{show=!show;save();render()};
  $("missionLaunch").onclick=()=>openMission();
  $("missionLaunchWhole").onclick=()=>openMission();
 $("choose").onclick=list;$("mode").onclick=()=>{whole=!whole;save();render();};$("more").onclick=settings;
