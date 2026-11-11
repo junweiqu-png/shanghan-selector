@@ -244,6 +244,52 @@ function previewCard(row,i,char){
   '<p class="study-compare unknown">⚪ 本字在本句的具体义项尚未逐字校核，不能判断同义或异义。</p>'+
   '<div class="study-actions">'+sourceLink(row.url)+'</div></article>';
 }
+function largeCandidateCard(row,index,char){
+ const meta=[row.group,row.id?"语料记录 "+row.id:""].filter(Boolean).join(" · ");
+ return '<article class="study-example study-unverified">'+
+  '<h4 class="study-example-top">'+displayTitle(row.title||"扩展古籍原文")+'</h4>'+
+  '<p class="study-original">'+tokens(row.text,char,"lc"+index)+'</p>'+
+  '<p class="study-caution">公开古籍全文库命中。此处目前只有原文片段和书目元数据，尚未逐字校译；不计入上方已校译篇数或同义篇数。</p>'+
+  (meta?'<p class="study-sense">来源信息：'+esc(meta)+'</p>':'')+
+  '<div class="study-actions">'+
+  (row.url?'<a href="'+esc(row.url)+'" target="_blank" rel="noopener noreferrer">查看语料库来源 ↗</a>':'')+
+  '<button type="button" data-study-large-edit="'+index+'">人工校译并加入</button></div></article>';
+}
+async function loadLargeCandidates(term,origin,reviewed,previews,active){
+ const host=$("studyLargeCandidates");
+ const search=window.WENYAN_STUDY_EDITOR?.searchClassics;
+ if(!host||typeof search!=="function")return;
+ host.innerHTML='<p class="study-caution">正在扩展古籍全文库中检索本字……</p>';
+ try{
+  const hits=await search(term);
+  if(state!==active)return;
+  const seen=new Set([...reviewed.map(x=>x.record.title),...previews.map(x=>x.title),origin.title]);
+  const candidates=[];
+  for(const hit of hits||[]){
+   const title=String(hit.title||hit.work||"");
+   if(!title||!hit.text?.includes(term)||seen.has(title))continue;
+   seen.add(title);candidates.push({...hit,title});
+   if(candidates.length>=8)break;
+  }
+  active.largeCandidates=candidates;
+  if(!candidates.length){
+   host.innerHTML='<div class="study-sectionhead"><b>扩展古籍全文库候选（待逐字校译）</b></div><p class="study-caution">全文库检索已完成。与当前已展示篇目重复的原句已自动去重；未校译的全文命中不会冒充已核义例句。</p>';
+   return;
+  }
+  host.innerHTML='<div class="study-sectionhead"><b>扩展古籍全文库候选（待逐字校译） · '+candidates.length+' 篇</b></div>'+
+   '<p class="study-caution">已从更大范围的经典、史书和编年史全文中找到含本字的原文。以下只展示原文候选；人工核对原典、补全翻译和本句义项后，才会计入上方达标数量。</p>'+
+   candidates.map((row,i)=>largeCandidateCard(row,i,term)).join("");
+  host.querySelectorAll("[data-study-large-edit]").forEach(button=>button.onclick=()=>{
+   const row=active.largeCandidates[Number(button.dataset.studyLargeEdit)];
+   if(!row)return;
+   window.WENYAN_STUDY_EDITOR?.open({kind:"word",name:term,title:row.title,
+    source:"公开古籍全文库（"+(row.group||"待核书目")+"）",original:row.text,anchor:""});
+  });
+ }catch(error){
+  if(state!==active)return;
+  host.innerHTML='<div class="study-sectionhead"><b>扩展古籍全文库候选</b></div><p class="study-caution">全文库暂时不可读取：'+esc(error?.message||error)+'。已有人工校核例句不受影响。</p>';
+ }
+}
 function renderPage(term,isGrammar,origin,push=true){
  if(push&&state)chain.push(state);
  state={term,isGrammar,origin};
@@ -296,8 +342,10 @@ function renderPage(term,isGrammar,origin,push=true){
  (previews.length?'<div class="study-sectionhead"><b>含本字的古文（义项待核）</b></div>'+
  '<p class="study-caution">这些句子已有现代译文，但尚未校核本字含义，不会计算到上方的关联数量。</p>'+
  previews.map((r,i)=>previewCard(r,i,term)).join(""):'');
+ '<div id="studyLargeCandidates"></div>';
 
  open((isGrammar?"句式：":"字义：")+term,html);
+ const active=state;if(!isGrammar)loadLargeCandidates(term,origin,filtered,previews,active);
  $("editStudyTerm").onclick=()=>window.WENYAN_STUDY_EDITOR?.open({kind:isGrammar?"grammar":"word",name:term,title:origin.title,original:origin.text});
  if(isGrammar){
   const guide=grammarSpec(term)?.guide;
