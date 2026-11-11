@@ -91,6 +91,12 @@ assert(expl.includes("loadLargeCandidates(term,origin,filtered,previews,active)"
  'single-character study cards must load the expanded classical corpus asynchronously');
 assert(expl.includes("不计入上方已校译篇数或同义篇数"),
  'untranslated full-corpus hits must never inflate verified coverage counts');
+const keywordAudit=fs.readFileSync(dir+'scripts/audit-keyword-coverage.mjs','utf8');
+assert(keywordAudit.includes("'data-junior.js'")&&keywordAudit.includes("study-verified-batch8.js")&&keywordAudit.includes("WENYAN_DATA_4"),
+ 'keyword coverage audit must include all 36 published works and the newest single-character store');
+assert(!keywordAudit.includes("term==='内集'")&&keywordAudit.includes("['筑','智子疑邻']"),
+ 'keyword coverage audit must enforce single-character regressions, not obsolete compound keys');
+
 
 assert(expl.includes('if(r.title===origin.title)continue'),'source work must be excluded from associated list');
 assert(expl.includes('function indexOrigin(term)'),'glossary must locate an actual sentence, not the current reading');
