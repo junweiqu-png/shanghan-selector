@@ -6,11 +6,11 @@ import path from 'node:path';
 import vm from 'node:vm';
 const root=process.env.WENYAN_ROOT||'wenyan/';
 const win={},ctx={window:win};
-for(const f of ['data-basic.js','data-classic.js','data-extra.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-grammar-more.js']){
+for(const f of ['data-basic.js','data-classic.js','data-extra.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-verified-batch6.js','study-grammar-more.js']){
  vm.runInNewContext(fs.readFileSync(path.join(root,f),'utf8'),ctx,{filename:f});
 }
 const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[])];
-const db=win.WENYAN_ANNOTATIONS,lists=[db,win.WENYAN_CROSSLESSON,win.WENYAN_VERIFIED_EXTRA,win.WENYAN_VERIFIED_MORE2,win.WENYAN_VERIFIED_COMMON3,win.WENYAN_VERIFIED_CORPUS,win.WENYAN_VERIFIED_BATCH4,win.WENYAN_VERIFIED_BATCH5];
+const db=win.WENYAN_ANNOTATIONS,lists=[db,win.WENYAN_CROSSLESSON,win.WENYAN_VERIFIED_EXTRA,win.WENYAN_VERIFIED_MORE2,win.WENYAN_VERIFIED_COMMON3,win.WENYAN_VERIFIED_CORPUS,win.WENYAN_VERIFIED_BATCH4,win.WENYAN_VERIFIED_BATCH5,win.WENYAN_VERIFIED_BATCH6];
 const merged={};
 const grammarMore=win.WENYAN_GRAMMAR_MORE?.grammar||{};
 const normalizeSense=code=>({look:'turn-look',lookback:'turn-look'}[code]||code);
@@ -76,7 +76,7 @@ const sum={
  grammarWithAtLeastFive:grammarResults.filter(x=>x.fiveExamples).length,
  grammarWithVerifiedOrigin:grammarResults.filter(x=>x.originAnnotated).length,
  grammarTopicsExpanded:Object.keys(grammarMore).length,
- verifiedSupplementalExamples:[win.WENYAN_VERIFIED_EXTRA,win.WENYAN_VERIFIED_MORE2,win.WENYAN_VERIFIED_COMMON3,win.WENYAN_VERIFIED_CORPUS,win.WENYAN_VERIFIED_BATCH4,win.WENYAN_VERIFIED_BATCH5].reduce((n,list)=>n+Object.values(list?.words||{}).reduce((m,x)=>m+x.examples.length,0),0),
+ verifiedSupplementalExamples:[win.WENYAN_VERIFIED_EXTRA,win.WENYAN_VERIFIED_MORE2,win.WENYAN_VERIFIED_COMMON3,win.WENYAN_VERIFIED_CORPUS,win.WENYAN_VERIFIED_BATCH4,win.WENYAN_VERIFIED_BATCH5,win.WENYAN_VERIFIED_BATCH6].reduce((n,list)=>n+Object.values(list?.words||{}).reduce((m,x)=>m+x.examples.length,0),0),
  strictRule:'Goal: >= 5 distinct reviewed source-text/sense pairs, first 2 SAME sense as origin. Do not count raw corpus hits or fabricate a translation.',
  warnings:errors
 };
