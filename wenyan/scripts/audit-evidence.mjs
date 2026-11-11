@@ -103,19 +103,22 @@ console.log(JSON.stringify(sum));
 const regressionChars=['内','集','俄','未','儿','女','诣','疾','顾','引','骤','舍','值','诸','竞','莫','弗','汝','岂','委','闻','或','甚','唯'];
 for(const term of regressionChars){
  const spec=merged[term];
- const source=(spec?.sources||[]).find(x=>x[1]?.includes(term));
- const originWork=source&&works.find(w=>w.title===source[0]&&(w.lines||[]).some(l=>String(l[0]||"").includes(source[1])));
  const seen=new Set(),rows=[];
  for(const x of spec?.examples||[]){
   if(!x[2]?.includes(x[9]||term)||!x[3]?.trim())continue;
   const key=x[0]+'|'+x[6];if(seen.has(key))continue;seen.add(key);rows.push(x);
  }
- const same=source?rows.filter(x=>normalizeSense(x[6])===normalizeSense(source[4])):[];
- const sameSources=new Set(same.map(x=>x[0]));
- if(!source||!originWork||rows.length<5||sameSources.size<2){
+ const candidates=(spec?.sources||[]).map(source=>{
+  const originWork=works.find(w=>w.title===source[0]&&(w.lines||[]).some(l=>String(l[0]||"").includes(source[1])));
+  const same=rows.filter(x=>normalizeSense(x[6])===normalizeSense(source[4]));
+  return {source,originWork,sameSources:new Set(same.map(x=>x[0]))};
+ }).filter(x=>x.originWork&&x.sameSources.size>=2)
+  .sort((a,b)=>b.sameSources.size-a.sameSources.size);
+ const best=candidates[0];
+ if(!best||rows.length<5){
   console.error('Verified single-character regression',term,JSON.stringify({
-   origin:source?.[0]||null,originInBody:!!originWork,reviewedExamples:rows.length,
-   sameSenseSources:sameSources.size,distinctSources:new Set(rows.map(x=>x[0])).size
+   origin:best?.source?.[0]||null,originInBody:!!best?.originWork,reviewedExamples:rows.length,
+   sameSenseSources:best?.sameSources?.size||0,distinctSources:new Set(rows.map(x=>x[0])).size
   }));
   process.exitCode=3;
  }
