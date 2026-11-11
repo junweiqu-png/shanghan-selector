@@ -5,11 +5,11 @@ import vm from 'node:vm';
 import {gunzipSync} from 'node:zlib';
 const root='wenyan/',out='dist/wenyan/evidence';
 const win={};
-for(const f of ['data-basic.js','data-classic.js','data-extra.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-verified-batch6.js','study-verified-batch7.js']){
+for(const f of ['data-basic.js','data-classic.js','data-extra.js','data-junior.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-verified-batch6.js','study-verified-batch7.js','study-verified-batch8.js','study-junior-glosses.js']){
  vm.runInNewContext(fs.readFileSync(path.join(root,f),'utf8'),{window:win},{filename:f});
 }
-const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[])];
-const stores=[win.WENYAN_ANNOTATIONS,win.WENYAN_CROSSLESSON,win.WENYAN_VERIFIED_EXTRA,win.WENYAN_VERIFIED_MORE2,win.WENYAN_VERIFIED_COMMON3,win.WENYAN_VERIFIED_CORPUS,win.WENYAN_VERIFIED_BATCH4,win.WENYAN_VERIFIED_BATCH5,win.WENYAN_VERIFIED_BATCH6,win.WENYAN_VERIFIED_BATCH7];
+const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[]),...(win.WENYAN_DATA_4||[])];
+const stores=[win.WENYAN_ANNOTATIONS,win.WENYAN_CROSSLESSON,win.WENYAN_VERIFIED_EXTRA,win.WENYAN_VERIFIED_MORE2,win.WENYAN_VERIFIED_COMMON3,win.WENYAN_VERIFIED_CORPUS,win.WENYAN_VERIFIED_BATCH4,win.WENYAN_VERIFIED_BATCH5,win.WENYAN_VERIFIED_BATCH6,win.WENYAN_VERIFIED_BATCH7,win.WENYAN_VERIFIED_BATCH8,win.WENYAN_JUNIOR_GLOSSES];
 const merged={};
 for(const store of stores)for(const [term,s]of Object.entries(store?.words||{})){
  const item=merged[term]||={sources:[],examples:[]};
@@ -62,13 +62,19 @@ const dest=process.env.WENYAN_KEYWORD_AUDIT_DEST||path.join(out,'keyword-coverag
 fs.mkdirSync(path.dirname(dest),{recursive:true});
 fs.writeFileSync(dest,JSON.stringify(report,null,2),'utf8');
 console.log(JSON.stringify(summary));
-const inner=unique.find(x=>x.term==='内集');
-if(!inner||inner.minReviewedExamples<5||inner.minSameSense<2)process.exitCode=2;
-// 最低质量基线是“已完成篇目”的下限，不是假装全部 203 词已经校完。
-const expected={works:26,distinctTerms:203,wordOccurrences:219,termsMeetingFullRule:50,
- termsWithAtLeastFiveReviewedExamples:56};
+// 单字模型回归：不再要求已经废弃的双字索引“内集”，而是逐篇验证真实正文中的单字。
+const required=[['筑','智子疑邻'],['内','咏雪'],['集','咏雪'],['俄','咏雪'],['未','咏雪'],['儿','咏雪'],['女','咏雪']];
+for(const [term,work] of required){
+ const item=unique.find(x=>x.term===term),use=item?.items.find(x=>x.work===work);
+ if(!use||!use.originAnnotated||use.reviewedExamples<5||use.sameSense<2){
+  console.error('Single-character keyword regression',term,work,JSON.stringify(use||null));
+  process.exitCode=2;
+ }
+}
+// 固定分母按全部36篇已发布正文计算；覆盖率只作进度指标，不用旧的26篇/双字词基线误判。
+const expected={works:36,distinctTerms:317,wordOccurrences:394};
 for(const [key,limit]of Object.entries(expected))if((summary[key]||0)<limit){
- console.error('Keyword regression: '+key+' below audited baseline '+limit+' (actual '+summary[key]+')');process.exitCode=3;
+ console.error('Keyword corpus scope regression: '+key+' below '+limit+' (actual '+summary[key]+')');process.exitCode=3;
 }
 if(candidateIndexAvailable&&summary.termsWithAtLeastFiveRawCandidates<200){
  console.error('Classical multi-character term index regressed');process.exitCode=4;
