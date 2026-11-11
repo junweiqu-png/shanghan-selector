@@ -78,6 +78,9 @@ jobs:
           node --check wenyan/study-verified-batch5.js
           node --check wenyan/study-verified-batch6.js
           node --check wenyan/study-verified-batch7.js
+          node --check wenyan/study-verified-characters.js
+          node --check wenyan/scripts/test-character.mjs
+          node --check wenyan/scripts/audit-character-coverage.mjs
           node --check wenyan/pinyin.js
       - name: Restore corpus API cache
         uses: actions/cache@v4
@@ -92,6 +95,7 @@ jobs:
         run: |
           node wenyan/scripts/test-study.mjs
           node wenyan/scripts/test-enhancements.mjs
+          node wenyan/scripts/test-character.mjs
       - name: Build local classical corpus
         env:
           CORPUS_MAX_BOOKS: 700
@@ -135,6 +139,10 @@ jobs:
         env:
           WENYAN_KEYWORD_AUDIT_DEST: dist/wenyan/evidence/keyword-coverage-report.json
         run: node wenyan/scripts/audit-keyword-coverage.mjs
+      - name: Audit each individual Chinese character and publish student progress
+        env:
+          WENYAN_CHARACTER_AUDIT_DEST: dist/wenyan/evidence/character-coverage-report.json
+        run: node wenyan/scripts/audit-character-coverage.mjs
       - name: Remove temporary corpus pages
         run: rm -rf dist/corpus-pages
       - name: Setup Pages
