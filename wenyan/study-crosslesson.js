@@ -161,6 +161,8 @@ const examples={},sources={},coverage={};
 for(const [term,profile] of Object.entries(dict)){
  let all=[];
  for(const work of core){
+  // 《管宁割席》中单写“宁”的多处均为主人公的姓名简称，不是“宁愿”。
+  if(term==="宁"&&work.title==="管宁割席")continue;
   for(const [line,translation] of work.lines||[]){
    if(!line.includes(term)||!translation)continue;
    const positions=[];let at=line.indexOf(term);while(at>=0){positions.push(at);at=line.indexOf(term,at+term.length);}
