@@ -85,16 +85,16 @@ function start(existing=null){
  const ctx=existing||{},study=ctx.kind||"word";kind=study;
  const liveTitle=$("title")?.textContent||"";
  const currentLine=$("sentence")?.textContent||"";
- const html='<p class="help">词语和句式可以自己新增；例句必须填原文、准确翻译与本句义项。未经译注的后台命中只会显示在这里，<b>不会进入孩子的关联学习页</b>。</p>'+
+ const html='<p class="help">单字和句式可以自己新增；例句必须填原文、准确翻译与本句义项。未经译注的后台命中只会显示在这里，<b>不会进入孩子的关联学习页</b>。</p>'+
  '<div class="row"><button id="editWord" class="'+(kind==="word"?'current':'')+'">新增实词/虚词</button><button id="editGrammar" class="'+(kind==="grammar"?'current':'')+'">新增句式</button></div>'+
- '<div class="form">'+field(ctx.name,"editName",kind==="word"?"字 / 词":"句式名称",kind==="word"?"例：期":"例：宾语前置",true)+
+ '<div class="form">'+field(ctx.name,"editName",kind==="word"?"单字（只填一个汉字）":"句式名称",kind==="word"?"例：期":"例：宾语前置",true)+
  field(ctx.title||liveTitle,"editTitle","例句篇名","例：陈太丘与友期行",true)+
  field(ctx.source,"editSource","出处","例：《世说新语·方正》")+
  field(ctx.sourceURL,"editURL","原典链接（可选，仅 https）","https://zh.wikisource.org/wiki/...")+
  '<label>原文句段 *</label><textarea id="editOriginal" rows="3" placeholder="至少包含上方词语；句式可以是整句">'+esc(ctx.original||currentLine)+'</textarea>'+
  field(ctx.anchor,"editAnchor","本文定位片段（可选）","例：与友期行；加入后可准确区分同字异义")+
  '<label>句意翻译 *</label><textarea id="editTranslation" rows="3" placeholder="准确翻译这段原文；后台检索不会自动造译文">'+esc(ctx.translation)+'</textarea>'+
- field(ctx.meaning,"editMeaning",kind==="word"?"此处具体词义":"该句句式说明","例：约定 / 本句宾语放在动词前",true)+
+ field(ctx.meaning,"editMeaning",kind==="word"?"本字在此句中的具体含义":"该句句式说明","例：约定 / 本句宾语放在动词前",true)+
  (kind==="word"?field(ctx.category||"实词","editPos","词性 / 作用","动词 / 介词 / 代词"):'<label>句式细分类型</label><input id="editPos" value="句式">')+
  field(ctx.variant,"editCode","义项编号 / 句式子类（同义填相同编号）","例：appoint 或 nominal；可自定义",true)+
  field(ctx.usage,"editUsage","与本文比较的侧重点","例：和朋友提前约定一件事",true)+
@@ -116,8 +116,9 @@ function wire(){
  $("saveStudy").onclick=()=>{
  const v=formValues();
  if(!v.term||v.term.length>15||!v.title||!v.original||!v.translation||!v.meaning||!v.variant||!v.usage)
-  return error("请填完整词语/句式、篇名、原文、翻译、义项编号、解释和侧重点。");
- if(kind==="word"&&!v.original.includes(v.term)&&!(v.anchor&&v.original.includes(v.anchor)))return error("例句原文中没有这个字或词的原字形；不能建立错误关联。");
+  return error("请填完整单字/句式、篇名、原文、翻译、义项编号、解释和侧重点。");
+ if(kind==="word"&&(!/^\p{Script=Han}$/u.test(v.term)||[...v.term].length!==1))return error("学生关联学习只允许录入一个汉字；原来的双字词请分开为两个字分别校核。");
+ if(kind==="word"&&!v.original.includes(v.term))return error("例句原文必须包含所标注的那个汉字，不能用近义字替代。");
  if(v.original.length>650||v.translation.length>1100)return error("原文请取 650 字以内的句段，翻译不超过 1100 字。");
  if(!urlOK(v.sourceURL))return error("原典链接必须是 HTTPS 地址。");
  const spec=kind==="word"?(data.words[v.term]||={sources:[],examples:[]}):(data.grammar[v.term]||={definition:v.meaning,examples:[]});

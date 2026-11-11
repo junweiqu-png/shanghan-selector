@@ -10,14 +10,25 @@ let visited=new Set(stored.visited||[]), learned=new Set(stored.learned||[]), co
 function save(){localStorage.setItem(KEY,JSON.stringify({custom,wi,si,whole,show,visited:[...visited],learned:[...learned],completions:[...completions]}));}
 function work(){return works()[wi]||works()[0];}
 function line(){const w=work();si=Math.max(0,Math.min(si,w.lines.length-1));return w.lines[si];}
-function tokensFor(w){const seen=new Set(),res=[];for(const x of [w,...base,...custom])for(const t of x.terms||[]){if(!t[0]||seen.has(t[0]))continue;seen.add(t[0]);res.push(t);}for(const s of window.WENYAN_STUDY_EDITOR?.indexTerms()||[]){if(!s||seen.has(s))continue;seen.add(s);res.push([s,"可学习","点击查看跨篇词义"]);}return res.sort((a,b)=>b[0].length-a[0].length);}
+// 单字是学生索引的唯一单位，课本中的双字/多字词仅保留作为上下文。
+const hanCharacter=c=>/\p{Script=Han}/u.test(c);
+function tokensFor(w){
+ const out=new Set(),sources=[w,...base,...custom];
+ for(const book of sources)for(const item of book.terms||[])for(const ch of String(item[0]||""))if(hanCharacter(ch))out.add(ch);
+ for(const term of window.WENYAN_STUDY_EDITOR?.indexTerms()||[])for(const ch of term)if(hanCharacter(ch))out.add(ch);
+ for(const term of Object.keys(window.WENYAN_VERIFIED_CHARACTERS?.words||{}))out.add(term);
+ return out;
+}
 function marked(text,w){
- let i=0,out="",terms=tokensFor(w);
- while(i<text.length){
-   let t=terms.find(x=>text.startsWith(x[0],i));
-   if(t){let rendered="";for(let j=0;j<t[0].length;j++)rendered+=window.WENYAN_PINYIN?.span(text,i+j,w)||escape(text[i+j]);out+='<span class="token" role="button" tabindex="0" data-term="'+escape(t[0])+'">'+rendered+'</span>';i+=t[0].length;}
-   else {out+=window.WENYAN_PINYIN?.span(text,i,w)||escape(text[i]);i++;}
- }return out;
+ const known=tokensFor(w);let out="",i=0;
+ for(const ch of text){
+  const shown=window.WENYAN_PINYIN?.span(text,i,w)||escape(ch);
+  if(known.has(ch)){
+   out+='<span class="token" role="button" tabindex="0" data-term="'+escape(ch)+'" data-study-offset="'+i+'" aria-label="查看“'+escape(ch)+'”的字义和关联古文">'+shown+'</span>';
+  }else out+=shown;
+  i+=ch.length;
+ }
+ return out;
 }
 function bindTokens(root,w){root.querySelectorAll(".token").forEach(n=>{n.addEventListener("click",e=>{e.stopPropagation();openTerm(n.dataset.term,w)});n.addEventListener("keydown",e=>{if(e.key==="Enter"){e.stopPropagation();openTerm(n.dataset.term,w)}})});}
 function setNav(active){document.querySelectorAll(".bottom button").forEach(b=>b.classList.remove("active"));$(active).classList.add("active");}
@@ -60,17 +71,17 @@ function allEvidence(predicate){const out=[];for(let i=0;i<works().length;i++){c
 function evidenceMarkup(matches,limit=60){return matches.slice(0,limit).map(x=>'<div class="evidence"><b>'+escape(x.w.title)+'</b><small>'+escape(x.w.source)+' · 第'+(x.j+1)+'句</small><p>'+escape(x.l[0])+'</p><div class="meaning">'+escape(x.l[1])+'</div><button data-go="'+x.i+','+x.j+'">跳到此句 ↗</button></div>').join("")+(matches.length>limit?'<p class="notice">为保持流畅，先显示前 '+limit+' 条；请使用搜索缩小范围。</p>':"");}
 function bindEvidence(root){root.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{const [i,j]=b.dataset.go.split(",").map(Number);wi=i;si=j;whole=false;show=false;close();render()});}
 function openTerm(term,w){
- const dict=(w.terms||[]).find(t=>t[0]===term);
+ const dict=(w.terms||[]).find(t=>t[0]===term)||(w.terms||[]).find(t=>t[0].includes(term));
  const examples=allEvidence(l=>l[0].includes(term));
- const definitions=works().flatMap(x=>(x.terms||[]).filter(t=>t[0]===term).map(t=>({w:x,t})));
+ const definitions=works().flatMap(x=>(x.terms||[]).filter(t=>t[0].includes(term)).map(t=>({w:x,t})));
  const html='<p><span class="pill">'+escape(dict?.[1]||"词语")+'</span> <strong style="font-size:27px">'+escape(term)+'</strong></p><p class="notice">当前篇解释：'+escape(dict?.[2]||"未添加释义")+'。同字在不同篇目的含义和语法作用可能不同，请结合上下文判断。</p>'+
  '<div class="row"><button id="markWord">'+(learned.has(term)?"✓ 已掌握":"标记为已掌握")+'</button></div>'+
  '<div class="sectionLabel">全站释义 · '+definitions.length+' 条</div>'+
  (definitions.map(x=>'<div class="evidence"><b>'+escape(x.w.title)+'</b>　'+escape(x.t[1])+'：'+escape(x.t[2])+'</div>').join("")||'<p class="help">暂无其他篇的校核释义。</p>')+
  '<div class="sectionLabel">跨篇原文应用 · '+examples.length+' 句</div>'+
- '<p class="help">以下是目前收录古文的原文命中，不代表每个例句里的词义都相同。例句不够时可以添加更多古文，不能自动虚构。</p>'+
+ '<p class="help">以下是目前收录古文的原文命中，不代表每个例句中的字义都相同。例句不够时可以添加更多古文，不能自动虚构。</p>'+
  (examples.length?evidenceMarkup(examples):'<p>暂无命中。</p>');
- modal("实词 · 虚词 · 跨篇例句",html,root=>{$("markWord").onclick=()=>{if(learned.has(term))learned.delete(term);else learned.add(term);save();$("markWord").textContent=learned.has(term)?"✓ 已掌握":"标记为已掌握";};bindEvidence(root);});
+ modal("字义 · 实词虚词 · 跨篇例句",html,root=>{$("markWord").onclick=()=>{if(learned.has(term))learned.delete(term);else learned.add(term);save();$("markWord").textContent=learned.has(term)?"✓ 已掌握":"标记为已掌握";};bindEvidence(root);});
 }
 function openPattern(name){
  const matches=allEvidence(l=>l[2]===name);
@@ -79,10 +90,10 @@ function openPattern(name){
 }
 function review(){
  const stats='<div class="stats"><div><strong>'+works().length+'</strong><small>收录篇目</small></div><div><strong>'+visited.size+'</strong><small>已学习篇</small></div><div><strong>'+learned.size+'</strong><small>掌握词语</small></div></div>';
- const words=[...new Set([...works().flatMap(w=>(w.terms||[]).map(t=>t[0])),...(window.WENYAN_STUDY_EDITOR?.indexTerms()||[])])];
- let html=stats+'<div class="sectionLabel">词汇索引 · '+words.length+' 词</div><input id="wordSearch" class="search" placeholder="查实词 / 虚词"><div id="wordList"></div><div class="row"><a class="pill" href="coverage.html" target="_blank" rel="noopener noreferrer">查看全部关键词的校译进度 ↗</a></div><div class="sectionLabel">句式专题</div><div id="patterns"></div><div class="row"><button id="studyEditReview">＋ 录入新实词、虚词、句式</button></div>';
+ const words=[...new Set([...works().flatMap(w=>(w.terms||[]).flatMap(t=>[...t[0]].filter(hanCharacter))),...(window.WENYAN_STUDY_EDITOR?.indexTerms()||[]).flatMap(t=>[...t].filter(hanCharacter))])].sort((a,b)=>a.localeCompare(b,"zh-CN"));
+ let html=stats+'<div class="sectionLabel">单字索引 · '+words.length+' 字</div><input id="wordSearch" class="search" placeholder="按字查实词 / 虚词"><div id="wordList"></div><div class="row"><a class="pill" href="coverage.html" target="_blank" rel="noopener noreferrer">查看全部单字的校译进度 ↗</a></div><div class="sectionLabel">句式专题</div><div id="patterns"></div><div class="row"><button id="studyEditReview">＋ 录入新实词、虚词、句式</button></div>';
  modal("积累 · 实词虚词与句式",html,root=>{
- let draw=(q="")=>{$("wordList").innerHTML=words.filter(s=>s.includes(q)).map(s=>'<button class="pill" data-term="'+escape(s)+'">'+escape(s)+(learned.has(s)?" ✓":"")+'</button>').join("")||"暂无";$("wordList").querySelectorAll("[data-term]").forEach(b=>b.onclick=()=>{let ref=works().find(w=>(w.terms||[]).some(t=>t[0]===b.dataset.term));openTerm(b.dataset.term,ref);});};
+ let draw=(q="")=>{$("wordList").innerHTML=words.filter(s=>s.includes(q)).map(s=>'<button class="pill" data-term="'+escape(s)+'">'+escape(s)+(learned.has(s)?" ✓":"")+'</button>').join("")||"暂无";$("wordList").querySelectorAll("[data-term]").forEach(b=>b.onclick=()=>{let ref=works().find(w=>(w.terms||[]).some(t=>t[0].includes(b.dataset.term)))||work();openTerm(b.dataset.term,ref);});};
  $("wordSearch").oninput=e=>draw(e.target.value.trim());draw();
  const pats=[...new Set([...works().flatMap(w=>w.lines.map(l=>l[2]).filter(Boolean)),...(window.WENYAN_STUDY_EDITOR?.indexPatterns()||[])])];
  $("patterns").innerHTML=pats.map(p=>'<button class="pill" data-p="'+escape(p)+'">'+escape(p)+'</button>').join("");
@@ -104,7 +115,7 @@ function showAdd(){
 }
 function settings(){
  const html='<p class="notice">学习数据、手动添加的文章仅保存在当前浏览器的 localStorage。清理网站数据、换手机、换浏览器可能导致丢失。建议定期导出备份。</p>'+
- '<div class="row"><a class="pill" href="coverage.html" target="_blank" rel="noopener noreferrer">查看 203 个关键词校译进度 ↗</a></div><div class="sectionLabel">数据管理</div><div class="row"><button id="add">＋ 新增文章</button><button id="studyEditSettings">＋ 实词／虚词／句式</button><button id="export">导出全部数据</button></div>'+
+ '<div class="row"><a class="pill" href="coverage.html" target="_blank" rel="noopener noreferrer">查看所有课内单字校译进度 ↗</a></div><div class="sectionLabel">数据管理</div><div class="row"><button id="add">＋ 新增文章</button><button id="studyEditSettings">＋ 实词／虚词／句式</button><button id="export">导出全部数据</button></div>'+
  '<label class="item" style="cursor:pointer">导入备份 JSON（将替换当前数据）<input id="import" type="file" accept="application/json,.json" style="display:block;margin-top:9px"></label>'+
  '<div class="sectionLabel">我的文章</div>'+(custom.length?custom.map((w,i)=>'<div class="item"><b>'+escape(w.title)+'</b><small>'+w.lines.length+'句　<button data-remove="'+i+'">删除此自定义篇目</button></small></div>').join(""):'<p class="help">暂无自定义文章。</p>')+
  '<div class="sectionLabel">使用说明</div><p class="help">逐句模式：上滑下一句，下滑上一句；轻点正文空白区域展开译文；点带点线的实词、虚词可看本句释义及跨篇古文；点句式标签查其他古文中的应用。整篇模式可逐句点开译文。学习状态自动保存。</p>'+
