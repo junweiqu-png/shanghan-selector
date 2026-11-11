@@ -73,7 +73,7 @@ for(const item of ["new Set()","missionDone","function openMission(","gradeFilte
 assert(explorer.includes("WENYAN_DATA_4")&&explorer.includes("WENYAN_JUNIOR_GLOSSES")&&explorer.includes("function discoveryGuide("));
 assert(app.includes('addEventListener("touchend"')&&!app.includes('if(!start||e.target.closest(".token"))'),
  "swiping a Chinese character must still turn pages, not cancel the touch gesture");
-assert(html.includes('id="showTranslation"')&&app.includes('class="reveal-line"'),
+assert(index.includes('id="showTranslation"')&&app.includes('class="reveal-line"'),
  "full-character clickable text needs explicit translation controls");
 assert(coverage.includes("正文单字")&&coverage.includes("bodyUniqueCharacters")&&coverage.includes("priorityCharacters"));
 for(const f of ["app.js","study-explorer.js","junior-curriculum.js","data-junior.js","study-junior-glosses.js"])
