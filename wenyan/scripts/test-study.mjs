@@ -92,7 +92,7 @@ for(const file of ['data-basic.js','data-classic.js','data-extra.js']){
  new vm.Script(source,{filename:file}).runInNewContext({window:extendedWindow});
 }
 let extraLex=0,extraGram=0;
-for(const [file,key] of [['study-crosslesson.js','WENYAN_CROSSLESSON'],['study-verified-extra.js','WENYAN_VERIFIED_EXTRA'],['study-verified-more2.js','WENYAN_VERIFIED_MORE2'],['study-verified-common3.js','WENYAN_VERIFIED_COMMON3'],['study-verified-corpus.js','WENYAN_VERIFIED_CORPUS'],['study-verified-batch4.js','WENYAN_VERIFIED_BATCH4'],['study-verified-batch5.js','WENYAN_VERIFIED_BATCH5'],['study-verified-batch6.js','WENYAN_VERIFIED_BATCH6'],['study-grammar-more.js','WENYAN_GRAMMAR_MORE']]){
+for(const [file,key] of [['study-crosslesson.js','WENYAN_CROSSLESSON'],['study-verified-extra.js','WENYAN_VERIFIED_EXTRA'],['study-verified-more2.js','WENYAN_VERIFIED_MORE2'],['study-verified-common3.js','WENYAN_VERIFIED_COMMON3'],['study-verified-corpus.js','WENYAN_VERIFIED_CORPUS'],['study-verified-batch4.js','WENYAN_VERIFIED_BATCH4'],['study-verified-batch5.js','WENYAN_VERIFIED_BATCH5'],['study-verified-batch6.js','WENYAN_VERIFIED_BATCH6'],['study-verified-batch7.js','WENYAN_VERIFIED_BATCH7'],['study-grammar-more.js','WENYAN_GRAMMAR_MORE']]){
  const source=fs.readFileSync(dir+file,'utf8');
  new vm.Script(source,{filename:file}).runInNewContext({window:extendedWindow});
  assert(app.includes(file),'supplemental corpus not included in HTML '+file);
@@ -161,6 +161,14 @@ for(const term of ['惠','履','度','操']){
  assert(s.examples[0][6]===s.sources[0][4]&&s.examples[1][6]===s.sources[0][4],
   'first two batch6 examples must match context '+term);
 }
+for(const term of ['走','尝','虽','安','故']){
+ const data=extendedWindow.WENYAN_VERIFIED_BATCH7.words[term];
+ assert(data?.examples?.length>=3&&data.examples.every(x=>x[2].includes(term)&&x[3]&&x[8]),'batch7 source evidence '+term);
+}
+const cross7=extendedWindow.WENYAN_CROSSLESSON;
+assert(!(cross7.words['宁']?.sources||[]).some(x=>x[0]==='管宁割席'||x[0]==='诫子书'),'names and 宁静 must not be translated as 宁愿');
+assert(cross7.words['信']?.sources?.some(x=>x[1].includes('自信')&&x[4]==='believe'),'自信 cannot mean 果然');
+assert(cross7.words['夫']?.sources?.filter(x=>x[0]==='诫子书').every(x=>x[4]==='intro'),'夫 as opening particle cannot mean 那');
 assert(extraLex>=495&&extraGram>=85,'expanded evidence was not compiled');
 assert(lex>=90&&gram>=70,'unexpected evidence coverage drop');
 console.log(JSON.stringify({ok:true,words:Object.keys(D.words).length,translatedWordExamples:lex,extraWordExamples:extraLex,grammarTopics:Object.keys(D.grammar).length,translatedGrammarExamples:gram,extraGrammarExamples:extraGram},null,2));

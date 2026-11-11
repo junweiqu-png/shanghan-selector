@@ -5,11 +5,11 @@ import vm from 'node:vm';
 import {gunzipSync} from 'node:zlib';
 const root='wenyan/',out='dist/wenyan/evidence';
 const win={};
-for(const f of ['data-basic.js','data-classic.js','data-extra.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-verified-batch6.js']){
+for(const f of ['data-basic.js','data-classic.js','data-extra.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-verified-batch6.js','study-verified-batch7.js']){
  vm.runInNewContext(fs.readFileSync(path.join(root,f),'utf8'),{window:win},{filename:f});
 }
 const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[])];
-const stores=[win.WENYAN_ANNOTATIONS,win.WENYAN_CROSSLESSON,win.WENYAN_VERIFIED_EXTRA,win.WENYAN_VERIFIED_MORE2,win.WENYAN_VERIFIED_COMMON3,win.WENYAN_VERIFIED_CORPUS,win.WENYAN_VERIFIED_BATCH4,win.WENYAN_VERIFIED_BATCH5,win.WENYAN_VERIFIED_BATCH6];
+const stores=[win.WENYAN_ANNOTATIONS,win.WENYAN_CROSSLESSON,win.WENYAN_VERIFIED_EXTRA,win.WENYAN_VERIFIED_MORE2,win.WENYAN_VERIFIED_COMMON3,win.WENYAN_VERIFIED_CORPUS,win.WENYAN_VERIFIED_BATCH4,win.WENYAN_VERIFIED_BATCH5,win.WENYAN_VERIFIED_BATCH6,win.WENYAN_VERIFIED_BATCH7];
 const merged={};
 for(const store of stores)for(const [term,s]of Object.entries(store?.words||{})){
  const item=merged[term]||={sources:[],examples:[]};
@@ -65,7 +65,7 @@ console.log(JSON.stringify(summary));
 const inner=unique.find(x=>x.term==='内集');
 if(!inner||inner.minReviewedExamples<5||inner.minSameSense<2)process.exitCode=2;
 // 最低质量基线是“已完成篇目”的下限，不是假装全部 203 词已经校完。
-const expected={works:26,distinctTerms:203,wordOccurrences:219,termsMeetingFullRule:46,
+const expected={works:26,distinctTerms:203,wordOccurrences:219,termsMeetingFullRule:50,
  termsWithAtLeastFiveReviewedExamples:56};
 for(const [key,limit]of Object.entries(expected))if((summary[key]||0)<limit){
  console.error('Keyword regression: '+key+' below audited baseline '+limit+' (actual '+summary[key]+')');process.exitCode=3;

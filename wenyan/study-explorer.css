@@ -77,3 +77,8 @@
 .study-token:not(.hit-word){border-bottom:1px dotted #afbdac}
 .study-token.hit-word{background:#ffde8f;border-bottom:2px solid #d69b36;box-shadow:0 2px 0 #ffd88f}
 @media(max-width:620px){.study-example{padding:12px}.study-example .study-original{font-size:22px}.study-origin .study-original{font-size:18px}.study-example .study-translation{font-size:16px}}
+
+.study-coverage{font-size:13px;line-height:1.55;padding:10px 12px;margin:8px 0 12px;border-radius:10px;background:#f5f2eb;color:#584f45;}
+.study-coverage.ready{background:#eef7ef;color:#255331;}
+.study-coverage.partial{background:#fff4df;color:#765222;}
+.study-coverage b{font-weight:600;}
