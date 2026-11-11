@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>文言拾句 · 关键词校译进度</title>
+<style>
+:root{color-scheme:light;font-family:system-ui,-apple-system,"Microsoft YaHei",sans-serif;background:#f8f5ec;color:#34312c}
+*{box-sizing:border-box}body{max-width:1020px;padding:18px;margin:auto}a{color:#306151;text-decoration:none}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}h1{font-size:24px;margin:12px 0}
+small,p{line-height:1.6}p{color:#696157}.stat{background:white;border:1px solid #eee7db;border-radius:14px;padding:14px;margin:12px 0}
+.stats{display:flex;gap:12px;flex-wrap:wrap}.stats span{flex:1;min-width:160px;font-size:15px}.stats b{font-size:23px;color:#215a45}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}input,select{font-size:16px;padding:11px;border:1px solid #d5ccbe;border-radius:9px;background:white;flex:1;min-width:160px}
+.table{display:grid;gap:8px}.row{background:white;border:1px solid #eee7db;border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:9px}
+.name{font-size:19px;font-weight:700}.muted{color:#716c65;font-size:13px;line-height:1.6}.tag{display:inline-block;font-size:12px;margin-right:4px;border-radius:6px;padding:2px 6px}
+.ready{background:#dff2e3;color:#22603d}.pending{background:#ffebc9;color:#854b16}.partial{background:#e9eafa;color:#4b5079}
+.actions{white-space:nowrap}button{cursor:pointer}.note{font-size:13px;color:#7a715f}
+</style></head><body>
+<header><a href="./">← 返回文言拾句</a><a href="evidence/keyword-coverage-report.json" target="_blank" rel="noopener">查看原始核验报告 ↗</a></header>
+<h1>全部关键词 · 校译进度</h1>
+<p>这里显示的是<strong>经过逐句原文、翻译、具体义项审核</strong>后实际能呈现的关联古文，不把后台全文检索的字形命中算作译注，也不把同字不同词冒充同词。</p>
+<section class="stat"><div id="stats" class="stats">正在读取核验数据……</div><p class="note">目标：每个课内关键字至少关联 5 篇不同古文，优先有 2 篇与本文同义；有的词另需专门区分仅关联单字的例子。</p></section>
+<div class="controls"><input id="query" placeholder="搜索关键词或篇目" aria-label="搜索关键词或篇目"><select id="filter" aria-label="按核校状态筛选"><option value="all">全部</option><option value="pending" selected>尚待完善</option><option value="ready">已满足关联规则</option><option value="exact">同词例句不足 5</option></select></div>
+<div id="total" class="note"></div><section id="rows" class="table" aria-live="polite"></section>
+<script>
+(()=>{"use strict";
+const $=id=>document.getElementById(id);
+function card(t){
+ const line=document.createElement("div");line.className="row";
+ const box=document.createElement("div");
+ const name=document.createElement("a");name.className="name";name.href="./?term="+encodeURIComponent(t.term);name.textContent=t.term;box.append(name);
+ const tag=document.createElement("span");tag.className="tag "+(t.ready?"ready":"pending");tag.textContent=t.ready?"关联规则达标":"仍缺校译";box.append(document.createTextNode(" "),tag);
+ if(t.items.some(i=>i.exactWordExamples<5)){const x=document.createElement("span");x.className="tag partial";x.textContent="同词不足5";box.append(x)}
+ const line2=document.createElement("div");line2.className="muted";line2.textContent="篇目："+[...new Set(t.items.map(x=>x.work))].join("、")+
+ " · 已校译 "+t.minReviewedExamples+" 篇 · 同义至少 "+t.minSameSense+" 篇 · 同词至少 "+Math.min(...t.items.map(x=>x.exactWordExamples))+" 篇";
+ box.append(line2);line.append(box);const go=document.createElement("a");go.className="actions";go.href=name.href;go.textContent="打开卡片 ↗";line.append(go);return line;
+}
+fetch("evidence/keyword-coverage-report.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("HTTP "+r.status);return r.json()}).then(data=>{
+ const stats=data.summary,items=data.terms;
+ const set=(node,text)=>node.textContent=text;
+ $("stats").replaceChildren();
+ for(const [num,desc] of [[stats.distinctTerms,"课内关键词"],[stats.wordOccurrences,"实际使用位置"],[stats.termsMeetingFullRule,"关联规则达标词"],[stats.termsStillWithoutFiveReviewedExamples,"关联例句不足 5 的词"]]){
+ const s=document.createElement("span"),b=document.createElement("b");b.textContent=num;s.append(b,document.createElement("br"),document.createTextNode(desc));$("stats").append(s);
+ }
+ const draw=()=>{const key=$("query").value.trim(),mode=$("filter").value;let filtered=items.filter(t=>
+ (!key||t.term.includes(key)||t.items.some(i=>i.work.includes(key)))&&
+ (mode==="all"||mode==="pending"&&!t.ready||mode==="ready"&&t.ready||mode==="exact"&&t.items.some(i=>i.exactWordExamples<5)));
+ filtered.sort((a,b)=>Number(a.ready)-Number(b.ready)||a.minReviewedExamples-b.minReviewedExamples||a.term.localeCompare(b.term,"zh-CN"));
+ $("total").textContent="显示 "+filtered.length+" / "+items.length+" 个关键词";
+ $("rows").replaceChildren(...filtered.map(card));};
+ $("query").addEventListener("input",draw);$("filter").addEventListener("change",draw);draw();
+}).catch(e=>{$("stats").textContent="校译报告暂未就绪，请等待本站构建成功；"+e.message;});
+})();
+</script></body></html>
