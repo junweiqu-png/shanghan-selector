@@ -18,7 +18,7 @@ for(const src of lists){for(const [term,s] of Object.entries(src.words||{})){
  const entry=merged[term]||={sources:[],examples:[]};
  entry.sources.push(...(s.sources||[]));entry.examples.push(...(s.examples||[]));
 }}
-const han=c=>/\\p{Script=Han}/u.test(c);
+const han=c=>/\p{Script=Han}/u.test(c);
 const discovered=new Set(works.flatMap(w=>(w.terms||[]).flatMap(x=>[...String(x[0]||"")].filter(han))));
 const errors=[],wordResults=[],grammarResults=[];
 for(const [term,s]of Object.entries(merged)){
