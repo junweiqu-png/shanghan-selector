@@ -18,7 +18,7 @@ function anchorFor(sentence,char){
 }
 const aliases={
  "何":"question", "且":"about-to","焉":"where-when","以":"means","虽":"hypothetical",
- "若":"similarity","乃":"then","者":"person","之":"object"
+ "若":"similarity","乃":"then","者":"person","之":"object","筑":"build-structure"
 };
 for(const w of works){
  const lines=w.lines||[],refs=w.terms||[];
