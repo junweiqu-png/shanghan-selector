@@ -371,7 +371,16 @@ document.addEventListener('click',e=>{
  if(t&&fromIndex&&!context){open("单字索引",'<p class="study-empty">尚未找到确实包含“'+esc(name)+'”的古文原句，请先补充经核校的例句。</p>');return;}
  if(t)openWord(name,context);else openGrammar(name,context);
 },true);
-window.WENYAN_STUDY_DEBUG={terms:()=>allTerms(),patterns:()=>grammarNames(),getState:()=>state&&({term:state.term,count:state.rows?.length,origin:state.origin}),lookupWord:term=>knowTerm(term),origin:(term,context)=>termOrigin(term,context),rows:term=>createWordRows(term)};
+window.WENYAN_STUDY_DEBUG={terms:()=>allTerms(),patterns:()=>grammarNames(),getState:()=>state&&({term:state.term,count:state.rows?.length,origin:state.origin}),lookupWord:term=>knowTerm(term),origin:(term,context)=>termOrigin(term,context),rows:term=>createWordRows(term),coverage:(term,context)=>{
+ const origin=termOrigin(term,context);if(!origin)return null;
+ const seen=new Set(),rows=[];
+ for(const row of createWordRows(term)){const r=row.record;if(r.title===origin.title)continue;const key=r.title+"|"+normalizeSense(r.code);if(seen.has(key))continue;seen.add(key);rows.push(row);}
+ const same=rows.filter(row=>relation(origin,row.record,false).type==="same");
+ const previews=readingCandidates(term,origin,rows);
+ const verifiedBooks=new Set(rows.map(row=>row.record.title)).size;
+ const sameSenseBooks=new Set(same.map(row=>row.record.title)).size;
+ return {verifiedBooks,sameSenseBooks,pendingBooks:previews.length,complete:!!origin.verified&&!!origin.code&&verifiedBooks>=5&&sameSenseBooks>=2};
+}};
 // 从“关键词校译进度”页直接打开对应学习卡片，不依赖当前阅读进度。
 const linkedTerm=new URLSearchParams(location.search).get("term");
 if(linkedTerm && allTerms().includes(linkedTerm)){
