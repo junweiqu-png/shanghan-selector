@@ -35,7 +35,8 @@ assert(!("俄而" in w.WENYAN_VERIFIED_EXTRA.words));
 assert(!("未若" in w.WENYAN_VERIFIED_EXTRA.words));
 const characterEvidence=[
  ["内",w.WENYAN_VERIFIED_CORPUS.words["内"]],["集",w.WENYAN_VERIFIED_CORPUS.words["集"]],
- ["俄",w.WENYAN_VERIFIED_EXTRA.words["俄"]],["未",w.WENYAN_VERIFIED_EXTRA.words["未"]]
+ ["俄",w.WENYAN_VERIFIED_EXTRA.words["俄"]],["未",w.WENYAN_VERIFIED_EXTRA.words["未"]],
+ ["儿",w.WENYAN_VERIFIED_BATCH4.words["儿"]],["女",w.WENYAN_VERIFIED_BATCH4.words["女"]]
 ];
 for(const [ch,spec] of characterEvidence){
  assert(spec?.sources.some(x=>x[0]==="咏雪"&&x[1].includes(ch)),ch+" must have a current-lesson single-character source");
@@ -68,6 +69,6 @@ assert(!html.includes('data-term="辩斗"'));
 vm.runInNewContext(explorer,{window:w,document:{getElementById:()=>null,addEventListener:()=>{}},location:{search:""},URLSearchParams,localStorage:{getItem:()=>null}});
 const terms=w.WENYAN_STUDY_DEBUG.terms();
 assert(terms.every(x=>[...x].length===1));
-assert(terms.includes("辩")&&terms.includes("斗")&&terms.includes("内")&&terms.includes("集")&&terms.includes("俄")&&terms.includes("未")&&terms.includes("而")&&terms.includes("若"));
+assert(terms.includes("辩")&&terms.includes("斗")&&terms.includes("内")&&terms.includes("集")&&terms.includes("俄")&&terms.includes("未")&&terms.includes("而")&&terms.includes("若")&&terms.includes("儿")&&terms.includes("女"));
 assert(terms.length>=chars.length);
 console.log(JSON.stringify({ok:true,lessons:books.length,characters:chars.length,linked:terms.length,characterEvidence:characterEvidence.map(([ch,spec])=>({char:ch,examples:spec.examples.length,distinctSources:new Set(spec.examples.map(x=>x[0])).size})),focus:"内 / 集 / 俄 / 未"}));
