@@ -24,12 +24,14 @@ for(const work of works){
   const exact=(work.terms||[]).find(x=>x[0]===term);
   const part=exact?.[1]||"单字待校定",meaning=exact?.[2]||"该字在本文中的独立义项待校定";
   const spec=merged[term]||{sources:[],examples:[]};
-  const source=spec.sources.find(s=>s[0]===work.title&&work.lines.some(l=>l[0].includes(s[1])));
+  const sourceCandidates=spec.sources.filter(s=>s[0]===work.title&&work.lines.some(l=>l[0].includes(s[1])));
   const rows=[],seen=new Set();
   for(const x of spec.examples){
    if(x[0]===work.title||!x[2]?.includes(x[9]||term)||!x[3]?.trim()||!x[4]?.trim()||!x[5]?.trim()||!x[6]?.trim()||!x[7]?.trim())continue;
    const key=x[0]+'|'+normalize(x[6]);if(seen.has(key))continue;seen.add(key);rows.push(x);
   }
+  const source=sourceCandidates.map(candidate=>({candidate,same:rows.filter(x=>normalize(x[6])===normalize(candidate[4])).length}))
+   .sort((a,b)=>b.same-a.same)[0]?.candidate;
   const same=source?rows.filter(x=>normalize(x[6])===normalize(source[4])).length:0;
   const exactWord=rows.filter(x=>(x[9]||term)===term).length,relatedCharacter=rows.length-exactWord;
   uses.push({work:work.title,term,part,meaning,originAnnotated:!!source,originMeaning:source?.[2]||meaning,reviewedExamples:rows.length,exactWordExamples:exactWord,relatedCharacterExamples:relatedCharacter,sameSense:same,differentSense:source?rows.length-same:0,firstTwoSame:same>=2,meetsFive:rows.length>=5,meetsRule:!!source&&rows.length>=5&&same>=2,shortfall:Math.max(0,5-rows.length)});
