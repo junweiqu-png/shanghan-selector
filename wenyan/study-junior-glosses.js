@@ -28,7 +28,7 @@ for(const w of works){
   if(!row?.[1])throw Error("缺正文句译 "+char+" "+w.title);
   const anchor=anchorFor(row[0],char);
   // 课程内容有已校译原句，但“与其他古文同义”只有同一义项编码时才可判断。
-  const code=(aliases[char]||"lesson")+"-"+w.title+"-"+char;
+  const code=char==="筑"?"build-structure":(aliases[char]||"lesson")+"-"+w.title+"-"+char;
   const usage="本文语境“"+anchor+"”：本字释为“"+meaning+"”；句译已校，跨篇异同仍须比较。";
   const sp=words[char]||(words[char]={sources:[],examples:[]});
   sp.sources.push([w.title,anchor,meaning,pos,code,usage]);
