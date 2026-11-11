@@ -180,7 +180,8 @@ for(const [term,profile] of Object.entries(dict)){
     const fields=picked?picked.fields:profile.base;
     const [meaning,pos,code,usage]=fields;
     const anchor=picked?.phrase||line.slice(Math.max(0,index-4),Math.min(line.length,index+term.length+4));
-    const key=code+'|'+line;
+    // 同一句中重复出现的同字，也要分别保留其位置和释义（如“宁信度，无自信也”）。
+    const key=code+'|'+line+'|'+index;
     if(!unique.has(key))unique.set(key,{anchor,meaning,pos,code,usage,index});
    }
    for(const v of unique.values()){
