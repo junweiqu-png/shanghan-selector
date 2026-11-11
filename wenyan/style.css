@@ -10,3 +10,10 @@
 .mission-options button.current{background:#e0f2e0;border-color:#8bae99}
 .work-hook{display:block;font-size:13px;color:#557363;margin-top:5px;line-height:1.6}
 @media (prefers-reduced-motion:reduce){.mission-launch{transition:none}}
+
+/* 全文汉字可点击，但仅突出本篇重点字，避免密集下划线干扰阅读。 */
+.sentence .token,.wholetext .token{border-bottom:1px solid transparent}
+.sentence .token.keychar,.wholetext .token.keychar{border-bottom:2px dotted #9cb5a2}
+.sentence .token:focus-visible,.wholetext .token:focus-visible{outline:2px solid #6d8e7b;border-radius:3px}
+.translation-launch{display:block;margin:8px auto 10px;border:1px solid #cbded0;border-radius:12px;background:#fff;color:#456452;padding:10px 16px;min-height:44px;cursor:pointer;font-size:15px}
+.reveal-line{display:inline-block;margin:7px 0 3px;border:1px solid #ceded0;background:#f8faf4;color:#4c6d57;padding:6px 10px;border-radius:8px;cursor:pointer;min-height:34px}
