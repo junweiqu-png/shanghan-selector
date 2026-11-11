@@ -6,11 +6,11 @@ import path from 'node:path';
 import vm from 'node:vm';
 const root=process.env.WENYAN_ROOT||'wenyan/';
 const win={},ctx={window:win};
-for(const f of ['data-basic.js','data-classic.js','data-extra.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-verified-batch6.js','study-verified-batch7.js','study-grammar-more.js']){
+for(const f of ['data-basic.js','data-classic.js','data-extra.js','data-junior.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-verified-batch6.js','study-verified-batch7.js','study-verified-batch8.js','study-grammar-more.js']){
  vm.runInNewContext(fs.readFileSync(path.join(root,f),'utf8'),ctx,{filename:f});
 }
-const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[])];
-const db=win.WENYAN_ANNOTATIONS,lists=[db,win.WENYAN_CROSSLESSON,win.WENYAN_VERIFIED_EXTRA,win.WENYAN_VERIFIED_MORE2,win.WENYAN_VERIFIED_COMMON3,win.WENYAN_VERIFIED_CORPUS,win.WENYAN_VERIFIED_BATCH4,win.WENYAN_VERIFIED_BATCH5,win.WENYAN_VERIFIED_BATCH6,win.WENYAN_VERIFIED_BATCH7];
+const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[]),...(win.WENYAN_DATA_4||[])];
+const db=win.WENYAN_ANNOTATIONS,lists=[db,win.WENYAN_CROSSLESSON,win.WENYAN_VERIFIED_EXTRA,win.WENYAN_VERIFIED_MORE2,win.WENYAN_VERIFIED_COMMON3,win.WENYAN_VERIFIED_CORPUS,win.WENYAN_VERIFIED_BATCH4,win.WENYAN_VERIFIED_BATCH5,win.WENYAN_VERIFIED_BATCH6,win.WENYAN_VERIFIED_BATCH7,win.WENYAN_VERIFIED_BATCH8];
 const merged={};
 const grammarMore=win.WENYAN_GRAMMAR_MORE?.grammar||{};
 const normalizeSense=code=>({look:'turn-look',lookback:'turn-look'}[code]||code);
@@ -100,7 +100,7 @@ if(process.env.WENYAN_COVERAGE_DEST){
  fs.writeFileSync(out,JSON.stringify(report,null,2),'utf8');
 }
 console.log(JSON.stringify(sum));
-const regressionChars=['内','集','俄','未','儿','女','诣','疾','顾','引','骤','舍','值','诸','竞','莫','弗','汝','岂','委','闻','或','甚','唯'];
+const regressionChars=['筑','内','集','俄','未','儿','女','诣','疾','顾','引','骤','舍','值','诸','竞','莫','弗','汝','岂','委','闻','或','甚','唯'];
 for(const term of regressionChars){
  const spec=merged[term];
  const seen=new Set(),rows=[];
