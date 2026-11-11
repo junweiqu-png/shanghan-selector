@@ -175,7 +175,7 @@ $("card").addEventListener("click",e=>{if(e.target.closest(".token"))return;show
 $("card").addEventListener("keydown",e=>{if(e.target!==$("card"))return;if(e.key==="Enter"||e.key===" "){e.preventDefault();show=!show;render();}});
 let start=null;
 $("card").addEventListener("touchstart",e=>{start={x:e.touches[0].clientX,y:e.touches[0].clientY,t:Date.now()};},{passive:true});
-$("card").addEventListener("touchend",e=>{if(!start||e.target.closest(".token")){start=null;return;}const delta=e.changedTouches[0].clientY-start.y,h=Math.abs(e.changedTouches[0].clientX-start.x);if(Math.abs(delta)>65&&Math.abs(delta)>h*1.2){e.preventDefault();move(delta<0?1:-1);}start=null;},{passive:false});
+$("card").addEventListener("touchend",e=>{if(!start){return;}const delta=e.changedTouches[0].clientY-start.y,h=Math.abs(e.changedTouches[0].clientX-start.x);if(Math.abs(delta)>65&&Math.abs(delta)>h*1.2){e.preventDefault();move(delta<0?1:-1);}start=null;},{passive:false});
 document.addEventListener("keydown",e=>{if($("overlay").hidden&& !whole && !["INPUT","TEXTAREA"].includes(document.activeElement.tagName)){if(e.key==="ArrowDown"){e.preventDefault();move(1)}if(e.key==="ArrowUp"){e.preventDefault();move(-1)}}if(e.key==="Escape")close();});
 $("prev").onclick=()=>move(-1);$("next").onclick=()=>move(1);
  $("showTranslation").onclick=()=>{show=!show;save();render()};
