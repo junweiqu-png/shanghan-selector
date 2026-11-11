@@ -74,6 +74,7 @@ jobs:
           node --check wenyan/scripts/audit-evidence.mjs
           node --check wenyan/scripts/audit-keyword-coverage.mjs
           node --check wenyan/study-verified-corpus.js
+          node --check wenyan/study-verified-batch4.js
           node --check wenyan/pinyin.js
       - name: Restore corpus API cache
         uses: actions/cache@v4
