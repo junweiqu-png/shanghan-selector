@@ -1,4 +1,4 @@
-/* 《文言拾句》关联学习：经过释义标注的原文、翻译、词义/句式差异。 */
+/* 《文言拾句》关联学习：经过释义标注的原文、翻译、字义/句式差异。 */
 (()=>{
 "use strict";
 const $=id=>document.getElementById(id), DB=window.WENYAN_ANNOTATIONS||{words:{},grammar:{},meta:{groups:{},families:{}}};
@@ -59,7 +59,7 @@ function activeOrigin(){
  return {title,text};
 }
 function indexOrigin(term){
- // “积累”的词表不指向当前阅读进度：必须从真正含该字的原句取得语境。
+ // “积累”的字表不指向当前阅读进度：必须从真正含该字的原句取得语境。
  let personal=[];
  try{const s=JSON.parse(localStorage.getItem("wenyan-recall-v1")||"{}");if(Array.isArray(s.custom))personal=s.custom}catch{}
  const spec=knowTerm(term),results=[];
@@ -68,7 +68,7 @@ function indexOrigin(term){
    const text=String(row?.[0]||"");if(!text.includes(term))continue;
    const source=(spec?.sources||[]).find(s=>s[0]===w.title&&s[1]&&s[1].includes(term)&&text.includes(s[1]));
    const index=source?text.indexOf(source[1])+source[1].indexOf(term):text.indexOf(term);
-   // 优先人工标注原句，其次课本自带词条解释，再其次普通正文命中。
+   // 优先人工标注原句，其次课本自带单字释义，再其次普通正文命中。
    const hasDefinition=(w.terms||[]).some(t=>t[0]===term);
    results.push({title:w.title,text,offset:index,score:source?0:hasDefinition?1:2,wi,li});
   }
@@ -105,7 +105,7 @@ function termOrigin(term,context){
  return {title,text,term,
   meaning:entry?.compound?("所在语境“"+entry.d[0]+"”整体意为："+entry.d[2]+"；“"+term+"”的独立义项待校核。"):entry?.d[2]||"当前原文的具体字义尚待校核",
   pos:entry?.compound?"待分字":entry?.d[1]||"未标注",code:null,
-  usage:entry?.compound?"只使用原课文词语的整体译注作上下文，不能把整词意思自动赋给其中一个字。":entry?"课文已提供本字释义，但还未独立核对跨篇同异。":"本字在当前句子的义项尚待逐字核校。",
+  usage:entry?.compound?"只把原文短语的整体译注作为语境提示，不能把短语意思自动赋给其中一个字。":entry?"课文已提供本字释义，但还未独立核对跨篇同异。":"本字在当前句子的义项尚待逐字核校。",
   verified:!!entry&&!entry.compound,sourceLevel:entry?(entry.compound?"phrase-context":"lesson-gloss"):"unverified"};
 }
 function grammarOrigin(pattern,context){
