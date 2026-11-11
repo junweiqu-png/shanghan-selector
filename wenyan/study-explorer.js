@@ -69,10 +69,14 @@ function termOrigin(term,context){
     if(!Number.isInteger(context?.offset)||!s[1])return false;
     let start=text.indexOf(s[1]);while(start!==-1){if(context.offset>=start&&context.offset+term.length<=start+s[1].length)return true;start=text.indexOf(s[1],start+1);}
     return false;
-  })||(Number.isInteger(context?.offset)&&candidates.length>1?null:candidates[0]);
+  })||(Number.isInteger(context?.offset)&&context.offset>=0?null:candidates[0]);
   if(hit)return {title,text,term,meaning:hit[2],pos:hit[3],code:hit[4],usage:hit[5],verified:true};
-  const example=(spec.examples||[]).find(x=>x[0]===title&&(text.includes(x[2])||x[2].includes(text)));
-  if(example)return {title,text,term,meaning:example[4],pos:example[5],code:example[6],usage:example[7],verified:true};
+  const occurrenceCount=text.split(term).length-1;
+  // 同一原句中多次出现同字，不能借其他位置的例句标注猜当前字义。
+  if(occurrenceCount===1){
+   const example=(spec.examples||[]).find(x=>x[0]===title&&x[2]?.includes(term)&&(text.includes(x[2])||x[2].includes(text)));
+   if(example)return {title,text,term,meaning:example[4],pos:example[5],code:example[6],usage:example[7],verified:true};
+  }
  }
  const defs=localDefs(term),entry=defs.find(x=>x.w.title===title);
  return {title,text,term,
@@ -274,7 +278,7 @@ function renderPage(term,isGrammar,origin,push=true){
  state.contexts=new Map(filtered.map((r,i)=>["r"+i,{title:r.record.title,text:r.record.text,annotated:true,annotatedTerm:isGrammar?null:(r.record.match||term),
  meaning:r.record.meaning,pos:r.record.pos,code:r.record.code,usage:r.record.usage}]));
  for(const [i,p] of previews.entries())state.contexts.set("p"+i,{title:p.title,text:p.text,annotated:false});
- state.contexts.set("source",{title:origin.title,text:origin.text,annotated:true,annotatedTerm:isGrammar?null:term,
+ state.contexts.set("source",{title:origin.title,text:origin.text,annotated:!!origin.verified,annotatedTerm:isGrammar?null:term,
  meaning:origin.meaning,pos:origin.pos,code:origin.code,usage:origin.usage});
 }
 
