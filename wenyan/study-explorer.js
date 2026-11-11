@@ -192,6 +192,31 @@ function createGrammarRows(name){
  title:x[0],record:{title:x[0],source:x[1],text:x[2],translation:x[3],meaning:grammarSpec(name)?.definition||name,pos:"句式",code:x[4],usage:x[5],url:x[6]||""}
  })).sort(sortEntries);
 }
+// 有整句译文但尚未核定本字义项的原典，只能作为学生的阅读候选，不能计入达标数。
+function readingCandidates(char,origin,reviewed){
+ if([...char].length!==1)return [];
+ const seen=new Set(reviewed.map(x=>x.record.title)),rows=[];
+ const add=(title,source,text,translation,url)=>{
+  if(!title||title===origin.title||seen.has(title)||!text?.includes(char)||!translation)return;
+  seen.add(title);rows.push({title,source,text,translation,url:url||""});
+ };
+ for(const w of core)for(const line of w.lines||[])add(w.title,w.source,line[0],line[1],w.sourceUrl);
+ const stores=[DB,window.WENYAN_VERIFIED_EXTRA,window.WENYAN_VERIFIED_MORE2,
+  window.WENYAN_VERIFIED_COMMON3,window.WENYAN_VERIFIED_CORPUS,
+  window.WENYAN_VERIFIED_BATCH4,window.WENYAN_VERIFIED_BATCH5,window.WENYAN_VERIFIED_BATCH6,
+  window.WENYAN_VERIFIED_BATCH7,window.WENYAN_VERIFIED_CHARACTERS];
+ for(const store of stores)for(const spec of Object.values(store?.words||{}))
+  for(const x of spec.examples||[])add(x[0],x[1],x[2],x[3],x[8]);
+ return rows.slice(0,10);
+}
+function previewCard(row,i,char){
+ return '<article class="study-example study-unverified">'+
+  '<h4 class="study-example-top">'+displayTitle(row.title)+'</h4>'+
+  '<p class="study-original">'+tokens(row.text,char,"p"+i)+'</p>'+
+  '<p class="study-translation">'+esc(row.translation)+'</p>'+
+  '<p class="study-compare unknown">⚪ 本字在本句的具体义项尚未逐字校核，不能判断同义或异义。</p>'+
+  '<div class="study-actions">'+sourceLink(row.url)+'</div></article>';
+}
 function renderPage(term,isGrammar,origin,push=true){
  if(push&&state)chain.push(state);
  state={term,isGrammar,origin};
@@ -223,29 +248,32 @@ function renderPage(term,isGrammar,origin,push=true){
   ...unknown
  ];
  filtered.splice(0,filtered.length,...arranged);
- // 只计算通过逐句释义的例句；同字不同词（如“内集”与“集”）必须单独披露。
+ // 单字关联只依靠已校核的该字例句。候选整句译文不计入数字。
  const independentBooks=new Set(filtered.map(r=>r.record.title)).size;
  const sameBooks=new Set(same.map(r=>r.record.title)).size;
- const sameWord=filtered.filter(r=>isGrammar||!r.record.match||r.record.match===term).length;
- const charOnly=filtered.length-sameWord;
  const complete=!!origin.verified&&!!origin.code&&independentBooks>=5&&sameBooks>=2;
  const missing=[];
- if(!origin.verified||!origin.code)missing.push("本文义项未校定");
- if(independentBooks<5)missing.push("还缺"+(5-independentBooks)+"篇已校译古文");
+ if(!origin.verified||!origin.code)missing.push("本文字义未校定");
+ if(independentBooks<5)missing.push("还缺"+(5-independentBooks)+"篇逐字校核的古文");
  if(sameBooks<2)missing.push("还缺"+(2-sameBooks)+"篇同义例句");
+ const previews=isGrammar?[]:readingCandidates(term,origin,filtered);
  const auditLine='<p class="study-coverage '+(complete?'ready':'partial')+'">'+
- '已校译关联 '+independentBooks+' 篇 · 同义 '+sameBooks+' 篇'+
- (isGrammar?'':' · 同词 '+sameWord+' 例'+(charOnly?' · 仅关联单字 '+charOnly+' 例':''))+
- '<br><b>'+(complete?'✓ 数量与义项比较达标'+(charOnly?'（含已标注的单字关联）':''):'待完善：'+esc(missing.join('；')) )+'</b></p>';
+ '已逐字校译 '+independentBooks+' 篇 · 同义 '+sameBooks+' 篇 · 待核原句 '+previews.length+' 篇'+
+ '<br><b>'+(complete?'✓ 本字跨篇例句数量与义项比较达标':'待完善：'+esc(missing.join('；')))+'</b></p>';
  const html=wrapHeader()+baseHeader(origin,isGrammar)+
  auditLine+
- '<div class="study-sectionhead"><b>关联古文</b><button id="editStudyTerm" type="button">＋ 补充例句</button></div>'+
+ '<div class="study-sectionhead"><b>同字关联古文（已核义）</b><button id="editStudyTerm" type="button">＋ 补充例句</button></div>'+
  (filtered.length?filtered.map((r,i)=>rowCard(r,i,origin,isGrammar)).join(""):
- '<p class="study-empty">暂无已校译的关联例句。可点击“补充例句”检索后台经史原典；完成原文、译文和词义核校后，才会加入学习内容。</p>');
+ '<p class="study-empty">暂无已逐字校核的关联古文。可以从下方整句有译文的候选原文继续核验。</p>')+
+ (previews.length?'<div class="study-sectionhead"><b>含本字的古文（义项待核）</b></div>'+
+ '<p class="study-caution">这些句子已有现代译文，但尚未校核本字含义，不会计算到上方的关联数量。</p>'+
+ previews.map((r,i)=>previewCard(r,i,term)).join(""):'');
+
  open((isGrammar?"句式：":"字义：")+term,html);$("editStudyTerm").onclick=()=>window.WENYAN_STUDY_EDITOR?.open({kind:isGrammar?"grammar":"word",name:term,title:origin.title,original:origin.text});
  state.rows=filtered;
  state.contexts=new Map(filtered.map((r,i)=>["r"+i,{title:r.record.title,text:r.record.text,annotated:true,annotatedTerm:isGrammar?null:(r.record.match||term),
  meaning:r.record.meaning,pos:r.record.pos,code:r.record.code,usage:r.record.usage}]));
+ for(const [i,p] of previews.entries())state.contexts.set("p"+i,{title:p.title,text:p.text,annotated:false});
  state.contexts.set("source",{title:origin.title,text:origin.text,annotated:true,annotatedTerm:isGrammar?null:term,
  meaning:origin.meaning,pos:origin.pos,code:origin.code,usage:origin.usage});
 }
