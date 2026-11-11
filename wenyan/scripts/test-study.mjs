@@ -92,7 +92,7 @@ for(const file of ['data-basic.js','data-classic.js','data-extra.js']){
  new vm.Script(source,{filename:file}).runInNewContext({window:extendedWindow});
 }
 let extraLex=0,extraGram=0;
-for(const [file,key] of [['study-crosslesson.js','WENYAN_CROSSLESSON'],['study-verified-extra.js','WENYAN_VERIFIED_EXTRA'],['study-verified-more2.js','WENYAN_VERIFIED_MORE2'],['study-verified-common3.js','WENYAN_VERIFIED_COMMON3'],['study-verified-corpus.js','WENYAN_VERIFIED_CORPUS'],['study-grammar-more.js','WENYAN_GRAMMAR_MORE']]){
+for(const [file,key] of [['study-crosslesson.js','WENYAN_CROSSLESSON'],['study-verified-extra.js','WENYAN_VERIFIED_EXTRA'],['study-verified-more2.js','WENYAN_VERIFIED_MORE2'],['study-verified-common3.js','WENYAN_VERIFIED_COMMON3'],['study-verified-corpus.js','WENYAN_VERIFIED_CORPUS'],['study-verified-batch4.js','WENYAN_VERIFIED_BATCH4'],['study-grammar-more.js','WENYAN_GRAMMAR_MORE']]){
  const source=fs.readFileSync(dir+file,'utf8');
  new vm.Script(source,{filename:file}).runInNewContext({window:extendedWindow});
  assert(app.includes(file),'supplemental corpus not included in HTML '+file);
@@ -135,6 +135,16 @@ assert(ji?.sources?.some(x=>x[0]==='咏雪'&&x[4]==='gather'),'集 source sense 
 assert(ji?.examples?.length>=5,'集 needs five translated examples');
 for(const term of ['内集','集'])for(const x of extendedWindow.WENYAN_VERIFIED_CORPUS.words[term].examples)
  assert(x[2].includes(x[9]||term)&&x[3]&&x[4]&&x[5]&&x[6]&&x[7]&&x[8],'incomplete related-word example '+term);
-assert(extraLex>=430&&extraGram>=85,'expanded evidence was not compiled');
+for(const term of ['儿女','鬻','誉','陷']){
+ const spec=extendedWindow.WENYAN_VERIFIED_BATCH4.words[term];
+ assert(spec?.sources?.length>0&&spec.examples?.length>=5,'curated batch4 must provide 5 examples '+term);
+ assert(spec.examples.every(x=>x[2].includes(x[9]||term)&&x[3]&&x[8]),'unverified original or translation '+term);
+}
+for(const term of ['儿女','鬻','誉']){
+ const item=extendedWindow.WENYAN_VERIFIED_BATCH4.words[term];
+ assert(item.examples[0][6]===item.sources[0][4]&&item.examples[1][6]===item.sources[0][4],
+  'first two examples must match source sense '+term);
+}
+assert(extraLex>=450&&extraGram>=85,'expanded evidence was not compiled');
 assert(lex>=90&&gram>=70,'unexpected evidence coverage drop');
 console.log(JSON.stringify({ok:true,words:Object.keys(D.words).length,translatedWordExamples:lex,extraWordExamples:extraLex,grammarTopics:Object.keys(D.grammar).length,translatedGrammarExamples:gram,extraGrammarExamples:extraGram},null,2));
