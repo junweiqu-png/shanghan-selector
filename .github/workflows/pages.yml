@@ -79,6 +79,10 @@ jobs:
           node --check wenyan/study-verified-batch6.js
           node --check wenyan/study-verified-batch7.js
           node --check wenyan/study-verified-characters.js
+          node --check wenyan/data-junior.js
+          node --check wenyan/study-junior-glosses.js
+          node --check wenyan/junior-curriculum.js
+          node --check wenyan/scripts/test-junior.mjs
           node --check wenyan/scripts/test-character.mjs
           node --check wenyan/scripts/audit-character-coverage.mjs
           node --check wenyan/pinyin.js
@@ -96,6 +100,7 @@ jobs:
           node wenyan/scripts/test-study.mjs
           node wenyan/scripts/test-enhancements.mjs
           node wenyan/scripts/test-character.mjs
+          node wenyan/scripts/test-junior.mjs
       - name: Build local classical corpus
         env:
           CORPUS_MAX_BOOKS: 700

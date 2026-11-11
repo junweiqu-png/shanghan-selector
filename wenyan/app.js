@@ -2,29 +2,28 @@
 "use strict";
 const $=id=>document.getElementById(id);
 const escape=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const base=[...(window.WENYAN_DATA_1||[]),...(window.WENYAN_DATA_2||[]),...(window.WENYAN_DATA_3||[])];
+const base=[...(window.WENYAN_DATA_1||[]),...(window.WENYAN_DATA_2||[]),...(window.WENYAN_DATA_3||[]),...(window.WENYAN_DATA_4||[])];
 const KEY="wenyan-recall-v1", tryJSON=(v,f)=>{if(typeof v!=="string"||!v.trim())return f;try{const parsed=JSON.parse(v);return parsed&&typeof parsed==="object"&&!Array.isArray(parsed)?parsed:f}catch{return f}};
 let stored=tryJSON(localStorage.getItem(KEY),{}), custom=Array.isArray(stored.custom)?stored.custom:[];
 let works=()=>[...base,...custom], wi=Math.max(0,Math.min(Number(stored.wi)||0,works().length-1)),si=Number(stored.si)||0, whole=!!stored.whole,show=!!stored.show;
-let visited=new Set(stored.visited||[]), learned=new Set(stored.learned||[]), completions=new Set(stored.completions||[]);
-function save(){localStorage.setItem(KEY,JSON.stringify({custom,wi,si,whole,show,visited:[...visited],learned:[...learned],completions:[...completions]}));}
+let visited=new Set(stored.visited||[]), learned=new Set(stored.learned||[]), completions=new Set(stored.completions||[]), missionDone=new Set(stored.missionDone||[]);
+function save(){localStorage.setItem(KEY,JSON.stringify({custom,wi,si,whole,show,visited:[...visited],learned:[...learned],completions:[...completions],missionDone:[...missionDone]}));}
 function work(){return works()[wi]||works()[0];}
 function line(){const w=work();si=Math.max(0,Math.min(si,w.lines.length-1));return w.lines[si];}
 // 单字是学生索引的唯一单位，课本中的双字/多字词仅保留作为上下文。
 const hanCharacter=c=>/\p{Script=Han}/u.test(c);
 function tokensFor(w){
- const out=new Set(),sources=[w,...base,...custom];
- for(const book of sources)for(const item of book.terms||[])for(const ch of String(item[0]||""))if(hanCharacter(ch))out.add(ch);
- for(const term of window.WENYAN_STUDY_EDITOR?.indexTerms()||[])for(const ch of term)if(hanCharacter(ch))out.add(ch);
- for(const term of Object.keys(window.WENYAN_VERIFIED_CHARACTERS?.words||{}))out.add(term);
+ // 当前阅读正文中的全部汉字都能打开字卡，扩展语料绝不进入正文覆盖分母。
+ const out=new Set();
+ for(const row of w.lines||[])for(const ch of String(row[0]||""))if(hanCharacter(ch))out.add(ch);
  return out;
 }
 function marked(text,w){
- const known=tokensFor(w);let out="",i=0;
+ const known=tokensFor(w),priority=new Set((w.terms||[]).flatMap(t=>[...t[0]].filter(hanCharacter)));let out="",i=0;
  for(const ch of text){
   const shown=window.WENYAN_PINYIN?.span(text,i,w)||escape(ch);
   if(known.has(ch)){
-   out+='<span class="token" role="button" tabindex="0" data-term="'+escape(ch)+'" data-study-offset="'+i+'" aria-label="查看“'+escape(ch)+'”的字义和关联古文">'+shown+'</span>';
+   out+='<span class="token'+(priority.has(ch)?" keychar":"")+'" role="button" tabindex="0" data-term="'+escape(ch)+'" data-study-offset="'+i+'" aria-label="查看“'+escape(ch)+'”的字义和关联古文">'+shown+'</span>';
   }else out+=shown;
   i+=ch.length;
  }
@@ -42,16 +41,19 @@ function render(){
  $("progress").textContent="第 "+(si+1)+" / "+w.lines.length+" 句";
  $("sentence").dataset.plain=row[0];$("sentence").innerHTML=marked(row[0],w);
  $("translation").textContent=row[1];$("translation").hidden=!show;
- $("tapHelp").textContent=show?"轻点空白处隐藏译文 · 上滑下一句":"轻点空白处看译文 · 上滑下一句";
+ $("tapHelp").textContent="点击汉字查义 · 点下方按钮看译文 · 上滑下一句";
+ $("showTranslation").textContent=show?"收起译文 ↑":"👁 查看这句译文";
  $("grammarRow").innerHTML=[...new Set([...(row[2]?[row[2]]:[]),...(window.WENYAN_STUDY_EDITOR?.grammarForText(row[0])||[])])].map(g=>'<button data-pattern="'+escape(g)+'">'+escape(g)+" · 学句式 ↗</button>").join("");
  $("grammarRow").querySelectorAll("button").forEach(b=>b.onclick=()=>openPattern(b.dataset.pattern));
+ $("missionLaunch").hidden=!(w.missions?.length);
  $("dots").textContent=(si+1)+" / "+w.lines.length;
  bindTokens($("sentence"),w);
  } else {
  $("wholeTitle").textContent=w.title;$("wholeLevel").textContent=w.level;$("wholeSource").textContent=w.source;
- $("wholeBody").innerHTML=w.lines.map((x,i)=>'<article class="wholepara" data-i="'+i+'"><div class="wholetext" data-plain="'+escape(x[0])+'">'+marked(x[0],w)+'</div><div class="wholetranslation" hidden>'+escape(x[1])+'</div></article>').join("");
+ $("wholeBody").innerHTML=w.lines.map((x,i)=>'<article class="wholepara" data-i="'+i+'"><div class="wholetext" data-plain="'+escape(x[0])+'">'+marked(x[0],w)+'</div><button class="reveal-line" type="button" aria-label="显示或隐藏本句译文">译文 ▾</button><div class="wholetranslation" hidden>'+escape(x[1])+'</div></article>').join("");
  $("wholeBody").querySelectorAll(".wholepara").forEach(n=>n.onclick=()=>{const target=n.querySelector(".wholetranslation");target.hidden=!target.hidden;});
  bindTokens($("wholeBody"),w);
+ $("missionLaunchWhole").hidden=!(w.missions?.length);
  }
  setNav("homeTab");
 }
@@ -60,16 +62,58 @@ function select(i){wi=i;si=0;show=false;whole=false;close();render();}
 function modal(title,html,after){$("modalTitle").textContent=title;$("modalContent").innerHTML=html;$("overlay").hidden=false;if(after)after($("modalContent"));}
 function close(){$("overlay").hidden=true;}
 function list(){
- let html='<input id="searchWork" class="search" placeholder="搜索篇目、正文或出处"><div id="workItems"></div><button id="addWork" class="item">＋ 手动新增文章</button>';
+ let html='<p class="notice">先挑一个有趣的问题，再读原文寻找证据；难度逐级提升，课本篇目与趣味拓展分开标识。</p><input id="searchWork" class="search" placeholder="搜索篇目、正文或出处"><select id="gradeFilter" class="search" aria-label="按年级筛选"><option value="">全部难度</option><option value="初一">初一起步</option><option value="初二">初二进阶</option><option value="初三">初三挑战</option></select><div id="workItems"></div><button id="addWork" class="item">＋ 手动新增文章</button>';
  modal("选择篇目",html,root=>{
- const renderList=(q="")=>{$("workItems").innerHTML=works().map((w,i)=>({w,i})).filter(x=>[x.w.title,x.w.source,...x.w.lines.map(l=>l[0])].join(" ").includes(q)).map(({w,i})=>'<button class="item '+(i===wi?"current":"")+'" data-i="'+i+'"><b>'+String(i+1).padStart(2,"0")+'　'+escape(w.title)+'</b><small>'+escape(w.level)+' · '+w.lines.length+' 句 · '+escape(w.source)+'</small></button>').join("")||'<p class="notice">没有匹配的篇目。</p>';
- $("workItems").querySelectorAll("button").forEach(b=>b.onclick=()=>select(Number(b.dataset.i)));};
- $("searchWork").oninput=e=>renderList(e.target.value.trim());$("addWork").onclick=showAdd;renderList();
+ const renderList=(q="")=>{
+  const grade=$("gradeFilter").value;
+  $("workItems").innerHTML=works().map((w,i)=>({w,i}))
+   .filter(x=>(!grade||String(x.w.level).startsWith(grade))&&
+     [x.w.title,x.w.source,x.w.theme||"",x.w.hook||"",...x.w.lines.map(l=>l[0])].join(" ").includes(q))
+   .map(({w,i})=>{
+     const length=w.lines.map(x=>[...x[0]].filter(hanCharacter).length).reduce((a,b)=>a+b,0);
+     const missions=(w.missions?.length||0);
+     const completed=missions? w.missions.filter((_,j)=>missionDone.has(w.title+"#"+j)).length:0;
+     return '<button class="item '+(i===wi?"current":"")+'" data-i="'+i+'"><b>'+String(i+1).padStart(2,"0")+'　'+escape(w.title)+'</b>'+
+      '<small>'+escape(w.level||"自建")+' · 正文'+length+'字 · '+w.lines.length+'句'+(missions?' · 趣味挑战 '+completed+'/'+missions:'')+'</small>'+
+      (w.hook?'<span class="work-hook">'+escape(w.hook)+'</span>':'')+'</button>';
+   }).join("")||'<p class="notice">本筛选暂无篇目，试试其他年级或清空搜索。</p>';
+  $("workItems").querySelectorAll("[data-i]").forEach(b=>b.onclick=()=>select(Number(b.dataset.i)));
+ };
+ $("searchWork").oninput=e=>renderList(e.target.value.trim());$("gradeFilter").onchange=()=>renderList($("searchWork").value.trim());$("addWork").onclick=showAdd;renderList();
  });
 }
 function allEvidence(predicate){const out=[];for(let i=0;i<works().length;i++){const w=works()[i];w.lines.forEach((l,j)=>{if(predicate(l,w))out.push({w,i,j,l});});}return out;}
 function evidenceMarkup(matches,limit=60){return matches.slice(0,limit).map(x=>'<div class="evidence"><b>'+escape(x.w.title)+'</b><small>'+escape(x.w.source)+' · 第'+(x.j+1)+'句</small><p>'+escape(x.l[0])+'</p><div class="meaning">'+escape(x.l[1])+'</div><button data-go="'+x.i+','+x.j+'">跳到此句 ↗</button></div>').join("")+(matches.length>limit?'<p class="notice">为保持流畅，先显示前 '+limit+' 条；请使用搜索缩小范围。</p>':"");}
 function bindEvidence(root){root.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{const [i,j]=b.dataset.go.split(",").map(Number);wi=i;si=j;whole=false;show=false;close();render()});}
+// 不强迫刷题：每篇仅两道“故事推断 + 句式/字义”，答错有线索可重试。
+function openMission(n=0){
+ const w=work(),missions=w.missions||[];if(!missions.length)return;
+ const index=Math.max(0,Math.min(n,missions.length-1)),q=missions[index];
+ const completed=missions.filter((_,i)=>missionDone.has(w.title+"#"+i)).length;
+ const html='<p class="notice">🎯 '+escape(w.theme||"古文小侦探")+' · 已完成 '+completed+'/'+missions.length+' · 不计时，不扣分</p>'+
+ (w.hook?'<p class="mission-hook">'+escape(w.hook)+'</p>':'')+
+ '<div class="sectionLabel">第 '+(index+1)+' / '+missions.length+' 问 · '+escape(q.type)+'</div>'+
+ '<p class="mission-question">'+escape(q.question)+'</p>'+
+ '<blockquote class="mission-quote">'+escape(w.lines[q.line][0])+'</blockquote>'+
+ '<div class="mission-options">'+q.options.map((o,i)=>
+  '<button type="button" class="item" data-mission-choice="'+i+'">'+escape(o)+'</button>').join("")+'</div>'+
+ '<p id="missionResult" class="notice" aria-live="polite"></p>'+
+ '<div class="row"><button id="missionBack" type="button">← 上一问</button><button id="missionNext" type="button">'+(index===missions.length-1?'再读一遍':'下一问 →')+'</button></div>'+
+ '<p class="help">读原句、猜一猜、再看解释；遇到不会的字，返回正文点击单字。</p>';
+ modal("🧩 趣味闯关 · "+w.title,html,root=>{
+  root.querySelectorAll("[data-mission-choice]").forEach(btn=>btn.onclick=()=>{
+   const choice=Number(btn.dataset.missionChoice),result=$("missionResult");
+   if(choice!==q.answer){result.textContent="再试一次：仔细看看上面的原句，找出一处支持答案的证据。";return;}
+   missionDone.add(w.title+"#"+index);save();
+   result.textContent="✓ 找对了！"+q.explain;
+   root.querySelectorAll("[data-mission-choice]").forEach(b=>{b.disabled=true;if(Number(b.dataset.missionChoice)===q.answer)b.classList.add("current")});
+  });
+  $("missionBack").disabled=index===0;
+  $("missionBack").onclick=()=>openMission(index-1);
+  $("missionNext").onclick=()=>{if(index===missions.length-1){close();render()}else openMission(index+1)};
+  if(missionDone.has(w.title+"#"+index))$("missionResult").textContent="✓ 这道题已通过，仍然可以再挑战一次。";
+ });
+}
 function openTerm(term,w){
  const dict=(w.terms||[]).find(t=>t[0]===term)||(w.terms||[]).find(t=>t[0].includes(term));
  const examples=allEvidence(l=>l[0].includes(term));
@@ -122,7 +166,7 @@ function settings(){
  '<p class="help">内置篇目、注释与例句为首版学习底稿，尚非经过出版社审定的权威教材。遇到古籍版本差异，以教材指定版本为准。</p>';
  modal("我的 · 添加与备份",html,root=>{
  $("add").onclick=showAdd;$("studyEditSettings").onclick=()=>window.WENYAN_STUDY_EDITOR?.open();
- $("export").onclick=()=>{const blob=new Blob([JSON.stringify({version:1,data:stored={custom,wi,si,whole,show,visited:[...visited],learned:[...learned],completions:[...completions]},study:window.WENYAN_STUDY_EDITOR?.data()||null},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="文言拾句-学习备份-"+new Date().toISOString().slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);};
+ $("export").onclick=()=>{const blob=new Blob([JSON.stringify({version:1,data:stored={custom,wi,si,whole,show,visited:[...visited],learned:[...learned],completions:[...completions],missionDone:[...missionDone]},study:window.WENYAN_STUDY_EDITOR?.data()||null},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="文言拾句-学习备份-"+new Date().toISOString().slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);};
  $("import").onchange=async e=>{try{const data=JSON.parse(await e.target.files[0].text());if(data.version!==1||!data.data||!Array.isArray(data.data.custom))throw Error("文件格式不正确");if(!confirm("导入将替换当前学习进度与自定义篇目，确认继续？"))return;localStorage.setItem(KEY,JSON.stringify(data.data));if(data.study?.version===1&&data.study.words&&data.study.grammar)localStorage.setItem("wenyan-recall-study-v1",JSON.stringify(data.study));location.reload();}catch(err){alert("导入失败："+err.message)}};
  root.querySelectorAll("[data-remove]").forEach(b=>b.onclick=()=>{if(!confirm("确定删除这篇自定义文章？"))return;custom.splice(Number(b.dataset.remove),1);wi=Math.min(wi,works().length-1);si=0;save();settings();});
  });
@@ -134,6 +178,9 @@ $("card").addEventListener("touchstart",e=>{start={x:e.touches[0].clientX,y:e.to
 $("card").addEventListener("touchend",e=>{if(!start||e.target.closest(".token")){start=null;return;}const delta=e.changedTouches[0].clientY-start.y,h=Math.abs(e.changedTouches[0].clientX-start.x);if(Math.abs(delta)>65&&Math.abs(delta)>h*1.2){e.preventDefault();move(delta<0?1:-1);}start=null;},{passive:false});
 document.addEventListener("keydown",e=>{if($("overlay").hidden&& !whole && !["INPUT","TEXTAREA"].includes(document.activeElement.tagName)){if(e.key==="ArrowDown"){e.preventDefault();move(1)}if(e.key==="ArrowUp"){e.preventDefault();move(-1)}}if(e.key==="Escape")close();});
 $("prev").onclick=()=>move(-1);$("next").onclick=()=>move(1);
+ $("showTranslation").onclick=()=>{show=!show;save();render()};
+ $("missionLaunch").onclick=()=>openMission();
+ $("missionLaunchWhole").onclick=()=>openMission();
 $("choose").onclick=list;$("mode").onclick=()=>{whole=!whole;save();render();};$("more").onclick=settings;
 $("homeTab").onclick=()=>{close();render()};$("libraryTab").onclick=list;$("reviewTab").onclick=review;$("settingsTab").onclick=settings;
 $("close").onclick=close;$("overlay").onclick=e=>{if(e.target===$("overlay"))close();};

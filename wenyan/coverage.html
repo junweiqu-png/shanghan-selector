@@ -1,52 +1,75 @@
-<!doctype html>
-<html lang="zh-CN">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>文言拾句 · 单字校译进度</title>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>文言拾句 · 正文单字校译进度</title>
 <style>
-:root{color-scheme:light;font-family:system-ui,-apple-system,"Microsoft YaHei",sans-serif;background:#f8f5ec;color:#34312c}
-*{box-sizing:border-box}body{max-width:1020px;padding:18px;margin:auto}a{color:#306151;text-decoration:none}
-header{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}h1{font-size:24px;margin:12px 0}
-small,p{line-height:1.6}p{color:#696157}.stat{background:white;border:1px solid #eee7db;border-radius:14px;padding:14px;margin:12px 0}
-.stats{display:flex;gap:12px;flex-wrap:wrap}.stats span{flex:1;min-width:160px;font-size:15px}.stats b{font-size:23px;color:#215a45}
-.controls{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}input,select{font-size:16px;padding:11px;border:1px solid #d5ccbe;border-radius:9px;background:white;flex:1;min-width:160px}
-.table{display:grid;gap:8px}.row{background:white;border:1px solid #eee7db;border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:9px}
-.name{font-size:19px;font-weight:700}.muted{color:#716c65;font-size:13px;line-height:1.6}.tag{display:inline-block;font-size:12px;margin-right:4px;border-radius:6px;padding:2px 6px}
-.ready{background:#dff2e3;color:#22603d}.pending{background:#ffebc9;color:#854b16}.partial{background:#e9eafa;color:#4b5079}
-.actions{white-space:nowrap}button{cursor:pointer}.note{font-size:13px;color:#7a715f}
+:root{font-family:system-ui,-apple-system,"Microsoft YaHei",sans-serif;background:#f8f5ec;color:#34312c}
+*{box-sizing:border-box}body{max-width:1050px;margin:auto;padding:18px}a{color:#2b624e;text-decoration:none}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+h1{font-size:24px}p{line-height:1.7;color:#655e54}small{font-size:13px}
+.stat{background:white;border:1px solid #e7dfd2;border-radius:14px;padding:12px;margin:14px 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:9px}
+.stats span{padding:8px;line-height:1.55;font-size:13px}.stats b{font-size:24px;color:#315e45}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+input,select,button{font:inherit;font-size:15px;border:1px solid #cfc5b5;border-radius:10px;padding:10px;background:white}
+input{flex:2;min-width:155px}select{flex:1;min-width:135px}
+.table{display:grid;gap:8px}.row{background:white;border:1px solid #eee7db;border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.name{font-size:21px;font-weight:700}.muted{font-size:13px;color:#716c65;line-height:1.65}
+.tag{display:inline-block;font-size:12px;margin:0 3px;border-radius:6px;padding:3px 6px}
+.ready{background:#ddf1e0;color:#246240}.pending{background:#ffeed5;color:#805026}.priority{background:#e4edf8;color:#284f7a}
+.notes{font-size:13px;color:#786a56}.actions{white-space:nowrap;font-size:14px}.more{display:block;margin:16px auto;min-width:160px}
 </style></head><body>
-<header><a href="./">← 返回文言拾句</a><a href="evidence/character-coverage-report.json" target="_blank" rel="noopener">查看原始核验报告 ↗</a></header>
-<h1>课内单字 · 校译进度</h1>
-<p>所有双字、多字学习项都拆成独立汉字，按原句语境理解。<strong>一个字可有多种含义</strong>；有整句译文不等于已核对本字义项。</p>
-<section class="stat"><div id="stats" class="stats">正在读取核验数据……</div><p class="note">目标：每个课内单字找到至少 5 篇独立古文，其中至少 2 篇该字与原句同义；只统计逐字校核完成的例句。</p></section>
-<div class="controls"><input id="query" placeholder="搜索单字或篇目" aria-label="搜索单字或篇目"><select id="filter" aria-label="按核校状态筛选"><option value="all">全部</option><option value="pending" selected>尚待完善</option><option value="ready">已满足关联规则</option><option value="origin">原句字义尚待校核</option></select></div>
-<div id="total" class="note"></div><section id="rows" class="table" aria-live="polite"></section>
+<header><a href="./">← 返回正文阅读</a><a href="evidence/character-coverage-report.json" target="_blank" rel="noopener">原始逐字校核报告 ↗</a></header>
+<h1>先看正文 · 逐字学懂</h1>
+<p><b>这里统计的是本站实际发布的古文正文里的字</b>，不把关联扩展文章、题目里的字放入分母。
+重点字来自正文人工注释，扩展例句只作为参考证据，不会让某个字无缘无故“已学会”。</p>
+<section class="stat"><div id="stats" class="stats">正在读取正文进度……</div><p class="notes" id="scope"></p></section>
+<div class="controls"><input id="query" aria-label="搜索正文单字或文章" placeholder="输入一个字或篇目，如：焉、三峡"><select id="filter" aria-label="按掌握情况筛选">
+<option value="priority" selected>优先学习：正文重点字</option><option value="pending">待完善的正文汉字</option>
+<option value="origin">尚缺正文义项</option><option value="ready">已满足关联规则</option><option value="all">全部正文汉字</option>
+</select></div>
+<p id="total" class="notes"></p><section id="rows" class="table" aria-live="polite"></section>
+<button id="more" class="more" hidden>再看更多汉字 ↓</button>
+<footer><p class="notes">说明：这是本站现有正文的完成度，<b>不是全省或全国中考的字表覆盖率</b>。初中阅读还需要整句翻译、句式、人物动机及新材料迁移能力。对照依据：<a href="https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582344386456.pdf" target="_blank" rel="noopener">义务教育语文课程标准（2022年版）</a>。</p></footer>
 <script>
-(()=>{"use strict";
-const $=id=>document.getElementById(id);
+(()=>{"use strict";const $=id=>document.getElementById(id);let items=[],visible=60;
 function card(t){
- const line=document.createElement("div");line.className="row";
+ const row=document.createElement("div");row.className="row";
  const box=document.createElement("div");
- const name=document.createElement("a");name.className="name";name.href="./?term="+encodeURIComponent(t.term);name.textContent=t.term;box.append(name);
- const tag=document.createElement("span");tag.className="tag "+(t.ready?"ready":"pending");tag.textContent=t.ready?"关联规则达标":"仍缺校译";box.append(document.createTextNode(" "),tag);
- if(!t.originAnnotated){const x=document.createElement("span");x.className="tag partial";x.textContent="原句字义待核";box.append(x)}
- const line2=document.createElement("div");line2.className="muted";line2.textContent="篇目："+[...new Set(t.items.map(x=>x.work))].join("、")+
- " · 已逐字核义 "+t.minReviewedExamples+" 篇 · 同义至少 "+t.minSameSense+" 篇";
- box.append(line2);line.append(box);const go=document.createElement("a");go.className="actions";go.href=name.href;go.textContent="打开卡片 ↗";line.append(go);return line;
+ const a=document.createElement("a");a.className="name";a.href="./?term="+encodeURIComponent(t.char);a.textContent=t.char;box.append(a);
+ const state=document.createElement("span");state.className="tag "+(t.ready?"ready":"pending");state.textContent=t.ready?"关联达标":"继续完善";
+ box.append(document.createTextNode(" "),state);
+ if(t.priority){const p=document.createElement("span");p.className="tag priority";p.textContent="正文重点字";box.append(p)}
+ const d=document.createElement("div");d.className="muted";
+ const labels=(t.workTitles||t.items.map(x=>x.work));
+ const named=[...new Set(labels)];
+ d.textContent="正文出现 "+t.frequency+" 次 · 涉及 "+t.uses+" 篇 · "+(t.anyOriginAnnotated?"已有字义注释":"本字义项待核")+
+ " · 同字校译关联至少 "+t.minReviewedExamples+" 篇 · 同义至少 "+t.minSameSense+" 篇"+
+ "｜"+named.slice(0,2).join("、")+(named.length>2?"等":"");
+ box.append(d);row.append(box);
+ const link=document.createElement("a");link.className="actions";link.href=a.href;link.textContent="学这个字 ↗";row.append(link);
+ return row;
+}
+function draw(){
+ const q=$("query").value.trim(),mode=$("filter").value;
+ let set=items.filter(x=>(!q||x.char.includes(q)||(x.workTitles||[]).some(n=>n.includes(q)))&&
+ (mode==="all"||mode==="priority"&&x.priority||mode==="pending"&&!x.ready||
+ mode==="ready"&&x.ready||mode==="origin"&&!x.originAnnotated));
+ set.sort((a,b)=>Number(b.priority)-Number(a.priority)||Number(a.ready)-Number(b.ready)||b.frequency-a.frequency||a.char.localeCompare(b.char,"zh-CN"));
+ $("total").textContent="当前显示 "+Math.min(visible,set.length)+" / "+set.length+" 个符合条件的正文汉字（本站总正文独立字 "+items.length+" 个）";
+ $("rows").replaceChildren(...set.slice(0,visible).map(card));$("more").hidden=visible>=set.length;
 }
 fetch("evidence/character-coverage-report.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("HTTP "+r.status);return r.json()}).then(data=>{
- const stats=data.summary,items=data.characters;
- const set=(node,text)=>node.textContent=text;
- $("stats").replaceChildren();
- for(const [num,desc] of [[stats.distinctCharacters,"课内单字"],[stats.characterLessonUses,"跨篇学字位置"],[stats.charactersMeetingRule,"关联规则达标字"],[stats.charactersStillWithoutFive,"已核关联不足 5 篇的字"]]){
- const s=document.createElement("span"),b=document.createElement("b");b.textContent=num;s.append(b,document.createElement("br"),document.createTextNode(desc));$("stats").append(s);
- }
- const draw=()=>{const key=$("query").value.trim(),mode=$("filter").value;let filtered=items.filter(t=>
- (!key||t.term.includes(key)||t.items.some(i=>i.work.includes(key)))&&
- (mode==="all"||mode==="pending"&&!t.ready||mode==="ready"&&t.ready||mode==="origin"&&!t.originAnnotated));
- filtered.sort((a,b)=>Number(a.ready)-Number(b.ready)||a.minReviewedExamples-b.minReviewedExamples||a.term.localeCompare(b.term,"zh-CN"));
- $("total").textContent="显示 "+filtered.length+" / "+items.length+" 个单字";
- $("rows").replaceChildren(...filtered.map(card));};
- $("query").addEventListener("input",draw);$("filter").addEventListener("change",draw);draw();
-}).catch(e=>{$("stats").textContent="校译报告暂未就绪，请等待本站构建成功；"+e.message;});
+ const x=data.summary;items=data.characters||[];
+ const fields=[[x.works,"已收录正文"],[x.bodyUniqueCharacters,"正文独立汉字"],[x.priorityCharacters,"正文重点字"],
+ [x.charactersWithSomeSource,"至少一处有释义"],[x.charactersMeetingRule,"跨篇核义达标"],[x.newStoryWorks,"分级趣味新篇"]];
+ $("stats").replaceChildren(...fields.map(([num,title])=>{
+  const n=document.createElement("span"),b=document.createElement("b");b.textContent=num;
+  n.append(b,document.createElement("br"),document.createTextNode(title));return n;
+ }));
+ $("scope").textContent="新添 "+x.newStoryWorks+" 篇分级选文、"+x.miniChallenges+" 道趣味任务。正文全部汉字出现 "+x.bodyOccurrences+" 次；已精确定位的释义出现位置约 "+x.annotatedOccurrences+" 次。";
+ $("query").addEventListener("input",()=>{visible=60;draw()});
+ $("filter").addEventListener("change",()=>{visible=60;draw()});
+ $("more").addEventListener("click",()=>{visible+=60;draw()});
+ draw();
+}).catch(e=>{$("stats").textContent="读取失败："+e.message;$("scope").textContent="如果刚刚发布，请核对 Pages 部署状态。"});
 })();
 </script></body></html>
