@@ -87,12 +87,12 @@ assert(expl.includes('which.closest("#wordList")'),'glossary click needs its own
 assert(expl.includes('if(!text.includes(term))'),'never display an ancient quote that lacks its purported headword');
 assert(expl.includes('const key=r.title+"|"+normalizeSense(r.code)'),'identical source senses must be deduplicated');
 const extendedWindow={};
-for(const file of ['data-basic.js','data-classic.js','data-extra.js']){
+for(const file of ['data-basic.js','data-classic.js','data-extra.js','data-junior.js']){
  const source=fs.readFileSync(dir+file,'utf8');
  new vm.Script(source,{filename:file}).runInNewContext({window:extendedWindow});
 }
 let extraLex=0,extraGram=0;
-for(const [file,key] of [['study-crosslesson.js','WENYAN_CROSSLESSON'],['study-verified-extra.js','WENYAN_VERIFIED_EXTRA'],['study-verified-more2.js','WENYAN_VERIFIED_MORE2'],['study-verified-common3.js','WENYAN_VERIFIED_COMMON3'],['study-verified-corpus.js','WENYAN_VERIFIED_CORPUS'],['study-verified-batch4.js','WENYAN_VERIFIED_BATCH4'],['study-verified-batch5.js','WENYAN_VERIFIED_BATCH5'],['study-verified-batch6.js','WENYAN_VERIFIED_BATCH6'],['study-verified-batch7.js','WENYAN_VERIFIED_BATCH7'],['study-grammar-more.js','WENYAN_GRAMMAR_MORE']]){
+for(const [file,key] of [['study-crosslesson.js','WENYAN_CROSSLESSON'],['study-verified-extra.js','WENYAN_VERIFIED_EXTRA'],['study-verified-more2.js','WENYAN_VERIFIED_MORE2'],['study-verified-common3.js','WENYAN_VERIFIED_COMMON3'],['study-verified-corpus.js','WENYAN_VERIFIED_CORPUS'],['study-verified-batch4.js','WENYAN_VERIFIED_BATCH4'],['study-verified-batch5.js','WENYAN_VERIFIED_BATCH5'],['study-verified-batch6.js','WENYAN_VERIFIED_BATCH6'],['study-verified-batch7.js','WENYAN_VERIFIED_BATCH7'],['study-verified-batch8.js','WENYAN_VERIFIED_BATCH8'],['study-grammar-more.js','WENYAN_GRAMMAR_MORE']]){
  const source=fs.readFileSync(dir+file,'utf8');
  new vm.Script(source,{filename:file}).runInNewContext({window:extendedWindow});
  assert(app.includes(file),'supplemental corpus not included in HTML '+file);
@@ -173,6 +173,15 @@ for(const term of ['走','尝','虽','安','故']){
  const data=extendedWindow.WENYAN_VERIFIED_BATCH7.words[term];
  assert(data?.examples?.length>=3&&data.examples.every(x=>x[2].includes(term)&&x[3]&&x[8]),'batch7 source evidence '+term);
 }
+const zhu=extendedWindow.WENYAN_VERIFIED_BATCH8.words['筑'];
+const zhuLesson=extendedWindow.WENYAN_DATA_4.find(x=>x.title==='智子疑邻');
+assert(zhuLesson?.terms.some(x=>x[0]==='筑'&&x[2].includes('修补')),'筑 must be part of 智子疑邻 body annotations');
+assert(zhu.sources.some(x=>x[0]==='智子疑邻'&&x[1].includes('不筑')&&x[4]==='build-structure'),'筑 must have an exact current-lesson origin anchor');
+assert.equal(zhu.examples.length,12,'筑 must include ten construction examples and two distinct-sense examples');
+assert.equal(new Set(zhu.examples.map(x=>x[0])).size,12,'筑 needs twelve distinct passages');
+assert.equal(zhu.examples.filter(x=>x[6]==='build-structure').length,10,'筑 needs ten same-core construction examples');
+assert.equal(zhu.examples.filter(x=>x[6]==='instrument').length,2,'筑 instrument sense must remain distinct');
+assert(zhu.examples.every(x=>x[2].includes('筑')&&x[3]&&x[4]&&x[5]&&x[6]&&x[7]&&x[8]),'筑 examples require exact text, translation and sense metadata');
 const cross7=extendedWindow.WENYAN_CROSSLESSON;
 assert(!(cross7.words['宁']?.sources||[]).some(x=>x[0]==='管宁割席'||x[0]==='诫子书'),'names and 宁静 must not be translated as 宁愿');
 assert(cross7.words['信']?.sources?.some(x=>x[1].includes('自信')&&x[4]==='believe'),'自信 cannot mean 果然');
