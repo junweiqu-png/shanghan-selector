@@ -18,6 +18,9 @@ const stores=[win.WENYAN_ANNOTATIONS,win.WENYAN_CROSSLESSON,win.WENYAN_VERIFIED_
  win.WENYAN_VERIFIED_BATCH4,win.WENYAN_VERIFIED_BATCH5,win.WENYAN_VERIFIED_BATCH6,
  win.WENYAN_VERIFIED_BATCH7,win.WENYAN_VERIFIED_CHARACTERS,win.WENYAN_JUNIOR_GLOSSES];
 const han=c=>/\p{Script=Han}/u.test(c);
+const invalidEvidenceKeys=stores.flatMap((store,index)=>Object.keys(store?.words||{})
+ .filter(c=>[...c].length!==1||!han(c)).map(key=>({store:index,key})));
+if(invalidEvidenceKeys.length)throw Error("evidence stores must use single-Han-character keys: "+JSON.stringify(invalidEvidenceKeys));
 const bodyLetters=w=>[...(w.lines||[]).flatMap(line=>[...String(line[0]||"")])].filter(han);
 const named=new Set();
 for(const w of works)if(!w.title||named.has(w.title))throw Error("duplicate or empty main work "+w.title);else named.add(w.title);
@@ -84,6 +87,8 @@ const summary={
  miniChallenges:(win.WENYAN_DATA_4||[]).reduce((n,w)=>n+(w.missions?.length||0),0),
  distinctCharacters:characters.length,bodyUniqueCharacters:letters.length,bodyOccurrences,
  characterLessonUses:uses.length,
+ singleCharacterEvidenceKeys:stores.reduce((n,store)=>n+Object.keys(store?.words||{}).length,0),
+ nonCharacterEvidenceKeys:invalidEvidenceKeys.length,
  priorityCharacters:characters.filter(x=>x.priority).length,
  charactersWithSomeSource:characters.filter(x=>x.anyOriginAnnotated).length,
  charactersFullyOriginAnnotated:characters.filter(x=>x.originAnnotated).length,
