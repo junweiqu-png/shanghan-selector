@@ -115,29 +115,29 @@ function openMission(n=0){
  });
 }
 function openTerm(term,w){
- const dict=(w.terms||[]).find(t=>t[0]===term)||(w.terms||[]).find(t=>t[0].includes(term));
+ const dict=(w.terms||[]).find(t=>t[0]===term);
  const examples=allEvidence(l=>l[0].includes(term));
- const definitions=works().flatMap(x=>(x.terms||[]).filter(t=>t[0].includes(term)).map(t=>({w:x,t})));
- const html='<p><span class="pill">'+escape(dict?.[1]||"词语")+'</span> <strong style="font-size:27px">'+escape(term)+'</strong></p><p class="notice">当前篇解释：'+escape(dict?.[2]||"未添加释义")+'。同字在不同篇目的含义和语法作用可能不同，请结合上下文判断。</p>'+
+ const definitions=works().flatMap(x=>(x.terms||[]).filter(t=>t[0]===term).map(t=>({w:x,t})));
+ const html='<p><span class="pill">'+escape(dict?.[1]||"单字")+'</span> <strong style="font-size:27px">'+escape(term)+'</strong></p><p class="notice">本篇字义：'+escape(dict?.[2]||"本篇尚未校定此字的独立义项，请结合原句和关联例文学习")+'。同字在不同篇目的含义和语法作用可能不同，请结合上下文判断。</p>'+
  '<div class="row"><button id="markWord">'+(learned.has(term)?"✓ 已掌握":"标记为已掌握")+'</button></div>'+
  '<div class="sectionLabel">全站释义 · '+definitions.length+' 条</div>'+
  (definitions.map(x=>'<div class="evidence"><b>'+escape(x.w.title)+'</b>　'+escape(x.t[1])+'：'+escape(x.t[2])+'</div>').join("")||'<p class="help">暂无其他篇的校核释义。</p>')+
  '<div class="sectionLabel">跨篇原文应用 · '+examples.length+' 句</div>'+
  '<p class="help">以下是目前收录古文的原文命中，不代表每个例句中的字义都相同。例句不够时可以添加更多古文，不能自动虚构。</p>'+
  (examples.length?evidenceMarkup(examples):'<p>暂无命中。</p>');
- modal("字义 · 实词虚词 · 跨篇例句",html,root=>{$("markWord").onclick=()=>{if(learned.has(term))learned.delete(term);else learned.add(term);save();$("markWord").textContent=learned.has(term)?"✓ 已掌握":"标记为已掌握";};bindEvidence(root);});
+ modal("字义 · 单字用法 · 跨篇例句",html,root=>{$("markWord").onclick=()=>{if(learned.has(term))learned.delete(term);else learned.add(term);save();$("markWord").textContent=learned.has(term)?"✓ 已掌握":"标记为已掌握";};bindEvidence(root);});
 }
 function openPattern(name){
  const matches=allEvidence(l=>l[2]===name);
- const html='<p class="notice">这是按照人工标注的句式类型汇集的原句；并非所有包含同一字词的句子都属于同一句式。对于争议句式，请以权威教材讲解为准。</p><h2>'+escape(name)+'</h2><div class="sectionLabel">已标注的古文应用 · '+matches.length+' 句</div>'+evidenceMarkup(matches);
+ const html='<p class="notice">这是按照人工标注的句式类型汇集的原句；并非所有包含同一字的句子都属于同一句式。对于争议句式，请以权威教材讲解为准。</p><h2>'+escape(name)+'</h2><div class="sectionLabel">已标注的古文应用 · '+matches.length+' 句</div>'+evidenceMarkup(matches);
  modal("句式专题 · "+name,html,bindEvidence);
 }
 function review(){
- const stats='<div class="stats"><div><strong>'+works().length+'</strong><small>收录篇目</small></div><div><strong>'+visited.size+'</strong><small>已学习篇</small></div><div><strong>'+learned.size+'</strong><small>掌握词语</small></div></div>';
+ const stats='<div class="stats"><div><strong>'+works().length+'</strong><small>收录篇目</small></div><div><strong>'+visited.size+'</strong><small>已学习篇</small></div><div><strong>'+learned.size+'</strong><small>掌握字数</small></div></div>';
  const words=[...new Set([...works().flatMap(w=>(w.terms||[]).flatMap(t=>[...t[0]].filter(hanCharacter))),...(window.WENYAN_STUDY_EDITOR?.indexTerms()||[]).flatMap(t=>[...t].filter(hanCharacter))])].sort((a,b)=>a.localeCompare(b,"zh-CN"));
- let html=stats+'<div class="sectionLabel">单字索引 · '+words.length+' 字</div><input id="wordSearch" class="search" placeholder="按字查实词 / 虚词"><div id="wordList"></div><div class="row"><a class="pill" href="coverage.html" target="_blank" rel="noopener noreferrer">查看全部单字的校译进度 ↗</a></div><div class="sectionLabel">句式专题</div><div id="patterns"></div><div class="row"><button id="studyEditReview">＋ 录入新实词、虚词、句式</button></div>';
- modal("积累 · 实词虚词与句式",html,root=>{
- let draw=(q="")=>{$("wordList").innerHTML=words.filter(s=>s.includes(q)).map(s=>'<button class="pill" data-term="'+escape(s)+'">'+escape(s)+(learned.has(s)?" ✓":"")+'</button>').join("")||"暂无";$("wordList").querySelectorAll("[data-term]").forEach(b=>b.onclick=()=>{let ref=works().find(w=>(w.terms||[]).some(t=>t[0].includes(b.dataset.term)))||work();openTerm(b.dataset.term,ref);});};
+ let html=stats+'<div class="sectionLabel">单字索引 · '+words.length+' 字</div><input id="wordSearch" class="search" placeholder="按字查释义"><div id="wordList"></div><div class="row"><a class="pill" href="coverage.html" target="_blank" rel="noopener noreferrer">查看全部单字的校译进度 ↗</a></div><div class="sectionLabel">句式专题</div><div id="patterns"></div><div class="row"><button id="studyEditReview">＋ 录入新单字释义、句式</button></div>';
+ modal("积累 · 单字与句式",html,root=>{
+ let draw=(q="")=>{$("wordList").innerHTML=words.filter(s=>s.includes(q)).map(s=>'<button class="pill" data-term="'+escape(s)+'">'+escape(s)+(learned.has(s)?" ✓":"")+'</button>').join("")||"暂无";$("wordList").querySelectorAll("[data-term]").forEach(b=>b.onclick=()=>{let ref=works().find(w=>(w.terms||[]).some(t=>t[0]===b.dataset.term))||works().find(w=>(w.lines||[]).some(line=>String(line[0]||"").includes(b.dataset.term)))||work();openTerm(b.dataset.term,ref);});};
  $("wordSearch").oninput=e=>draw(e.target.value.trim());draw();
  const pats=[...new Set([...works().flatMap(w=>w.lines.map(l=>l[2]).filter(Boolean)),...(window.WENYAN_STUDY_EDITOR?.indexPatterns()||[])])];
  $("patterns").innerHTML=pats.map(p=>'<button class="pill" data-p="'+escape(p)+'">'+escape(p)+'</button>').join("");
@@ -148,18 +148,20 @@ function showAdd(){
  modal("新增古文 · 手工录入",'<p class="notice">逐句一行，原文和翻译用“ || ”分隔；也可以只填原文，之后再补译。填写保存后仅存于当前浏览器。建议保留出处和版本信息，不把未核查内容标作权威资料。</p>'+
  '<div class="form"><label>标题 *</label><input id="newTitle" placeholder="例如：新篇目"><label>出处 / 版本</label><input id="newSource" placeholder="例如：《世说新语·言语》"><label>分类</label><select id="newLevel"><option>基础语感</option><option>经典积累</option><option>我的文章</option></select>'+
  '<label>每句原文 || 译文（每行一组） *</label><textarea id="newLines" placeholder="原文第一句。 || 第一句译文。\n原文第二句。 || 第二句译文。"></textarea>'+
- '<label>词语标注（每行：词语 | 类型 | 释义）</label><textarea id="newTerms" placeholder="之 | 虚词 | 代词，指代前文事物"></textarea><button id="saveNew">保存文章并开始背诵</button><div id="formError" class="danger"></div></div>',root=>{
+ '<label>单字标注（每行：字 | 类型 | 字义）</label><textarea id="newTerms" placeholder="之 | 虚字 | 代词，指代前文事物"></textarea><button id="saveNew">保存文章并开始背诵</button><div id="formError" class="danger"></div></div>',root=>{
  $("saveNew").onclick=()=>{
  const title=$("newTitle").value.trim(),raw=$("newLines").value.trim();if(!title||!raw){$("formError").textContent="标题和原文不能为空";return;}
  const lines=raw.split(/\n+/).map(s=>{let v=s.split(/\s*\|\|\s*/);return [(v[0]||"").trim(),(v.slice(1).join(" || ")||"").trim(),""]}).filter(x=>x[0]);
  if(!lines.length){$("formError").textContent="请至少输入一句原文";return;}
- const terms=$("newTerms").value.split(/\n+/).map(s=>s.split("|").map(v=>v.trim())).filter(t=>t.length===3&&t[0]);
+ const termRows=$("newTerms").value.split(/\n+/).map(s=>s.split("|").map(v=>v.trim())).filter(t=>t.some(Boolean));
+ if(termRows.some(t=>t.length!==3||[...t[0]].length!==1||!hanCharacter(t[0]))){$("formError").textContent="单字标注每行只能填写一个汉字；多字表达请拆成多个单字分别标注。";return;}
+ const terms=termRows;
  custom.push({title,source:$("newSource").value.trim()||"个人导入（待核查）",level:$("newLevel").value,lines,terms,ruby:{},hint:""});wi=works().length-1;si=0;whole=false;show=false;save();close();render();
  };});
 }
 function settings(){
  const html='<p class="notice">学习数据、手动添加的文章仅保存在当前浏览器的 localStorage。清理网站数据、换手机、换浏览器可能导致丢失。建议定期导出备份。</p>'+
- '<div class="row"><a class="pill" href="coverage.html" target="_blank" rel="noopener noreferrer">查看所有课内单字校译进度 ↗</a></div><div class="sectionLabel">数据管理</div><div class="row"><button id="add">＋ 新增文章</button><button id="studyEditSettings">＋ 实词／虚词／句式</button><button id="export">导出全部数据</button></div>'+
+ '<div class="row"><a class="pill" href="coverage.html" target="_blank" rel="noopener noreferrer">查看所有课内单字校译进度 ↗</a></div><div class="sectionLabel">数据管理</div><div class="row"><button id="add">＋ 新增文章</button><button id="studyEditSettings">＋ 单字释义／句式</button><button id="export">导出全部数据</button></div>'+
  '<label class="item" style="cursor:pointer">导入备份 JSON（将替换当前数据）<input id="import" type="file" accept="application/json,.json" style="display:block;margin-top:9px"></label>'+
  '<div class="sectionLabel">我的文章</div>'+(custom.length?custom.map((w,i)=>'<div class="item"><b>'+escape(w.title)+'</b><small>'+w.lines.length+'句　<button data-remove="'+i+'">删除此自定义篇目</button></small></div>').join(""):'<p class="help">暂无自定义文章。</p>')+
  '<div class="sectionLabel">使用说明</div><p class="help">逐句模式：上滑下一句，下滑上一句；轻点正文空白区域展开译文；点带点线的实词、虚词可看本句释义及跨篇古文；点句式标签查其他古文中的应用。整篇模式可逐句点开译文。学习状态自动保存。</p>'+
