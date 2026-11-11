@@ -26,7 +26,8 @@ for(const work of works)for(const [term,part,meaning]of work.terms||[]){
   const key=x[0]+'|'+normalize(x[6]);if(seen.has(key))continue;seen.add(key);rows.push(x);
  }
  const same=source?rows.filter(x=>normalize(x[6])===normalize(source[4])).length:0;
- uses.push({work:work.title,term,part,meaning,originAnnotated:!!source,originMeaning:source?.[2]||meaning,reviewedExamples:rows.length,sameSense:same,differentSense:source?rows.length-same:0,firstTwoSame:same>=2,meetsFive:rows.length>=5,meetsRule:!!source&&rows.length>=5&&same>=2,shortfall:Math.max(0,5-rows.length)});
+ const exactWord=rows.filter(x=>(x[9]||term)===term).length,relatedCharacter=rows.length-exactWord;
+ uses.push({work:work.title,term,part,meaning,originAnnotated:!!source,originMeaning:source?.[2]||meaning,reviewedExamples:rows.length,exactWordExamples:exactWord,relatedCharacterExamples:relatedCharacter,sameSense:same,differentSense:source?rows.length-same:0,firstTwoSame:same>=2,meetsFive:rows.length>=5,meetsRule:!!source&&rows.length>=5&&same>=2,shortfall:Math.max(0,5-rows.length)});
 }
 const terms=[...new Set(uses.map(x=>x.term))];
 const manifestPath=path.join(out,'expanded-manifest.json');
@@ -50,6 +51,8 @@ const summary={
  termsWithNoRawCandidates:unique.filter(x=>x.rawCandidates===0).length,
  termsWithAtLeastFiveReviewedExamples:unique.filter(x=>x.minReviewedExamples>=5).length,
  termsWithTwoSameSenseExamples:unique.filter(x=>x.minSameSense>=2).length,
+ termsWithAtLeastFiveExactWordExamples:unique.filter(x=>x.items.every(u=>u.exactWordExamples>=5)).length,
+ relatedCharacterExamples:uses.reduce((n,x)=>n+x.relatedCharacterExamples,0),
  termsMeetingFullRule:unique.filter(x=>x.ready).length,
  termsMissingOriginAnnotation:unique.filter(x=>!x.originAnnotated).length,
  termsStillWithoutFiveReviewedExamples:unique.filter(x=>x.minReviewedExamples<5).length
@@ -61,3 +64,12 @@ fs.writeFileSync(dest,JSON.stringify(report,null,2),'utf8');
 console.log(JSON.stringify(summary));
 const inner=unique.find(x=>x.term==='内集');
 if(!inner||inner.minReviewedExamples<5||inner.minSameSense<2)process.exitCode=2;
+// 最低质量基线是“已完成篇目”的下限，不是假装全部 203 词已经校完。
+const expected={works:26,distinctTerms:203,wordOccurrences:219,termsMeetingFullRule:46,
+ termsWithAtLeastFiveReviewedExamples:56};
+for(const [key,limit]of Object.entries(expected))if((summary[key]||0)<limit){
+ console.error('Keyword regression: '+key+' below audited baseline '+limit+' (actual '+summary[key]+')');process.exitCode=3;
+}
+if(candidateIndexAvailable&&summary.termsWithAtLeastFiveRawCandidates<200){
+ console.error('Classical multi-character term index regressed');process.exitCode=4;
+}
