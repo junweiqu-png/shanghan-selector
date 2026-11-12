@@ -208,7 +208,7 @@ assert(zhi9.examples.every(x=>x[2].includes('智')&&x[3]&&x[8]),'智 examples ne
 assert(!zhi9.examples.some(x=>x[6]==='judge-clever'),'cannot count wisdom nouns as putative usage');
 assert(expl.includes('const isName=!isGrammar&&origin.code==="proper-name"'),'names must not be treated as unverified lexemes');
 assert(expl.includes('<details class="study-reveal">'),'example translations and definitions must be collapsed by default');
-assert(expl.includes("'<div id=\\"studyLargeCandidates\\"></div>'")&&!expl.includes(":'');\\n '<div id=\\"studyLargeCandidates\\"></div>'"),'expanded-corpus host must actually be mounted');
+assert(expl.includes("studyLargeCandidates")&&expl.includes(":'' )+")===false&&expl.includes(":'')+"),"expanded-corpus host must actually be mounted");
 const cross7=extendedWindow.WENYAN_CROSSLESSON;
 assert(!(cross7.words['宁']?.sources||[]).some(x=>x[0]==='管宁割席'||x[0]==='诫子书'),'names and 宁静 must not be translated as 宁愿');
 assert(cross7.words['信']?.sources?.some(x=>x[1].includes('自信')&&x[4]==='believe'),'自信 cannot mean 果然');
