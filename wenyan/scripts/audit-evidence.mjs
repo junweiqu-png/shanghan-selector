@@ -6,7 +6,7 @@ import path from 'node:path';
 import vm from 'node:vm';
 const root=process.env.WENYAN_ROOT||'wenyan/';
 const win={},ctx={window:win};
-for(const f of ['data-basic.js','data-classic.js','data-extra.js','data-junior.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-verified-batch6.js','study-verified-batch7.js','study-verified-batch8.js','study-grammar-more.js']){
+for(const f of ['data-basic.js','data-classic.js','data-extra.js','data-junior.js','data-junior-batch2a.js','data-junior-batch2b.js','data-junior-batch2c.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-verified-batch6.js','study-verified-batch7.js','study-verified-batch8.js','study-grammar-more.js']){
  vm.runInNewContext(fs.readFileSync(path.join(root,f),'utf8'),ctx,{filename:f});
 }
 const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[]),...(win.WENYAN_DATA_4||[])];
