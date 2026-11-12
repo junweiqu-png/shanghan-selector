@@ -10,13 +10,13 @@ const files=["data-basic.js","data-classic.js","data-extra.js","data-junior.js",
  "study-annotations.js","study-crosslesson.js","study-verified-extra.js",
  "study-verified-more2.js","study-verified-common3.js","study-verified-corpus.js",
  "study-verified-batch4.js","study-verified-batch5.js","study-verified-batch6.js",
- "study-verified-batch7.js","study-verified-batch8.js","study-verified-characters.js","study-junior-glosses.js"];
+ "study-verified-batch7.js","study-verified-batch8.js","study-verified-batch9.js","study-verified-characters.js","study-junior-glosses.js"];
 for(const f of files)vm.runInNewContext(fs.readFileSync(path.join(root,f),"utf8"),{window:win},{filename:f});
 const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[]),...(win.WENYAN_DATA_4||[])];
 const stores=[win.WENYAN_ANNOTATIONS,win.WENYAN_CROSSLESSON,win.WENYAN_VERIFIED_EXTRA,
  win.WENYAN_VERIFIED_MORE2,win.WENYAN_VERIFIED_COMMON3,win.WENYAN_VERIFIED_CORPUS,
  win.WENYAN_VERIFIED_BATCH4,win.WENYAN_VERIFIED_BATCH5,win.WENYAN_VERIFIED_BATCH6,
- win.WENYAN_VERIFIED_BATCH7,win.WENYAN_VERIFIED_BATCH8,win.WENYAN_VERIFIED_CHARACTERS,win.WENYAN_JUNIOR_GLOSSES];
+ win.WENYAN_VERIFIED_BATCH7,win.WENYAN_VERIFIED_BATCH8,win.WENYAN_VERIFIED_BATCH9,win.WENYAN_VERIFIED_CHARACTERS,win.WENYAN_JUNIOR_GLOSSES];
 const han=c=>/\p{Script=Han}/u.test(c);
 const invalidEvidenceKeys=stores.flatMap((store,index)=>Object.keys(store?.words||{})
  .filter(c=>[...c].length!==1||!han(c)).map(key=>({store:index,key})));
