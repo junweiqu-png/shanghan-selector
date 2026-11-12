@@ -6,7 +6,7 @@ import fs from "node:fs";
 import vm from "node:vm";
 import path from "node:path";
 const root=process.env.WENYAN_ROOT||"wenyan/",win={};
-const files=["data-basic.js","data-classic.js","data-extra.js","data-junior.js",
+const files=["data-basic.js","data-classic.js","data-extra.js","data-junior.js","data-junior-batch2a.js","data-junior-batch2b.js","data-junior-batch2c.js",
  "study-annotations.js","study-crosslesson.js","study-verified-extra.js",
  "study-verified-more2.js","study-verified-common3.js","study-verified-corpus.js",
  "study-verified-batch4.js","study-verified-batch5.js","study-verified-batch6.js",
@@ -100,7 +100,7 @@ const summary={
  strictRule:"分母只计已发布文章正文中的汉字；“重点字”是正文内人为注释子集。每个正文篇目至少一个原字义项来源、跨篇已校译五篇且同义两篇，方称达到本阶段规则。阅读水平与中考题型仍须单独评测。",
  scopeNote:"非全国统一中考考纲，不能把新增10篇或本统计等同初中全部考试要求"
 };
-if(works.length!==36||letters.length<=231||!letters.includes("辩")||!letters.includes("斗"))throw Error("main-text-only coverage regression");
+if(works.length!==51||letters.length<=231||!letters.includes("辩")||!letters.includes("斗"))throw Error("main-text-only coverage regression");
 if(summary.priorityCharacters>summary.bodyUniqueCharacters||summary.bodyOccurrences<summary.bodyUniqueCharacters)throw Error("wrong denominator");
 const output={summary,characters,uses};
 const dest=process.env.WENYAN_CHARACTER_AUDIT_DEST||"dist/wenyan/evidence/character-coverage-report.json";

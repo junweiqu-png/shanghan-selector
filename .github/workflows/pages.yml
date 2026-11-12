@@ -78,8 +78,13 @@ jobs:
           node --check wenyan/study-verified-batch5.js
           node --check wenyan/study-verified-batch6.js
           node --check wenyan/study-verified-batch7.js
+          node --check wenyan/study-verified-batch8.js
+          node --check wenyan/scripts/test-large-corpus-student.mjs
           node --check wenyan/study-verified-characters.js
           node --check wenyan/data-junior.js
+          node --check wenyan/data-junior-batch2a.js
+          node --check wenyan/data-junior-batch2b.js
+          node --check wenyan/data-junior-batch2c.js
           node --check wenyan/study-junior-glosses.js
           node --check wenyan/junior-curriculum.js
           node --check wenyan/scripts/test-junior.mjs
@@ -98,6 +103,7 @@ jobs:
       - name: Validate Wenyan translated examples and semantic comparison annotations
         run: |
           node wenyan/scripts/test-study.mjs
+          node wenyan/scripts/test-large-corpus-student.mjs
           node wenyan/scripts/test-enhancements.mjs
           node wenyan/scripts/test-character.mjs
           node wenyan/scripts/test-junior.mjs

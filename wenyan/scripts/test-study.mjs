@@ -77,17 +77,34 @@ assert(editor.includes('large-term-index'),'teacher search must query complete w
 assert(editor.includes('r.matched||term'),'teacher search must preserve the actual matched form');
 const builder=fs.readFileSync(dir+'scripts/build-large-corpus.mjs','utf8');
 assert(builder.includes('termAliases')&&builder.includes('large-term-index'),'full-text builder must index semantic aliases and complete terms');
+assert(builder.includes("'data-junior.js','data-junior-batch2a.js','data-junior-batch2b.js','data-junior-batch2c.js'")&&builder.includes("study-verified-batch8.js")&&builder.includes("WENYAN_DATA_4"),
+ 'large classical index must cover all 36 published works and the newest single-character evidence');
+assert(editor.includes("searchClassics")&&editor.includes("readLarge(term,c.manifest)"),
+ 'student/editor integration must expose the expanded classical corpus search');
+
 const expl=fs.readFileSync(dir+'study-explorer.js','utf8');
 new vm.Script(expl,{filename:'study-explorer.js'});
 assert(!/上句|下句|命中句/.test(expl),'old up/down/target labels present in visible UI code');
 assert(!/rawCount|原典命中|字形匹配/.test(expl),'uncurated raw hits or background counts leaked to learning page');
+assert(expl.includes('active.contexts.set("lc"+i'),"expanded corpus candidates must retain their own source context");
+assert(expl.includes("loadLargeCandidates(term,origin,filtered,previews,active)")&&expl.includes("studyLargeCandidates"),
+ 'single-character study cards must load the expanded classical corpus asynchronously');
+assert(expl.includes("不计入上方已校译篇数或同义篇数"),
+ 'untranslated full-corpus hits must never inflate verified coverage counts');
+const keywordAudit=fs.readFileSync(dir+'scripts/audit-keyword-coverage.mjs','utf8');
+assert(keywordAudit.includes("'data-junior.js'")&&keywordAudit.includes("study-verified-batch8.js")&&keywordAudit.includes("WENYAN_DATA_4"),
+ 'keyword coverage audit must include all 36 published works and the newest single-character store');
+assert(!keywordAudit.includes("term==='内集'")&&keywordAudit.includes("['筑','智子疑邻']"),
+ 'keyword coverage audit must enforce single-character regressions, not obsolete compound keys');
+
+
 assert(expl.includes('if(r.title===origin.title)continue'),'source work must be excluded from associated list');
 assert(expl.includes('function indexOrigin(term)'),'glossary must locate an actual sentence, not the current reading');
 assert(expl.includes('which.closest("#wordList")'),'glossary click needs its own origin context');
 assert(expl.includes('if(!text.includes(term))'),'never display an ancient quote that lacks its purported headword');
 assert(expl.includes('const key=r.title+"|"+normalizeSense(r.code)'),'identical source senses must be deduplicated');
 const extendedWindow={};
-for(const file of ['data-basic.js','data-classic.js','data-extra.js','data-junior.js']){
+for(const file of ['data-basic.js','data-classic.js','data-extra.js','data-junior.js','data-junior-batch2a.js','data-junior-batch2b.js','data-junior-batch2c.js']){
  const source=fs.readFileSync(dir+file,'utf8');
  new vm.Script(source,{filename:file}).runInNewContext({window:extendedWindow});
 }

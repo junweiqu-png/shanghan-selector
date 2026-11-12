@@ -13,7 +13,7 @@ function getSpec(type,name){return (type==="word"?data.words:data.grammar)[name]
 function readCatalog(){
  if(catalogPromise)return catalogPromise;
  catalogPromise=(async()=>{
-  const resp=await fetch("evidence/expanded-manifest.json?v=20261111termindex1",{cache:"default"});
+  const resp=await fetch("evidence/expanded-manifest.json?v=20261112fullcorpus1",{cache:"default"});
   if(!resp.ok)throw Error("后台原典索引未部署("+resp.status+")");
   const m=await resp.json();
   const files=["catalog.json",...(m.files||[]).map(x=>x.file)];
@@ -45,7 +45,7 @@ async function readLarge(term,manifest){
   const shard=(stableHash(term)%manifest.large.termIndexShards).toString().padStart(2,'0'),cacheKey='term:'+shard;
   if(!largeCache[cacheKey]){
    const ext=manifest.large.termIndexEncoding==="gzip"?".json.gz":".json";
-   largeCache[cacheKey]=fetchClassicsIndex('evidence/large-term-index/'+shard+ext).catch(e=>{delete largeCache[cacheKey];throw e});
+   largeCache[cacheKey]=fetchClassicsIndex('evidence/large-term-index/'+shard+ext+'?v=20261112fullcorpus1').catch(e=>{delete largeCache[cacheKey];throw e});
   }
   const indexed=await largeCache[cacheKey],rows=indexed[term]||[];
   if(rows.length)return rows.map(r=>({id:r.id,group:r.group,title:r.title||r.source+'·'+r.chapter,work:r.source+'·'+r.chapter,
@@ -55,13 +55,18 @@ async function readLarge(term,manifest){
  const ch=[...term][0],index=ch.codePointAt(0)%64,key=index.toString().padStart(2,'0');
  if(!largeCache[key]){
   const ext=manifest.large.indexEncoding==="gzip"?".json.gz":".json";
-  largeCache[key]=fetchClassicsIndex('evidence/large-index/'+key+ext).catch(e=>{delete largeCache[key];throw e});
+  largeCache[key]=fetchClassicsIndex('evidence/large-index/'+key+ext+'?v=20261112fullcorpus1').catch(e=>{delete largeCache[key];throw e});
  }
  const data=await largeCache[key];
  return (data[ch]||[]).filter(r=>r.text?.includes(term)).map(r=>({
   id:r.id,group:r.group,title:r.source+'·'+r.chapter,work:r.source+'·'+r.chapter,
   text:r.text,matched:term,url:'https://github.com/gujilab/chinese-classical-corpus',originId:r.id
  }));
+}
+async function searchClassics(term){
+ if(!term)return [];
+ const c=await readCatalog();
+ return readLarge(term,c.manifest);
 }
 function contextSnippet(r,term){
  const text=String(r.text||"").replace(/\s+/g,' '),matched=r.matched||term,pos=text.indexOf(matched);
@@ -238,6 +243,7 @@ window.WENYAN_STUDY_EDITOR={
  indexPatterns:()=>[...new Set([...patterns(),...Object.keys(window.WENYAN_ANNOTATIONS?.grammar||{})])],
  lookupWord:name=>data.words[name]||null,
  lookupGrammar:name=>data.grammar[name]||null,
+ searchClassics,
  grammarForText:txt=>patterns().filter(g=>data.grammar[g].examples.some(x=>txt.includes(x[2])||x[2].includes(txt)))
 };
 })();
