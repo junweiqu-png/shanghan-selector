@@ -19,7 +19,7 @@ const added=newWorks.slice(10);
 assert.equal(added.length,15,"second batch must add exactly 15 works");
 const expectedTiers=[...Array(6).fill("初一"),...Array(5).fill("初二"),...Array(4).fill("初三")];
 assert.equal(JSON.stringify(added.map(w=>w.level.split("·")[0])),JSON.stringify(expectedTiers),"new 15 lessons must progress from easy to hard");
-const avg=added.reduce((n,w)=>n+(w.lines.map(x=>x[0]).join("").match(/\\p{Script=Han}/gu)||[]).length,0)/added.length;
+const avg=added.reduce((n,w)=>n+(w.lines.map(x=>x[0]).join("").match(/\p{Script=Han}/gu)||[]).length,0)/added.length;
 assert(avg>=125&&avg<=200,"new graded lessons must have a balanced average body length, actual "+avg);
 assert(added.every(x=>x.hook&&x.theme&&x.terms.length>=5),"new lessons require engaging hooks and at least five single-character notes");
 assert(added.every(x=>x.missions[0].type!==x.missions[1].type),"each story must offer varied exercise types");
