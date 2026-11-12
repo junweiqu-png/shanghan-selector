@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import vm from "node:vm";
 const root=process.env.WENYAN_ROOT||"wenyan/";
 const w={};
-for(const file of ["data-basic.js","data-classic.js","data-extra.js","data-junior.js","study-annotations.js","study-crosslesson.js","study-verified-characters.js","study-verified-extra.js","study-verified-more2.js","study-verified-common3.js","study-verified-corpus.js","study-verified-batch4.js","study-verified-batch5.js","study-verified-batch6.js","study-verified-batch7.js","study-verified-batch8.js","study-junior-glosses.js"]){
+for(const file of ["data-basic.js","data-classic.js","data-extra.js","data-junior.js","data-junior-batch2a.js","data-junior-batch2b.js","data-junior-batch2c.js","study-annotations.js","study-crosslesson.js","study-verified-characters.js","study-verified-extra.js","study-verified-more2.js","study-verified-common3.js","study-verified-corpus.js","study-verified-batch4.js","study-verified-batch5.js","study-verified-batch6.js","study-verified-batch7.js","study-verified-batch8.js","study-junior-glosses.js"]){
   vm.runInNewContext(fs.readFileSync(root+file,"utf8"),{window:w},{filename:file});
 }
 const books=[...(w.WENYAN_DATA_1||[]),...(w.WENYAN_DATA_2||[]),...(w.WENYAN_DATA_3||[])];
