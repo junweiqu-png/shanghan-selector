@@ -25,6 +25,30 @@ const words={
   examples:[]
  }
 };
+/* 源文中容易被误当成“缺义”的姓名字：只在确实指人名的原句位置豁免。 */
+const persons={
+ "王":[["王戎不取道旁李","王戎七岁","“王”是王戎的姓"]],
+ "杨":[["杨氏之子","梁国杨氏子九岁","“杨”是姓氏；不可把“杨梅”的“杨”也自动改成人名"]],
+ "陈":[["陈太丘与友期行","陈太丘与友期行","“陈”是陈太丘的姓"]],
+ "管":[["管宁割席","管宁、华歆共园中锄菜","“管”是管宁的姓"],["管宁割席","管挥锄与瓦石不异","省称管宁"]],
+ "宁":[["管宁割席","管宁、华歆共园中锄菜","“宁”是管宁名字里的字"],["管宁割席","宁读如故","省称管宁"],["管宁割席","宁割席分坐","省称管宁"]],
+ "华":[["管宁割席","华歆共园中锄菜","“华”是华歆的姓"],["管宁割席","华捉而掷去之","省称华歆"]],
+ "歆":[["管宁割席","华歆共园中锄菜","“歆”是华歆的名字"],["管宁割席","歆废书出看","省称华歆"]],
+ "荀":[["荀巨伯远看友人疾","荀巨伯远看友人疾","“荀”是荀巨伯的姓"]],
+ "戴":[["书戴嵩画牛","有戴嵩《牛》一轴","“戴”是画家戴嵩的姓"]],
+ "嵩":[["书戴嵩画牛","有戴嵩《牛》一轴","“嵩”是画家戴嵩的名字"]],
+ "孔":[["两小儿辩日","孔子东游","“孔”是孔子的姓"],["杨氏之子","孔君平诣其父","“孔”是孔君平的姓"]],
+ "杜":[["书戴嵩画牛","蜀中有杜处士","“杜”是处士的姓"]]
+};
+const published=[...(window.WENYAN_DATA_1||[]),...(window.WENYAN_DATA_2||[]),...(window.WENYAN_DATA_3||[]),...(window.WENYAN_DATA_4||[])];
+for(const [char,rows] of Object.entries(persons)){
+ if(words[char])throw Error("重复人物字："+char);
+ const sources=rows.map(([title,anchor,meaning])=>{
+  if(!anchor.includes(char)||!published.some(w=>w.title===title&&w.lines.some(l=>l[0].includes(anchor))))throw Error("人名来源不在正文："+char+"/"+title+"/"+anchor);
+  return [title,anchor,meaning,"专名（人名）","proper-name","这一原句的字属于人物姓名，不能套用同形字的普通词义；换到其他句子须重新判定。"];
+ });
+ words[char]={sources,examples:[]};
+}
 for(const [char,spec] of Object.entries(words)){
  if([...char].length!==1||!spec.sources.length)throw Error("第九批单字来源未核定："+char);
  for(const x of spec.examples)if(!x[2]?.includes(char)||![x[3],x[4],x[5],x[6],x[7],x[8]].every(Boolean)||!x[8].startsWith("https://"))throw Error("第九批资料缺失："+char+" "+x[0]);
