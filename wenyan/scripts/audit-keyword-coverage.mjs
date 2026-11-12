@@ -5,7 +5,7 @@ import vm from 'node:vm';
 import {gunzipSync} from 'node:zlib';
 const root='wenyan/',out='dist/wenyan/evidence';
 const win={};
-for(const f of ['data-basic.js','data-classic.js','data-extra.js','data-junior.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-verified-batch6.js','study-verified-batch7.js','study-verified-batch8.js','study-junior-glosses.js']){
+for(const f of ['data-basic.js','data-classic.js','data-extra.js','data-junior.js','data-junior-batch2a.js','data-junior-batch2b.js','data-junior-batch2c.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-verified-batch6.js','study-verified-batch7.js','study-verified-batch8.js','study-junior-glosses.js']){
  vm.runInNewContext(fs.readFileSync(path.join(root,f),'utf8'),{window:win},{filename:f});
 }
 const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[]),...(win.WENYAN_DATA_4||[])];
@@ -80,7 +80,7 @@ for(const [term,work] of required){
  }
 }
 // 固定分母按全部36篇已发布正文计算；覆盖率只作进度指标，不用旧的26篇/双字词基线误判。
-const expected={works:36,distinctTerms:317,wordOccurrences:394};
+const expected={works:51,distinctTerms:317,wordOccurrences:394};
 for(const [key,limit]of Object.entries(expected))if((summary[key]||0)<limit){
  console.error('Keyword corpus scope regression: '+key+' below '+limit+' (actual '+summary[key]+')');process.exitCode=3;
 }
