@@ -77,7 +77,7 @@ assert(editor.includes('large-term-index'),'teacher search must query complete w
 assert(editor.includes('r.matched||term'),'teacher search must preserve the actual matched form');
 const builder=fs.readFileSync(dir+'scripts/build-large-corpus.mjs','utf8');
 assert(builder.includes('termAliases')&&builder.includes('large-term-index'),'full-text builder must index semantic aliases and complete terms');
-assert(builder.includes("'data-junior.js'")&&builder.includes("study-verified-batch8.js")&&builder.includes("WENYAN_DATA_4"),
+assert(builder.includes("'data-junior.js','data-junior-batch2a.js','data-junior-batch2b.js','data-junior-batch2c.js'")&&builder.includes("study-verified-batch8.js")&&builder.includes("WENYAN_DATA_4"),
  'large classical index must cover all 36 published works and the newest single-character evidence');
 assert(editor.includes("searchClassics")&&editor.includes("readLarge(term,c.manifest)"),
  'student/editor integration must expose the expanded classical corpus search');
