@@ -104,7 +104,7 @@ assert(expl.includes('which.closest("#wordList")'),'glossary click needs its own
 assert(expl.includes('if(!text.includes(term))'),'never display an ancient quote that lacks its purported headword');
 assert(expl.includes('const key=r.title+"|"+normalizeSense(r.code)'),'identical source senses must be deduplicated');
 const extendedWindow={};
-for(const file of ['data-basic.js','data-classic.js','data-extra.js','data-junior.js']){
+for(const file of ['data-basic.js','data-classic.js','data-extra.js','data-junior.js','data-junior-batch2a.js','data-junior-batch2b.js','data-junior-batch2c.js']){
  const source=fs.readFileSync(dir+file,'utf8');
  new vm.Script(source,{filename:file}).runInNewContext({window:extendedWindow});
 }
