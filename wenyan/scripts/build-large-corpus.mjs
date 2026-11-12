@@ -58,7 +58,7 @@ if(!await download()){
 const buckets=Array.from({length:64},()=>Object.create(null));
 const texts=Array.from({length:32},()=>[]);
 const wordWindow={};
-for(const f of ['data-basic.js','data-classic.js','data-extra.js','data-junior.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-verified-batch6.js','study-verified-batch7.js','study-verified-batch8.js']){
+for(const f of ['data-basic.js','data-classic.js','data-extra.js','data-junior.js','data-junior-batch2a.js','data-junior-batch2b.js','data-junior-batch2c.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-verified-batch6.js','study-verified-batch7.js','study-verified-batch8.js']){
  const file=path.join('wenyan',f);
  vm.runInNewContext(await fsp.readFile(file,'utf8'),{window:wordWindow},{filename:file});
 }
