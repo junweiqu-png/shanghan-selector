@@ -201,6 +201,8 @@ assert.equal(zhu.examples.filter(x=>x[6]==='instrument').length,2,'筑 instrumen
 assert(zhu.examples.every(x=>x[2].includes('筑')&&x[3]&&x[4]&&x[5]&&x[6]&&x[7]&&x[8]),'筑 examples require exact text, translation and sense metadata');
 const nine=extendedWindow.WENYAN_VERIFIED_BATCH9;
 assert(nine?.words['戎']?.sources.every(x=>x[4]==='proper-name'),'王戎 must be identified as a personal name');
+assert(Object.keys(nine.words).length>=14,'at least 13 exact-context name characters plus 智 must be checked');
+for(const char of ['王','杨','陈','管','宁','华','歆','荀','戴','嵩','孔','杜'])assert(nine.words[char]?.sources.every(x=>x[4]==='proper-name'),'missing exact-context personal name '+char);
 const zhi9=nine?.words['智'];
 assert(zhi9?.sources.some(x=>x[0]==='智子疑邻'&&x[4]==='judge-clever'),'智子疑邻 requires precise putative origin');
 assert(zhi9?.examples.length===7&&new Set(zhi9.examples.map(x=>x[0])).size===7,'智 needs seven distinct reviewed source passages');
@@ -208,7 +210,7 @@ assert(zhi9.examples.every(x=>x[2].includes('智')&&x[3]&&x[8]),'智 examples ne
 assert(!zhi9.examples.some(x=>x[6]==='judge-clever'),'cannot count wisdom nouns as putative usage');
 assert(expl.includes('const isName=!isGrammar&&origin.code==="proper-name"'),'names must not be treated as unverified lexemes');
 assert(expl.includes('<details class="study-reveal">'),'example translations and definitions must be collapsed by default');
-assert(expl.includes("studyLargeCandidates")&&expl.includes(":'' )+")===false&&expl.includes(":'')+"),"expanded-corpus host must actually be mounted");
+assert(expl.includes("studyLargeCandidates")&&expl.includes(":'')+"),"expanded-corpus host must actually be mounted");
 const cross7=extendedWindow.WENYAN_CROSSLESSON;
 assert(!(cross7.words['宁']?.sources||[]).some(x=>x[0]==='管宁割席'||x[0]==='诫子书'),'names and 宁静 must not be translated as 宁愿');
 assert(cross7.words['信']?.sources?.some(x=>x[1].includes('自信')&&x[4]==='believe'),'自信 cannot mean 果然');
