@@ -82,6 +82,9 @@ jobs:
           node --check wenyan/scripts/test-large-corpus-student.mjs
           node --check wenyan/study-verified-characters.js
           node --check wenyan/data-junior.js
+          node --check wenyan/data-junior-batch2a.js
+          node --check wenyan/data-junior-batch2b.js
+          node --check wenyan/data-junior-batch2c.js
           node --check wenyan/study-junior-glosses.js
           node --check wenyan/junior-curriculum.js
           node --check wenyan/scripts/test-junior.mjs
