@@ -94,3 +94,11 @@
 .study-guide-choice{display:block;width:100%;text-align:left;border:1px solid #bed7c8;border-radius:9px;background:white;padding:11px;margin:7px 0;cursor:pointer;min-height:44px}
 .study-guide-feedback{color:#895824;margin-top:8px;line-height:1.5}
 .study-guide-feedback.ready{color:#21603e}
+
+/* 隐藏关联例句的答案，先看原文再主动揭晓；原文按钮仍可跳查单字。 */
+.study-reveal{margin:7px 0 10px;border:1px solid #d9e6da;border-radius:9px;background:#f9fcf8;padding:0 10px}
+.study-reveal summary{display:list-item;cursor:pointer;padding:9px 5px;font-size:14px;font-weight:650;color:#336b4b;user-select:none;list-style-position:inside}
+.study-reveal summary:hover,.study-reveal summary:focus-visible{color:#19462f;text-decoration:underline}
+.study-reveal[open]{padding-bottom:7px}
+.study-reveal[open] summary{border-bottom:1px solid #e3eee2;margin-bottom:5px}
+.study-reveal .study-translation,.study-reveal .study-sense,.study-reveal .study-compare{margin:8px 0}
