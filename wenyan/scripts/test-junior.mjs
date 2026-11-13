@@ -58,10 +58,11 @@ const terms=new Set(works.flatMap(w=>(w.terms||[]).flatMap(t=>han(t[0]))));
 assert(actualBody.size>231&&actualBody.size>terms.size,"all body Han chars must exceed only selected annotated chars");
 const glosses=win.WENYAN_JUNIOR_GLOSSES?.words||{};
 assert(Object.keys(glosses).length>=100,"priority main-text annotations should be usable");
+assert(old.every(w=>(w.terms||[]).filter(x=>han(x[0]).length===1).every(([c])=>(glosses[c]?.sources||[]).some(x=>x[0]===w.title))),"all original 26 texts' explicit single-character glosses must be mapped");
 for(const [c,sp] of Object.entries(glosses)){
  assert(han(c).length===1);
  for(const src of sp.sources||[]){
-  assert(newWorks.some(w=>w.title===src[0]&&w.lines.some(l=>l[0].includes(src[1]))),
+  assert(works.some(w=>w.title===src[0]&&w.lines.some(l=>l[0].includes(src[1]))),
    "annotation source fragment should exist in published main text "+c);
   assert(src[2]&&src[3]&&src[4]);
  }
