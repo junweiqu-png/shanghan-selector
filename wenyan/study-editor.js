@@ -63,10 +63,21 @@ async function readLarge(term,manifest){
   text:r.text,matched:term,url:'https://github.com/gujilab/chinese-classical-corpus',originId:r.id
  }));
 }
+// 学生端查一字不必等待全文目录的全部分片；先取很小的清单，再按字读取单一索引分片。
+let searchManifestPromise=null;
+async function searchManifest(){
+ if(catalog?.manifest)return catalog.manifest;
+ if(!searchManifestPromise){
+  searchManifestPromise=fetch("evidence/expanded-manifest.json?v=20261113singlechar1",{cache:"default"})
+   .then(r=>{if(!r.ok)throw Error("古籍清单 HTTP "+r.status);return r.json()})
+   .catch(error=>{searchManifestPromise=null;throw error});
+ }
+ return searchManifestPromise;
+}
 async function searchClassics(term){
  if(!term)return [];
- const c=await readCatalog();
- return readLarge(term,c.manifest);
+ const manifest=await searchManifest();
+ return readLarge(term,manifest);
 }
 function contextSnippet(r,term){
  const text=String(r.text||"").replace(/\s+/g,' '),matched=r.matched||term,pos=text.indexOf(matched);

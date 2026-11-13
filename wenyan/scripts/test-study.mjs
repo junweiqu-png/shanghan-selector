@@ -79,7 +79,7 @@ const builder=fs.readFileSync(dir+'scripts/build-large-corpus.mjs','utf8');
 assert(builder.includes('termAliases')&&builder.includes('large-term-index'),'full-text builder must index semantic aliases and complete terms');
 assert(builder.includes("'data-junior.js','data-junior-batch2a.js','data-junior-batch2b.js','data-junior-batch2c.js'")&&builder.includes("study-verified-batch8.js")&&builder.includes("WENYAN_DATA_4"),
  'large classical index must cover all 36 published works and the newest single-character evidence');
-assert(editor.includes("searchClassics")&&editor.includes("readLarge(term,c.manifest)"),
+assert(editor.includes("searchClassics")&&editor.includes("readLarge(term,manifest)")&&editor.includes("searchManifestPromise"),
  'student/editor integration must expose the expanded classical corpus search');
 
 const expl=fs.readFileSync(dir+'study-explorer.js','utf8');
@@ -109,7 +109,7 @@ for(const file of ['data-basic.js','data-classic.js','data-extra.js','data-junio
  new vm.Script(source,{filename:file}).runInNewContext({window:extendedWindow});
 }
 let extraLex=0,extraGram=0;
-for(const [file,key] of [['study-crosslesson.js','WENYAN_CROSSLESSON'],['study-verified-extra.js','WENYAN_VERIFIED_EXTRA'],['study-verified-more2.js','WENYAN_VERIFIED_MORE2'],['study-verified-common3.js','WENYAN_VERIFIED_COMMON3'],['study-verified-corpus.js','WENYAN_VERIFIED_CORPUS'],['study-verified-batch4.js','WENYAN_VERIFIED_BATCH4'],['study-verified-batch5.js','WENYAN_VERIFIED_BATCH5'],['study-verified-batch6.js','WENYAN_VERIFIED_BATCH6'],['study-verified-batch7.js','WENYAN_VERIFIED_BATCH7'],['study-verified-batch8.js','WENYAN_VERIFIED_BATCH8'],['study-verified-batch9.js','WENYAN_VERIFIED_BATCH9'],['study-grammar-more.js','WENYAN_GRAMMAR_MORE']]){
+for(const [file,key] of [['study-crosslesson.js','WENYAN_CROSSLESSON'],['study-verified-extra.js','WENYAN_VERIFIED_EXTRA'],['study-verified-more2.js','WENYAN_VERIFIED_MORE2'],['study-verified-common3.js','WENYAN_VERIFIED_COMMON3'],['study-verified-corpus.js','WENYAN_VERIFIED_CORPUS'],['study-verified-batch4.js','WENYAN_VERIFIED_BATCH4'],['study-verified-batch5.js','WENYAN_VERIFIED_BATCH5'],['study-verified-batch6.js','WENYAN_VERIFIED_BATCH6'],['study-verified-batch7.js','WENYAN_VERIFIED_BATCH7'],['study-verified-batch8.js','WENYAN_VERIFIED_BATCH8'],['study-verified-batch9.js','WENYAN_VERIFIED_BATCH9'],['study-verified-batch10.js','WENYAN_VERIFIED_BATCH10'],['study-grammar-more.js','WENYAN_GRAMMAR_MORE']]){
  const source=fs.readFileSync(dir+file,'utf8');
  new vm.Script(source,{filename:file}).runInNewContext({window:extendedWindow});
  assert(app.includes(file),'supplemental corpus not included in HTML '+file);
@@ -199,6 +199,14 @@ assert.equal(new Set(zhu.examples.map(x=>x[0])).size,12,'筑 needs twelve distin
 assert.equal(zhu.examples.filter(x=>x[6]==='build-structure').length,10,'筑 needs ten same-core construction examples');
 assert.equal(zhu.examples.filter(x=>x[6]==='instrument').length,2,'筑 instrument sense must remain distinct');
 assert(zhu.examples.every(x=>x[2].includes('筑')&&x[3]&&x[4]&&x[5]&&x[6]&&x[7]&&x[8]),'筑 examples require exact text, translation and sense metadata');
+const ten=extendedWindow.WENYAN_VERIFIED_BATCH10;
+const vessel=ten?.words?.["卮"];
+assert(vessel?.sources?.length===3,'卮 needs source-anchored senses at all three original locations');
+assert(vessel.examples.length>=5&&new Set(vessel.examples.map(x=>x[0])).size>=5,'卮 must have five distinct referenced works');
+assert(vessel.examples.filter(x=>x[6]==="wine-vessel").length>=2,'卮 requires at least two same-sense vessel examples');
+assert(vessel.examples.some(x=>x[6]==="vessel-metaphor"),'卮 must distinguish literal wine vessel from figurative 庄子 卮言');
+assert(vessel.examples.every(x=>x[2].includes('卮')&&x[3]&&x[4]&&x[5]&&x[6]&&x[7]&&x[8].startsWith('https://')),'every 卮 excerpt needs source and precise meaning');
+assert(app.includes('study-verified-batch10.js'),'new 卮 evidence file must load');
 const nine=extendedWindow.WENYAN_VERIFIED_BATCH9;
 assert(nine?.words['戎']?.sources.every(x=>x[4]==='proper-name'),'王戎 must be identified as a personal name');
 assert(Object.keys(nine.words).length>=14,'at least 13 exact-context name characters plus 智 must be checked');
@@ -208,6 +216,7 @@ assert(zhi9?.sources.some(x=>x[0]==='智子疑邻'&&x[4]==='judge-clever'),'智�
 assert(zhi9?.examples.length===7&&new Set(zhi9.examples.map(x=>x[0])).size===7,'智 needs seven distinct reviewed source passages');
 assert(zhi9.examples.every(x=>x[2].includes('智')&&x[3]&&x[8]),'智 examples need quote, translation, and source');
 assert(!zhi9.examples.some(x=>x[6]==='judge-clever'),'cannot count wisdom nouns as putative usage');
+assert(expl.includes('WENYAN_VERIFIED_BATCH10'),'explorer must read tenth verified store');
 assert(expl.includes('const isName=!isGrammar&&origin.code==="proper-name"'),'names must not be treated as unverified lexemes');
 assert(expl.includes('<details class="study-reveal">'),'example translations and definitions must be collapsed by default');
 assert(expl.includes("studyLargeCandidates")&&expl.includes(":'')+"),"expanded-corpus host must actually be mounted");

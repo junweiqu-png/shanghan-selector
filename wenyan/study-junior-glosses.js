@@ -1,9 +1,9 @@
-/* 阅读正文的“已逐句校译单字”：每篇只标注人工给出的关键字及首个可定位语境。
+/* 51篇正文的“有逐句译文且有课文单字注释”词条：只纳入人工已给出单字释义的正文原句。
  * 拒绝把未写释义的所有汉字自动标为已校核；同字在另一句另一个位置仍须单独辨义。
  */
 (()=>{
 "use strict";
-const works=[...(window.WENYAN_DATA_4||[])];
+const works=[...(window.WENYAN_DATA_1||[]),...(window.WENYAN_DATA_2||[]),...(window.WENYAN_DATA_3||[]),...(window.WENYAN_DATA_4||[])];
 const words=Object.create(null),han=c=>/^\p{Script=Han}$/u.test(c);
 function anchorFor(sentence,char){
  const i=sentence.indexOf(char);
@@ -23,7 +23,9 @@ const aliases={
 for(const w of works){
  const lines=w.lines||[],refs=w.terms||[];
  for(const [char,pos,meaning] of refs){
-  if(!han(char)||!meaning)throw Error("需单字释义 "+w.title+" "+char);
+  // 基础篇含“舍人”等词组释义，绝不拆分成字义；只把明确单字注释纳入证据。
+  if(!han(char))continue;
+  if(!meaning)throw Error("需单字释义 "+w.title+" "+char);
   const row=lines.find(r=>r[0].includes(char));
   if(!row?.[1])throw Error("缺正文句译 "+char+" "+w.title);
   const anchor=anchorFor(row[0],char);

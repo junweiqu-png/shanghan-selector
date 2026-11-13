@@ -20,11 +20,11 @@ input{flex:2;min-width:155px}select{flex:1;min-width:135px}
 <header><a href="./">← 返回正文阅读</a><a href="evidence/character-coverage-report.json" target="_blank" rel="noopener">原始逐字校核报告 ↗</a></header>
 <h1>先看正文 · 逐字学懂</h1>
 <p><b>这里统计的是本站实际发布的古文正文里的字</b>，不把关联扩展文章、题目里的字放入分母。
-重点字来自正文人工注释，扩展例句只作为参考证据，不会让某个字无缘无故“已学会”。</p>
+重点字来自正文人工注释，扩展例句只作为参考证据，不会让某个字无缘无故“已学会”。下方的5篇/2篇均按该字所有原文用法中的最缺语境统计，全文库未校核命中不计入。</p>
 <section class="stat"><div id="stats" class="stats">正在读取正文进度……</div><p class="notes" id="scope"></p></section>
 <div class="controls"><input id="query" aria-label="搜索正文单字或文章" placeholder="输入一个字或篇目，如：焉、三峡"><select id="filter" aria-label="按掌握情况筛选">
 <option value="priority" selected>优先学习：正文重点字</option><option value="pending">待完善的正文汉字</option>
-<option value="origin">尚缺正文义项</option><option value="ready">已满足关联规则</option><option value="all">全部正文汉字</option>
+<option value="underfive">缺5篇已校关联</option><option value="undersame">缺2篇同义关联</option><option value="origin">尚缺正文义项</option><option value="ready">已满足关联规则</option><option value="all">全部正文汉字</option>
 </select></div>
 <p id="total" class="notes"></p><section id="rows" class="table" aria-live="polite"></section>
 <button id="more" class="more" hidden>再看更多汉字 ↓</button>
@@ -41,8 +41,8 @@ function card(t){
  const d=document.createElement("div");d.className="muted";
  const labels=(t.workTitles||t.items.map(x=>x.work));
  const named=[...new Set(labels)];
- d.textContent="正文出现 "+t.frequency+" 次 · 涉及 "+t.uses+" 篇 · "+(t.anyOriginAnnotated?"已有字义注释":"本字义项待核")+
- " · 同字校译关联至少 "+t.minReviewedExamples+" 篇 · 同义至少 "+t.minSameSense+" 篇"+
+ d.textContent="正文出现 "+t.frequency+" 次 · 涉及 "+t.uses+" 篇 · "+(t.anyOriginAnnotated?"至少一处已有字义注释":"本字义项待核")+
+ " · 最缺语境：已核关联 "+t.minReviewedExamples+"/5篇（缺"+Math.max(0,5-t.minReviewedExamples)+"篇），同义 "+t.minSameSense+"/2篇（缺"+Math.max(0,2-t.minSameSense)+"篇）"+
  "｜"+named.slice(0,2).join("、")+(named.length>2?"等":"");
  box.append(d);row.append(box);
  const link=document.createElement("a");link.className="actions";link.href=a.href;link.textContent="学这个字 ↗";row.append(link);
@@ -52,7 +52,7 @@ function draw(){
  const q=$("query").value.trim(),mode=$("filter").value;
  let set=items.filter(x=>(!q||x.char.includes(q)||(x.workTitles||[]).some(n=>n.includes(q)))&&
  (mode==="all"||mode==="priority"&&x.priority||mode==="pending"&&!x.ready||
- mode==="ready"&&x.ready||mode==="origin"&&!x.originAnnotated));
+ mode==="ready"&&x.ready||mode==="underfive"&&x.minReviewedExamples<5||mode==="undersame"&&x.minSameSense<2||mode==="origin"&&!x.originAnnotated));
  set.sort((a,b)=>Number(b.priority)-Number(a.priority)||Number(a.ready)-Number(b.ready)||b.frequency-a.frequency||a.char.localeCompare(b.char,"zh-CN"));
  $("total").textContent="当前显示 "+Math.min(visible,set.length)+" / "+set.length+" 个符合条件的正文汉字（本站总正文独立字 "+items.length+" 个）";
  $("rows").replaceChildren(...set.slice(0,visible).map(card));$("more").hidden=visible>=set.length;
@@ -60,7 +60,7 @@ function draw(){
 fetch("evidence/character-coverage-report.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("HTTP "+r.status);return r.json()}).then(data=>{
  const x=data.summary;items=data.characters||[];
  const fields=[[x.works,"已收录正文"],[x.bodyUniqueCharacters,"正文独立汉字"],[x.priorityCharacters,"正文重点字"],
- [x.charactersWithSomeSource,"至少一处有释义"],[x.charactersMeetingRule,"跨篇核义达标"],[x.newStoryWorks,"分级趣味新篇"]];
+ [x.charactersWithSomeSource,"至少一处有释义"],[x.charactersMeetingRule,"跨篇核义达标"],[x.charactersStillWithoutFive,"仍缺5篇的字"],[x.newStoryWorks,"分级趣味新篇"]];
  $("stats").replaceChildren(...fields.map(([num,title])=>{
   const n=document.createElement("span"),b=document.createElement("b");b.textContent=num;
   n.append(b,document.createElement("br"),document.createTextNode(title));return n;
