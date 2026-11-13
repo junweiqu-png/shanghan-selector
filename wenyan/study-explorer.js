@@ -351,7 +351,7 @@ function renderPage(term,isGrammar,origin,push=true){
  '<div id="studyLargeCandidates"></div>';
 
  open((isGrammar?"句式：":"字义：")+term,html);
- const active=state;if(!isGrammar&&!isName)loadLargeCandidates(term,origin,filtered,previews,active);
+ const active=state;if(!isGrammar&&!isName&&!complete)loadLargeCandidates(term,origin,filtered,previews,active);
  $("editStudyTerm").onclick=()=>window.WENYAN_STUDY_EDITOR?.open({kind:isGrammar?"grammar":"word",name:term,title:origin.title,original:origin.text});
  if(isGrammar){
   const guide=grammarSpec(term)?.guide;
