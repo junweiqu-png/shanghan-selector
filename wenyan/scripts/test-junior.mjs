@@ -67,7 +67,7 @@ for(const [c,sp] of Object.entries(glosses)){
   assert(src[2]&&src[3]&&src[4]);
  }
  for(const row of sp.examples||[]){
-  assert(newWorks.some(w=>w.title===row[0]&&w.lines.some(l=>l[0]===row[2]&&l[1]===row[3])),
+  assert(works.some(w=>w.title===row[0]&&w.lines.some(l=>l[0]===row[2]&&l[1]===row[3])),
    "do not use extension/candidate translations as verified primary material "+c);
  }
 }
