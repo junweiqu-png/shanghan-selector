@@ -204,7 +204,7 @@ const vessel=ten?.words?.["卮"];
 assert(vessel?.sources?.length===3,'卮 needs source-anchored senses at all three original locations');
 assert(vessel.examples.length>=5&&new Set(vessel.examples.map(x=>x[0])).size>=5,'卮 must have five distinct referenced works');
 assert(vessel.examples.filter(x=>x[6]==="wine-vessel").length>=2,'卮 requires at least two same-sense vessel examples');
-assert(vessel.examples.some(x=>x[6]==="cup-measure"),'卮 needs to compare vessel vs measure');
+assert(vessel.examples.some(x=>x[6]==="vessel-metaphor"),'卮 must distinguish literal wine vessel from figurative 庄子 卮言');
 assert(vessel.examples.every(x=>x[2].includes('卮')&&x[3]&&x[4]&&x[5]&&x[6]&&x[7]&&x[8].startsWith('https://')),'every 卮 excerpt needs source and precise meaning');
 assert(app.includes('study-verified-batch10.js'),'new 卮 evidence file must load');
 const nine=extendedWindow.WENYAN_VERIFIED_BATCH9;
