@@ -5,11 +5,11 @@ import vm from 'node:vm';
 import {gunzipSync} from 'node:zlib';
 const root='wenyan/',out='dist/wenyan/evidence';
 const win={};
-for(const f of ['data-basic.js','data-classic.js','data-extra.js','data-junior.js','data-junior-batch2a.js','data-junior-batch2b.js','data-junior-batch2c.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-verified-batch6.js','study-verified-batch7.js','study-verified-batch8.js','study-verified-batch9.js','study-junior-glosses.js']){
+for(const f of ['data-basic.js','data-classic.js','data-extra.js','data-junior.js','data-junior-batch2a.js','data-junior-batch2b.js','data-junior-batch2c.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-verified-batch6.js','study-verified-batch7.js','study-verified-batch8.js','study-verified-batch9.js','study-verified-batch10.js','study-junior-glosses.js']){
  vm.runInNewContext(fs.readFileSync(path.join(root,f),'utf8'),{window:win},{filename:f});
 }
 const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[]),...(win.WENYAN_DATA_4||[])];
-const stores=[win.WENYAN_ANNOTATIONS,win.WENYAN_CROSSLESSON,win.WENYAN_VERIFIED_EXTRA,win.WENYAN_VERIFIED_MORE2,win.WENYAN_VERIFIED_COMMON3,win.WENYAN_VERIFIED_CORPUS,win.WENYAN_VERIFIED_BATCH4,win.WENYAN_VERIFIED_BATCH5,win.WENYAN_VERIFIED_BATCH6,win.WENYAN_VERIFIED_BATCH7,win.WENYAN_VERIFIED_BATCH8,win.WENYAN_VERIFIED_BATCH9,win.WENYAN_JUNIOR_GLOSSES];
+const stores=[win.WENYAN_ANNOTATIONS,win.WENYAN_CROSSLESSON,win.WENYAN_VERIFIED_EXTRA,win.WENYAN_VERIFIED_MORE2,win.WENYAN_VERIFIED_COMMON3,win.WENYAN_VERIFIED_CORPUS,win.WENYAN_VERIFIED_BATCH4,win.WENYAN_VERIFIED_BATCH5,win.WENYAN_VERIFIED_BATCH6,win.WENYAN_VERIFIED_BATCH7,win.WENYAN_VERIFIED_BATCH8,win.WENYAN_VERIFIED_BATCH9,win.WENYAN_VERIFIED_BATCH10,win.WENYAN_JUNIOR_GLOSSES];
 const merged={};
 for(const store of stores)for(const [term,s]of Object.entries(store?.words||{})){
  const item=merged[term]||={sources:[],examples:[]};
