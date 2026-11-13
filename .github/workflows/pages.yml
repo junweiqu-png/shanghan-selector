@@ -80,6 +80,7 @@ jobs:
           node --check wenyan/study-verified-batch7.js
           node --check wenyan/study-verified-batch8.js
           node --check wenyan/study-verified-batch9.js
+          node --check wenyan/study-verified-batch10.js
           node --check wenyan/scripts/test-large-corpus-student.mjs
           node --check wenyan/study-verified-characters.js
           node --check wenyan/data-junior.js
