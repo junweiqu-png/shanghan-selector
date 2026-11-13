@@ -58,7 +58,7 @@ if(!await download()){
 const buckets=Array.from({length:64},()=>Object.create(null));
 const texts=Array.from({length:32},()=>[]);
 const wordWindow={};
-for(const f of ['data-basic.js','data-classic.js','data-extra.js','data-junior.js','data-junior-batch2a.js','data-junior-batch2b.js','data-junior-batch2c.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-verified-batch6.js','study-verified-batch7.js','study-verified-batch8.js','study-verified-batch9.js']){
+for(const f of ['data-basic.js','data-classic.js','data-extra.js','data-junior.js','data-junior-batch2a.js','data-junior-batch2b.js','data-junior-batch2c.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-verified-batch6.js','study-verified-batch7.js','study-verified-batch8.js','study-verified-batch9.js','study-verified-batch10.js']){
  const file=path.join('wenyan',f);
  vm.runInNewContext(await fsp.readFile(file,'utf8'),{window:wordWindow},{filename:file});
 }
@@ -67,7 +67,7 @@ const searchTerms=[...new Set([
  ...(wordWindow.WENYAN_DATA_2||[]).flatMap(w=>(w.terms||[]).map(t=>t[0])),
  ...(wordWindow.WENYAN_DATA_3||[]).flatMap(w=>(w.terms||[]).map(t=>t[0])),
  ...(wordWindow.WENYAN_DATA_4||[]).flatMap(w=>(w.terms||[]).map(t=>t[0])),
- ...[wordWindow.WENYAN_ANNOTATIONS,wordWindow.WENYAN_CROSSLESSON,wordWindow.WENYAN_VERIFIED_EXTRA,wordWindow.WENYAN_VERIFIED_MORE2,wordWindow.WENYAN_VERIFIED_COMMON3,wordWindow.WENYAN_VERIFIED_CORPUS,wordWindow.WENYAN_VERIFIED_BATCH4,wordWindow.WENYAN_VERIFIED_BATCH5,wordWindow.WENYAN_VERIFIED_BATCH6,wordWindow.WENYAN_VERIFIED_BATCH7,wordWindow.WENYAN_VERIFIED_BATCH8,wordWindow.WENYAN_VERIFIED_BATCH9].flatMap(x=>Object.keys(x?.words||{}))
+ ...[wordWindow.WENYAN_ANNOTATIONS,wordWindow.WENYAN_CROSSLESSON,wordWindow.WENYAN_VERIFIED_EXTRA,wordWindow.WENYAN_VERIFIED_MORE2,wordWindow.WENYAN_VERIFIED_COMMON3,wordWindow.WENYAN_VERIFIED_CORPUS,wordWindow.WENYAN_VERIFIED_BATCH4,wordWindow.WENYAN_VERIFIED_BATCH5,wordWindow.WENYAN_VERIFIED_BATCH6,wordWindow.WENYAN_VERIFIED_BATCH7,wordWindow.WENYAN_VERIFIED_BATCH8,wordWindow.WENYAN_VERIFIED_BATCH9,wordWindow.WENYAN_VERIFIED_BATCH10].flatMap(x=>Object.keys(x?.words||{}))
 ])].filter(Boolean);
 const termAliases={
  '辩斗':['争辩','辩论','论辩'],'沧沧凉凉':['清凉','凉爽','寒凉'],'揠':['拔','拔起'],
