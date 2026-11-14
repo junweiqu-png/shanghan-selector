@@ -37,7 +37,7 @@ function excerpt(raw,char){
   if(right<0)continue;
   let start=left+1,end=right+1;
   const candidate=text.slice(start,end).replace(/^[，、：\s]+/,"").trim();
-  if(candidate.length<7||candidate.length>130||!candidate.includes(char)||!hasEnd(candidate))continue;
+  if(candidate.length<5||candidate.length>130||!candidate.includes(char)||!hasEnd(candidate))continue;
   if(/(?:师古曰|師古曰|案近刻|顏師古曰|颜师古曰)/.test(candidate))continue;
   if((candidate.match(/[【】〈〉]/g)||[]).length)continue;
   const ratio=(candidate.match(/[，。；：！？]/g)||[]).length;
