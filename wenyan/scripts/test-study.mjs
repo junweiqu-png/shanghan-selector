@@ -89,7 +89,7 @@ assert(!/rawCount|原典命中|字形匹配/.test(expl),'uncurated raw hits or b
 assert(expl.includes('active.contexts.set("lc"+i'),"expanded corpus candidates must retain their own source context");
 assert(expl.includes("loadLargeCandidates(term,origin,filtered,previews,active)")&&expl.includes("studyLargeCandidates"),
  'single-character study cards must load the expanded classical corpus asynchronously');
-assert(expl.includes("不计入上方已校译篇数或同义篇数"),
+assert(expl.includes("未经逐字校译，不计入5篇／2篇关联要求"),
  'untranslated full-corpus hits must never inflate verified coverage counts');
 const keywordAudit=fs.readFileSync(dir+'scripts/audit-keyword-coverage.mjs','utf8');
 assert(keywordAudit.includes("'data-junior.js'")&&keywordAudit.includes("study-verified-batch8.js")&&keywordAudit.includes("WENYAN_DATA_4"),
