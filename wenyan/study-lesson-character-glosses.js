@@ -61,7 +61,7 @@ for(const [title,rows] of Object.entries(lesson)){
    row.sources.push([title,anchor(text,offset,char),meaning,pos,code,contextual]);
    annotated++;
   }
-  for(const k of defs.keys())if(!hit.has(k.split("@")[0]))throw Error("字义映射中包含本文不存在的字："+title+" 第"+(lineIndex+1)+"句 "+k);
+  for(const k of defs.keys())if(!hit.has(k.split("@")[0]))throw Error("unused glossary "+title+" line "+(lineIndex+1)+" U+"+k.codePointAt(0).toString(16));
  });
 }
 window.WENYAN_LESSON_CHARACTER_GLOSSES={words,annotated,lessonTitles:Object.keys(lesson)};
