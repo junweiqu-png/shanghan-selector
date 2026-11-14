@@ -102,7 +102,15 @@ const summary={
 };
 if(works.length!==51||letters.length<=231||!letters.includes("辩")||!letters.includes("斗"))throw Error("main-text-only coverage regression");
 if(summary.priorityCharacters>summary.bodyUniqueCharacters||summary.bodyOccurrences<summary.bodyUniqueCharacters)throw Error("wrong denominator");
-const output={summary,characters,uses};
+const perWork=works.map(w=>{
+ const items=uses.filter(x=>x.work===w.title);
+ const missing=items.filter(x=>!x.originAnnotated).map(x=>x.char);
+ return {title:w.title,totalCharacters:items.length,annotated:items.length-missing.length,missingCount:missing.length,missingCharacters:missing,
+  fullyReviewed:items.filter(x=>x.ready).length};
+});
+summary.unannotatedLessonCharacterUses=perWork.reduce((n,w)=>n+w.missingCount,0);
+summary.worksWithMissingOrigin=perWork.filter(w=>w.missingCount>0).length;
+const output={summary,characters,uses,perWork};
 const dest=process.env.WENYAN_CHARACTER_AUDIT_DEST||"dist/wenyan/evidence/character-coverage-report.json";
 fs.mkdirSync(path.dirname(dest),{recursive:true});fs.writeFileSync(dest,JSON.stringify(output,null,2),"utf8");
 console.log(JSON.stringify(summary));
