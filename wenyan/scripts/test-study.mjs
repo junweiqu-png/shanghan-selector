@@ -89,7 +89,7 @@ assert(!/rawCount|原典命中|字形匹配/.test(expl),'uncurated raw hits or b
 assert(expl.includes('active.contexts.set("lc"+i'),"expanded corpus candidates must retain their own source context");
 assert(expl.includes("loadLargeCandidates(term,origin,filtered,previews,active)")&&expl.includes("studyLargeCandidates"),
  'single-character study cards must load the expanded classical corpus asynchronously');
-assert(expl.includes("不计入上方已校译篇数或同义篇数"),
+assert(expl.includes("未经逐字校译，不计入5篇／2篇关联要求"),
  'untranslated full-corpus hits must never inflate verified coverage counts');
 const keywordAudit=fs.readFileSync(dir+'scripts/audit-keyword-coverage.mjs','utf8');
 assert(keywordAudit.includes("'data-junior.js'")&&keywordAudit.includes("study-verified-batch8.js")&&keywordAudit.includes("WENYAN_DATA_4"),
@@ -109,7 +109,7 @@ for(const file of ['data-basic.js','data-classic.js','data-extra.js','data-junio
  new vm.Script(source,{filename:file}).runInNewContext({window:extendedWindow});
 }
 let extraLex=0,extraGram=0;
-for(const [file,key] of [['study-crosslesson.js','WENYAN_CROSSLESSON'],['study-verified-extra.js','WENYAN_VERIFIED_EXTRA'],['study-verified-more2.js','WENYAN_VERIFIED_MORE2'],['study-verified-common3.js','WENYAN_VERIFIED_COMMON3'],['study-verified-corpus.js','WENYAN_VERIFIED_CORPUS'],['study-verified-batch4.js','WENYAN_VERIFIED_BATCH4'],['study-verified-batch5.js','WENYAN_VERIFIED_BATCH5'],['study-verified-batch6.js','WENYAN_VERIFIED_BATCH6'],['study-verified-batch7.js','WENYAN_VERIFIED_BATCH7'],['study-verified-batch8.js','WENYAN_VERIFIED_BATCH8'],['study-verified-batch9.js','WENYAN_VERIFIED_BATCH9'],['study-verified-batch10.js','WENYAN_VERIFIED_BATCH10'],['study-grammar-more.js','WENYAN_GRAMMAR_MORE']]){
+for(const [file,key] of [['study-crosslesson.js','WENYAN_CROSSLESSON'],['study-verified-extra.js','WENYAN_VERIFIED_EXTRA'],['study-verified-more2.js','WENYAN_VERIFIED_MORE2'],['study-verified-common3.js','WENYAN_VERIFIED_COMMON3'],['study-verified-corpus.js','WENYAN_VERIFIED_CORPUS'],['study-verified-batch4.js','WENYAN_VERIFIED_BATCH4'],['study-verified-batch5.js','WENYAN_VERIFIED_BATCH5'],['study-verified-batch6.js','WENYAN_VERIFIED_BATCH6'],['study-verified-batch7.js','WENYAN_VERIFIED_BATCH7'],['study-verified-batch8.js','WENYAN_VERIFIED_BATCH8'],['study-verified-batch9.js','WENYAN_VERIFIED_BATCH9'],['study-verified-batch10.js','WENYAN_VERIFIED_BATCH10'],['study-verified-batch11.js','WENYAN_VERIFIED_BATCH11'],['study-grammar-more.js','WENYAN_GRAMMAR_MORE']]){
  const source=fs.readFileSync(dir+file,'utf8');
  new vm.Script(source,{filename:file}).runInNewContext({window:extendedWindow});
  assert(app.includes(file),'supplemental corpus not included in HTML '+file);
@@ -207,6 +207,14 @@ assert(vessel.examples.filter(x=>x[6]==="wine-vessel").length>=2,'卮 requires a
 assert(vessel.examples.some(x=>x[6]==="vessel-metaphor"),'卮 must distinguish literal wine vessel from figurative 庄子 卮言');
 assert(vessel.examples.every(x=>x[2].includes('卮')&&x[3]&&x[4]&&x[5]&&x[6]&&x[7]&&x[8].startsWith('https://')),'every 卮 excerpt needs source and precise meaning');
 assert(app.includes('study-verified-batch10.js'),'new 卮 evidence file must load');
+const batch11=extendedWindow.WENYAN_VERIFIED_BATCH11;
+for(const char of ["汲","溉"]){
+ const spec=batch11?.words?.[char];
+ assert(spec?.sources?.some(x=>x[0]==="穿井得一人"&&x[1].includes(char)),"origin anchor missing "+char);
+ assert(spec.examples.length>=5&&new Set(spec.examples.map(x=>x[0])).size>=5,"five independent ancient texts missing for "+char);
+ assert(spec.examples.filter(x=>x[6]===spec.sources[0][4]).length>=2,"two genuine same-sense examples missing for "+char);
+ assert(spec.examples.every(x=>x[2].includes(char)&&x[3]&&x[4]&&x[5]&&x[6]&&x[7]&&x[8]?.startsWith("https://")),"original, translation and source link incomplete for "+char);
+}
 const nine=extendedWindow.WENYAN_VERIFIED_BATCH9;
 assert(nine?.words['戎']?.sources.every(x=>x[4]==='proper-name'),'王戎 must be identified as a personal name');
 assert(Object.keys(nine.words).length>=14,'at least 13 exact-context name characters plus 智 must be checked');

@@ -27,10 +27,31 @@ const primary=new Set(['论语','孟子','诗经','礼记','荀子','春秋左�
 const groupOf=src=>src==='资治通鉴'?'资治通鉴':src.includes('史记')?'史记':src.includes('汉书')?'汉书':primary.has(src)?'经史名言':'二十四史及古籍';
 const rankGroup=g=>({'经史名言':0.35,'史记':0.55,'资治通鉴':0.6,'汉书':0.7,'二十四史及古籍':1})[g]||1;
 function quoteContext(s,at,word){
- const start=s.lastIndexOf('。',at-1)+1;
- const close=s.indexOf('。',at+word.length);
- const lo=Math.max(0,Math.max(start,at-75)),hi=Math.min(s.length,close>=0&&close-at<105?close+1:at+word.length+100);
- return (lo>0?'…':'')+clean(s.slice(lo,hi))+(hi<s.length?'…':'');
+ // 学生页只使用底本自带句读的短句；不猜测添加句号，不把注文断片当成原文。
+ const marks="。！？；";let left=-1,right=-1;
+ for(const p of marks){
+  const x=s.lastIndexOf(p,at-1),y=s.indexOf(p,at+word.length);
+  if(x>left)left=x;if(y>=0&&(right<0||y<right))right=y;
+ }
+ if(right<0)return null;
+ const segment=clean(s.slice(left+1,right+1)
+  .replace(/【[^【】]{0,600}】/g,"")
+  .replace(/〈[^〈〉]{0,350}〉/g,"")
+  .replace(/\[[^\[\]]{0,180}\]/g,""));
+ if(segment.length<5||segment.length>130||!segment.includes(word))return null;
+ if(/[\uE000-\uF8FF\uFFFD]/u.test(segment))return null;
+ if(/师古曰|師古曰|案近刻|顏師古曰|颜师古曰/.test(segment))return null;
+ if((segment.match(/“/g)||[]).length!==(segment.match(/”/g)||[]).length)return null;
+ return segment;
+}
+function usableContext(full,variant){
+ let at=-1,count=0;
+ while((at=full.indexOf(variant,at+1))>=0&&count++<12){
+  if(variant==="汲"&&/汲(?:桑|黯|仁|郡|縣|县|冢|塚)/.test(full.slice(at,at+4)))continue;
+  const sentence=quoteContext(full,at,variant);
+  if(sentence)return sentence;
+ }
+ return null;
 }
 async function download(){
  try{const st=await fsp.stat(RAW);if(st.size>40000000){console.log('large corpus cached',st.size);return true;}}catch{}
@@ -58,7 +79,7 @@ if(!await download()){
 const buckets=Array.from({length:64},()=>Object.create(null));
 const texts=Array.from({length:32},()=>[]);
 const wordWindow={};
-for(const f of ['data-basic.js','data-classic.js','data-extra.js','data-junior.js','data-junior-batch2a.js','data-junior-batch2b.js','data-junior-batch2c.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-verified-batch6.js','study-verified-batch7.js','study-verified-batch8.js','study-verified-batch9.js','study-verified-batch10.js']){
+for(const f of ['data-basic.js','data-classic.js','data-extra.js','data-junior.js','data-junior-batch2a.js','data-junior-batch2b.js','data-junior-batch2c.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-verified-batch6.js','study-verified-batch7.js','study-verified-batch8.js','study-verified-batch9.js','study-verified-batch10.js','study-verified-batch11.js']){
  const file=path.join('wenyan',f);
  vm.runInNewContext(await fsp.readFile(file,'utf8'),{window:wordWindow},{filename:file});
 }
@@ -67,7 +88,7 @@ const searchTerms=[...new Set([
  ...(wordWindow.WENYAN_DATA_2||[]).flatMap(w=>(w.terms||[]).map(t=>t[0])),
  ...(wordWindow.WENYAN_DATA_3||[]).flatMap(w=>(w.terms||[]).map(t=>t[0])),
  ...(wordWindow.WENYAN_DATA_4||[]).flatMap(w=>(w.terms||[]).map(t=>t[0])),
- ...[wordWindow.WENYAN_ANNOTATIONS,wordWindow.WENYAN_CROSSLESSON,wordWindow.WENYAN_VERIFIED_EXTRA,wordWindow.WENYAN_VERIFIED_MORE2,wordWindow.WENYAN_VERIFIED_COMMON3,wordWindow.WENYAN_VERIFIED_CORPUS,wordWindow.WENYAN_VERIFIED_BATCH4,wordWindow.WENYAN_VERIFIED_BATCH5,wordWindow.WENYAN_VERIFIED_BATCH6,wordWindow.WENYAN_VERIFIED_BATCH7,wordWindow.WENYAN_VERIFIED_BATCH8,wordWindow.WENYAN_VERIFIED_BATCH9,wordWindow.WENYAN_VERIFIED_BATCH10].flatMap(x=>Object.keys(x?.words||{}))
+ ...[wordWindow.WENYAN_ANNOTATIONS,wordWindow.WENYAN_CROSSLESSON,wordWindow.WENYAN_VERIFIED_EXTRA,wordWindow.WENYAN_VERIFIED_MORE2,wordWindow.WENYAN_VERIFIED_COMMON3,wordWindow.WENYAN_VERIFIED_CORPUS,wordWindow.WENYAN_VERIFIED_BATCH4,wordWindow.WENYAN_VERIFIED_BATCH5,wordWindow.WENYAN_VERIFIED_BATCH6,wordWindow.WENYAN_VERIFIED_BATCH7,wordWindow.WENYAN_VERIFIED_BATCH8,wordWindow.WENYAN_VERIFIED_BATCH9,wordWindow.WENYAN_VERIFIED_BATCH10,wordWindow.WENYAN_VERIFIED_BATCH11].flatMap(x=>Object.keys(x?.words||{}))
 ])].filter(Boolean);
 const termAliases={
  '辩斗':['争辩','辩论','论辩'],'沧沧凉凉':['清凉','凉爽','寒凉'],'揠':['拔','拔起'],
@@ -93,26 +114,31 @@ for await(const raw of input){
  texts[hash(id)%32].push(part);
  rows++;chars+=full.length;stats[source]=(stats[source]||0)+1;charsByBook[source]=(charsByBook[source]||0)+full.length;
  if(source==="说文解字")continue; // 字书提供词典，避免将释文混作教学文章的句式例句
+ if(!/[。！？；]/.test(full))continue; // 原卷无句读，不伪造标点，不参与学生候选索引
  // One evidence sample from each book chapter, selected by stable hash, not by arbitrary first 100.
  const seen=new Set(),candidates=[];
  for(const term of searchTerms){
-  const variants=termForms.get(term)||[term];let at=-1,matched=term;
-  for(const variant of variants){at=full.indexOf(variant);if(at>=0){matched=variant;break;}}
-  if(at<0)continue;
-  const arr=termBuckets[term]||(termBuckets[term]=[]);
-  const score=(hash(term+'|'+id)/4294967296)*rankGroup(group);
-  if(arr.length===MAX_PER_TERM&&arr[arr.length-1][0]<=score)continue;
-  const item=[score,source,chapter,quoteContext(full,at,matched),id,group,matched,(matched===term||matched===s2t(term))?'exact':'related'];
-  if(arr.length<MAX_PER_TERM){arr.push(item);arr.sort((a,b)=>a[0]-b[0]);}
+  const variants=termForms.get(term)||[term];let matched=term,quote=null;
+   for(const variant of variants){
+    const candidate=usableContext(full,variant);
+    if(candidate){matched=variant;quote=candidate;break;}
+   }
+   if(!quote)continue;
+   const arr=termBuckets[term]||(termBuckets[term]=[]);
+   const score=(hash(term+"|"+id)/4294967296)*rankGroup(group)+quote.length/2000;
+   if(arr.length===MAX_PER_TERM&&arr[arr.length-1][0]<=score)continue;
+   const item=[score,source,chapter,quote,id,group,matched,(matched===term||matched===s2t(term))?"exact":"related"];
+   if(arr.length<MAX_PER_TERM){arr.push(item);arr.sort((a,b)=>a[0]-b[0]);}
   else{arr[arr.length-1]=item;arr.sort((a,b)=>a[0]-b[0]);}
  }
  for(const ch of full.match(/[\u3400-\u9fff]/g)||[]){
   if(seen.has(ch))continue;seen.add(ch);
-  const at=full.indexOf(ch),key=ch,code=ch.codePointAt(0)%64;
-  const score=(hash(key+'|'+id)/4294967296)*rankGroup(group);
+  const key=ch,code=ch.codePointAt(0)%64;
+  const q=usableContext(full,ch);
+  if(!q)continue;
+  const score=(hash(key+"|"+id)/4294967296)*rankGroup(group)+q.length/2000;
   const bucket=buckets[code],arr=bucket[key]||(bucket[key]=[]);
   if(arr.length===MAX_PER_CHAR&&arr[arr.length-1][0]<=score)continue;
-  const q=quoteContext(full,at,ch);
   const item=[score,source,chapter,q,id,group];
   if(arr.length<MAX_PER_CHAR){arr.push(item);arr.sort((a,b)=>a[0]-b[0]);}
   else{arr[arr.length-1]=item;arr.sort((a,b)=>a[0]-b[0]);}
@@ -146,6 +172,6 @@ manifest.large={available:true,source:PROVENANCE,license:'CC0 1.0（数据集标
  indexedSnippets:quoteEntries,excluded,indexShards:64,textShards:32,maxSamplesPerCharacter:MAX_PER_CHAR,
  indexEncoding:'gzip',fullTextEncoding:'gzip',termIndexEncoding:'gzip',termIndexShards:64,termIndexTerms:searchTerms.length,termIndexSamples,termIndexMaxSamples:MAX_PER_TERM,
  bookCounts:stats,bookChars:charsByBook,
- explain:'原典全文、单字和完整词语候选索引仅供教师查询；未逐句确认翻译和字义者不会自动作为学生关联学习答案展示'};
+ explain:'原典候选只抽取底本自带标点、无明显损坏的短句；无句读底本不猜标点，未校译命中不计5篇／2篇'};
 await fsp.writeFile(manifestPath,JSON.stringify(manifest,null,2),'utf8');
 console.log('LARGE CORPUS READY',JSON.stringify({records:rows,books:Object.keys(stats).length,chars,snippets:quoteEntries,termIndexTerms:searchTerms.length,termIndexSamples,excluded,indexShards:64,termIndexShards:64,textShards:32}));
