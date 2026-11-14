@@ -38,7 +38,7 @@ function quoteContext(s,at,word){
   .replace(/【[^【】]{0,600}】/g,"")
   .replace(/〈[^〈〉]{0,350}〉/g,"")
   .replace(/\[[^\[\]]{0,180}\]/g,""));
- if(segment.length<7||segment.length>130||!segment.includes(word))return null;
+ if(segment.length<5||segment.length>130||!segment.includes(word))return null;
  if(/[\uE000-\uF8FF\uFFFD]/u.test(segment))return null;
  if(/师古曰|師古曰|案近刻|顏師古曰|颜师古曰/.test(segment))return null;
  if((segment.match(/“/g)||[]).length!==(segment.match(/”/g)||[]).length)return null;
