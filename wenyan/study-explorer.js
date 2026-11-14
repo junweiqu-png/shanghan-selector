@@ -439,10 +439,13 @@ window.WENYAN_STUDY_DEBUG={terms:()=>allTerms(),patterns:()=>grammarNames(),getS
  return {verifiedBooks,sameSenseBooks,pendingBooks:previews.length,complete:!!origin.verified&&!!origin.code&&verifiedBooks>=5&&sameSenseBooks>=2};
 }};
 // 从“关键词校译进度”页直接打开对应学习卡片，不依赖当前阅读进度。
-const linkedTerm=new URLSearchParams(location.search).get("term");
+const linkedParams=new URLSearchParams(location.search),linkedTerm=linkedParams.get("term"),linkedWork=linkedParams.get("work");
 if(linkedTerm && allTerms().includes(linkedTerm)){
  queueMicrotask(()=>{
-  const origin=indexOrigin(linkedTerm);
+  // 缺义清单中可精确指向“某一篇的某个字”，不再跳到另一篇同字的已校注位置。
+  const selected=linkedWork&&core.find(w=>w.title===linkedWork);
+  const context=selected&&(selected.lines||[]).find(line=>String(line[0]||"").includes(linkedTerm));
+  const origin=context?{title:selected.title,text:context[0],offset:context[0].indexOf(linkedTerm)}:indexOrigin(linkedTerm);
   if(origin)openWord(linkedTerm,origin);
   else open("单字索引",'<p class="study-empty">“'+esc(linkedTerm)+'”尚无可定位的原句。请先补齐原文和准确释义。</p>');
  });
