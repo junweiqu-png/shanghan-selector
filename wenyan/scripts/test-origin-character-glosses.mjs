@@ -2,10 +2,15 @@ import fs from "node:fs";
 import vm from "node:vm";
 import assert from "node:assert/strict";
 const win={};const dirs="wenyan/";
-for(const f of ["data-basic.js","data-classic.js","data-extra.js","data-junior.js","data-junior-batch2a.js","data-junior-batch2b.js","data-junior-batch2c.js","study-lesson-character-glosses.js","study-verified-batch12.js"])
+for(const f of ["data-basic.js","data-classic.js","data-extra.js","data-junior.js","data-junior-batch2a.js","data-junior-batch2b.js","data-junior-batch2c.js","study-lesson-character-glosses.js","study-verified-batch12.js","study-reference-dictionary.js"])
  vm.runInNewContext(fs.readFileSync(dirs+f,"utf8"),{window:win},{filename:f});
 const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[]),...(win.WENYAN_DATA_4||[])];
 const curated=win.WENYAN_LESSON_CHARACTER_GLOSSES;
+const allChars=new Set(works.flatMap(w=>w.lines.flatMap(line=>[...line[0]].filter(c=>/\p{Script=Han}/u.test(c)))));
+const dictionary=win.WENYAN_REFERENCE_DICTIONARY;
+assert.equal(allChars.size,1302,"published body unique glyphs changed");
+assert(dictionary?.source?.includes("chinese-dictionary")&&dictionary.license==="MIT");
+for(const c of allChars)assert(dictionary.words[c]?.s?.length,"every original-body glyph must have a clearly labeled dictionary reference: "+c);
 let checked=0,missing=[];
 for(const title of curated.lessonTitles){
  const w=works.find(x=>x.title===title);
@@ -33,6 +38,8 @@ assert(win.WENYAN_VERIFIED_BATCH12.words["径"].examples.length>=2&&new Set(win.
 const first=works.find(x=>x.title==="核舟记").lines[0];
 assert(first[1].includes("直径一寸")&&!first[1].includes("一寸见方"),"correct sentence translation itself, not only glossary");
 const page=fs.readFileSync("wenyan/index.html","utf8"),explore=fs.readFileSync("wenyan/study-explorer.js","utf8");
-for(const asset of ["study-lesson-character-glosses.js","study-verified-batch12.js"])assert(page.includes(asset));
+for(const asset of ["study-lesson-character-glosses.js","study-verified-batch12.js","study-reference-dictionary.js"])assert(page.includes(asset));
 assert(explore.includes("WENYAN_LESSON_CHARACTER_GLOSSES")&&explore.includes("WENYAN_VERIFIED_BATCH12"));
+assert(explore.includes("WENYAN_REFERENCE_DICTIONARY")&&explore.includes("不等于本句义项"),"dictionary meanings cannot substitute verified contextual senses");
+assert(page.includes("study-reference-dictionary.js"),"offline reference must load");
 console.log(JSON.stringify({ok:true,publishedWorks:works.length,checkedCharacters:checked,lessons:curated.lessonTitles,contextMissing:missing.length,diameterExamples:win.WENYAN_VERIFIED_BATCH12.words["径"].examples.length}));
