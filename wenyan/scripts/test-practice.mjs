@@ -8,8 +8,8 @@ for(const file of ["data-basic.js","data-classic.js","data-extra.js","data-junio
 const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[]),...(win.WENYAN_DATA_4||[])],bank=win.WENYAN_PRACTICE_BANK;
 assert.equal(works.length,51,"must preserve published 51 lessons");
 assert.equal(bank.reverse.length,24,"require 24 vetted school-text reverse-translation prompts");
-assert.equal(bank.exam.length,10,"source-verified exam baseline requires 10 items");
-assert.equal(new Set(bank.reverse.concat(bank.exam).map(q=>q.id)).size,34,"question IDs unique");
+assert.equal(bank.exam.length,32,"10 original exam items plus 22 clearly labeled exam-point breakdowns");
+assert.equal(new Set(bank.reverse.concat(bank.exam).map(q=>q.id)).size,56,"question IDs unique");
 const seen=new Set(),topics=new Set();
 for(const q of bank.reverse){
  const work=works.find(w=>w.title===q.work),line=work?.lines?.[q.lineIndex];
@@ -23,10 +23,13 @@ for(const q of bank.reverse){
 }
 assert(topics.size>=8,"must cover at least 8 different reviewed grammar categories");
 const realSources=new Set(bank.exam.map(q=>q.source));
-assert.equal(realSources.size,5,"must actually cover 2 province midterms and 3 national high school exams");
+assert.equal(realSources.size,12,"must cover 2024 local exam sources and 2025 national exam points");
+assert.equal(bank.exam.filter(q=>!q.isAdapted).length,10,"existing original exam baseline remains");
+assert.equal(bank.exam.filter(q=>q.isAdapted).length,22,"adapted points must be visibly distinct from original questions");
 for(const q of bank.exam){
- assert(q.sourceMeta?.year===2024&&/^https:\/\//.test(q.sourceMeta.url),"real exam must carry checkable original source "+q.id);
- assert(/^2024/.test(q.sourceMeta.label)&&q.part&&q.focus,"missing year or exam subquestion "+q.id);
+ assert([2024,2025].includes(q.sourceMeta?.year)&&/^https:\/\//.test(q.sourceMeta.url),"exam points must carry checkable original source "+q.id);
+ assert(/^202[45]/.test(q.sourceMeta.label)&&q.part&&q.focus,"missing year or exam subquestion "+q.id);
+ if(q.isAdapted)assert(q.part.includes("拆解")&&!q.options,"adapted practice must not masquerade as an original question: "+q.id);
  if(q.options)assert(q.options.length===4&&Number.isInteger(q.answerIndex)&&q.answerIndex>=0&&q.answerIndex<4,"four original choices and verified answer required");
  else assert(q.answer?.length&&q.accept?.length>=1,"real single-character exam item must have its validated answer");
 }
@@ -43,5 +46,8 @@ assert(controller.includes('function withHighlights(')&&controller.includes('win
 assert(controller.includes('data.states')&&controller.includes('localStorage.setItem')&&controller.includes('弱')===false,"retries should persist without unsupported claims");
 assert(controller.includes('q.sourceMeta.url')&&controller.includes('q.sourceMeta.label'),"exam source links must be visible");
 assert(page.includes('id="weakOnly"')&&styles.includes(".answer-field"),"review and accessible controls missing");
+assert(page.includes('id="shuffleBatch"')&&page.includes('id="batchInfo"'),"random batch control and status missing");
+assert(controller.includes("function pickBatch(")&&controller.includes("BATCH_SIZE=10")&&controller.includes("data.examDecks"),"no persistent non-repeating batch shuffle");
+assert(controller.includes("isAdapted")&&controller.includes("真题考点拆解"),"adapted exam questions must be visibly labeled");
 for(const f of ["practice.js","practice-data.js","app.js"])new vm.Script(fs.readFileSync(root+f,"utf8"),{filename:f});
 console.log(JSON.stringify({ok:true,lessons:works.length,reverse:bank.reverse.length,exam:bank.exam.length,topics:[...topics],examSourceCount:realSources.size,authenticExamOnly:true}));
