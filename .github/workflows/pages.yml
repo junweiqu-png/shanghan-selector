@@ -84,6 +84,7 @@ jobs:
           node --check wenyan/study-verified-batch11.js
           node --check wenyan/study-verified-batch12.js
           node --check wenyan/study-lesson-character-glosses.js
+          node --check wenyan/study-reference-dictionary.js
           node --check wenyan/scripts/test-origin-character-glosses.mjs
           node --check wenyan/study-candidate-quality.js
           node --check wenyan/scripts/test-candidate-readability.mjs
