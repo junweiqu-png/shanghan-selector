@@ -93,6 +93,9 @@ jobs:
           node --check wenyan/data-junior-batch2c.js
           node --check wenyan/study-junior-glosses.js
           node --check wenyan/junior-curriculum.js
+          node --check wenyan/scripts/test-practice.mjs
+          node --check wenyan/practice-data.js
+          node --check wenyan/practice.js
           node --check wenyan/scripts/test-junior.mjs
           node --check wenyan/scripts/test-character.mjs
           node --check wenyan/scripts/audit-character-coverage.mjs
@@ -113,6 +116,7 @@ jobs:
           node wenyan/scripts/test-enhancements.mjs
           node wenyan/scripts/test-character.mjs
           node wenyan/scripts/test-junior.mjs
+          node wenyan/scripts/test-practice.mjs
           node wenyan/scripts/test-live-character-card.mjs
           node wenyan/scripts/test-candidate-readability.mjs
       - name: Build local classical corpus
