@@ -17,3 +17,6 @@
 .sentence .token:focus-visible,.wholetext .token:focus-visible{outline:2px solid #6d8e7b;border-radius:3px}
 .translation-launch{display:block;margin:8px auto 10px;border:1px solid #cbded0;border-radius:12px;background:#fff;color:#456452;padding:10px 16px;min-height:44px;cursor:pointer;font-size:15px}
 .reveal-line{display:inline-block;margin:7px 0 3px;border:1px solid #ceded0;background:#f8faf4;color:#4c6d57;padding:6px 10px;border-radius:8px;cursor:pointer;min-height:34px}
+
+/* 五个学习模块在窄屏上也能完整显示，新增练习模块不遮挡原有功能。 */
+nav.bottom button{flex:1;min-width:0;padding:9px 4px;font-size:14px}
