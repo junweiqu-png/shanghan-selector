@@ -16,16 +16,22 @@ input{flex:2;min-width:155px}select{flex:1;min-width:135px}
 .tag{display:inline-block;font-size:12px;margin:0 3px;border-radius:6px;padding:3px 6px}
 .ready{background:#ddf1e0;color:#246240}.pending{background:#ffeed5;color:#805026}.priority{background:#e4edf8;color:#284f7a}
 .notes{font-size:13px;color:#786a56}.actions{white-space:nowrap;font-size:14px}.more{display:block;margin:16px auto;min-width:160px}
+.work-audit{border:1px solid #e7dfd2;background:#fff;border-radius:14px;margin:16px 0;padding:12px 15px}
+.work-audit h2{font-size:19px;margin:3px 0 6px}.work-audit details{border-top:1px solid #eee9e2;padding:9px 0}
+.work-audit summary{cursor:pointer;font-size:14px;line-height:1.7}.work-audit .missing{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0}
+.work-audit .missing a{border:1px solid #d8e4da;background:#f2f8f1;border-radius:8px;padding:6px 9px;text-align:center;min-width:34px}
+.work-audit .ok{color:#246240}
 </style></head><body>
 <header><a href="./">← 返回正文阅读</a><a href="evidence/character-coverage-report.json" target="_blank" rel="noopener">原始逐字校核报告 ↗</a></header>
 <h1>先看正文 · 逐字学懂</h1>
 <p><b>这里统计的是本站实际发布的古文正文里的字</b>，不把关联扩展文章、题目里的字放入分母。
-重点字来自正文人工注释，扩展例句只作为参考证据，不会让某个字无缘无故“已学会”。下方的5篇/2篇均按该字所有原文用法中的最缺语境统计，全文库未校核命中不计入。</p>
+全部正文汉字现均可查看开源字典常见义；但字典列出的可能义项不等于该句已校释义。重点字来自正文人工注释，扩展例句只作为参考证据，不会让某个字无缘无故“已学会”。下方的5篇/2篇均按该字所有原文用法中的最缺语境统计，全文库未校核命中不计入。</p>
 <section class="stat"><div id="stats" class="stats">正在读取正文进度……</div><p class="notes" id="scope"></p></section>
 <div class="controls"><input id="query" aria-label="搜索正文单字或文章" placeholder="输入一个字或篇目，如：焉、三峡"><select id="filter" aria-label="按掌握情况筛选">
 <option value="priority" selected>优先学习：正文重点字</option><option value="pending">待完善的正文汉字</option>
 <option value="underfive">缺5篇已校关联</option><option value="undersame">缺2篇同义关联</option><option value="origin">尚缺正文义项</option><option value="ready">已满足关联规则</option><option value="all">全部正文汉字</option>
 </select></div>
+<section id="workAudit" class="work-audit"><h2>逐篇漏释义检查 · 全部51篇</h2><p class="notes">从这里点“缺义字”可打开它在这篇课文里的真正原句，而不是跳到别的篇目。同字不同句仍须分别校核。</p><div id="workAuditList">正在读取逐篇审计……</div></section>
 <p id="total" class="notes"></p><section id="rows" class="table" aria-live="polite"></section>
 <button id="more" class="more" hidden>再看更多汉字 ↓</button>
 <footer><p class="notes">说明：这是本站现有正文的完成度，<b>不是全省或全国中考的字表覆盖率</b>。初中阅读还需要整句翻译、句式、人物动机及新材料迁移能力。对照依据：<a href="https://www.moe.gov.cn/srcsite/A26/s8001/202204/W020220420582344386456.pdf" target="_blank" rel="noopener">义务教育语文课程标准（2022年版）</a>。</p></footer>
@@ -48,6 +54,25 @@ function card(t){
  const link=document.createElement("a");link.className="actions";link.href=a.href;link.textContent="学这个字 ↗";row.append(link);
  return row;
 }
+function displayWorkAudit(perWork){
+ const host=$("workAuditList");host.replaceChildren();
+ for(const w of [...(perWork||[])].sort((a,b)=>b.missingCount-a.missingCount||a.title.localeCompare(b.title,"zh-CN"))){
+  const d=document.createElement("details"),s=document.createElement("summary");
+  s.textContent=w.title+" · "+(w.missingCount?"仍缺"+w.missingCount+"字／共"+w.totalCharacters+"字":"正文每字已有释义");
+  if(!w.missingCount)s.className="ok";
+  d.append(s);
+  const words=document.createElement("div");words.className="missing";
+  for(const c of w.missingCharacters||[]){
+   const a=document.createElement("a");a.textContent=c;
+   a.href="./?term="+encodeURIComponent(c)+"&work="+encodeURIComponent(w.title);
+   a.title="查看《"+w.title+"》中“"+c+"”的原句";
+   words.append(a);
+  }
+  if(!w.missingCount){const p=document.createElement("p");p.className="ok";p.textContent="这篇正文中每个独立汉字都有经过定位的语境释义。跨篇五例／两同义仍须另查。";d.append(p);}
+  else d.append(words);
+  host.append(d);
+ }
+}
 function draw(){
  const q=$("query").value.trim(),mode=$("filter").value;
  let set=items.filter(x=>(!q||x.char.includes(q)||(x.workTitles||[]).some(n=>n.includes(q)))&&
@@ -58,9 +83,9 @@ function draw(){
  $("rows").replaceChildren(...set.slice(0,visible).map(card));$("more").hidden=visible>=set.length;
 }
 fetch("evidence/character-coverage-report.json",{cache:"no-store"}).then(r=>{if(!r.ok)throw Error("HTTP "+r.status);return r.json()}).then(data=>{
- const x=data.summary;items=data.characters||[];
- const fields=[[x.works,"已收录正文"],[x.bodyUniqueCharacters,"正文独立汉字"],[x.priorityCharacters,"正文重点字"],
- [x.charactersWithSomeSource,"至少一处有释义"],[x.charactersMeetingRule,"跨篇核义达标"],[x.charactersStillWithoutFive,"仍缺5篇的字"],[x.newStoryWorks,"分级趣味新篇"]];
+ const x=data.summary;items=data.characters||[];displayWorkAudit(data.perWork||[]);
+ const fields=[[x.works,"已收录正文"],[x.bodyUniqueCharacters,"正文独立汉字"],[x.dictionaryReferenceCovered,"已提供常用字典义（非校核）"],[x.priorityCharacters,"正文重点字"],
+ [x.charactersWithSomeSource,"至少一处有释义"],[x.worksWithMissingOrigin,"仍有缺义字的篇数"],[x.unannotatedLessonCharacterUses,"逐篇缺义字次"],[x.charactersMeetingRule,"跨篇核义达标"],[x.charactersStillWithoutFive,"仍缺5篇的字"],[x.newStoryWorks,"分级趣味新篇"]];
  $("stats").replaceChildren(...fields.map(([num,title])=>{
   const n=document.createElement("span"),b=document.createElement("b");b.textContent=num;
   n.append(b,document.createElement("br"),document.createTextNode(title));return n;

@@ -82,6 +82,10 @@ jobs:
           node --check wenyan/study-verified-batch9.js
           node --check wenyan/study-verified-batch10.js
           node --check wenyan/study-verified-batch11.js
+          node --check wenyan/study-verified-batch12.js
+          node --check wenyan/study-lesson-character-glosses.js
+          node --check wenyan/study-reference-dictionary.js
+          node --check wenyan/scripts/test-origin-character-glosses.mjs
           node --check wenyan/study-candidate-quality.js
           node --check wenyan/scripts/test-candidate-readability.mjs
           node --check wenyan/scripts/test-live-character-card.mjs
@@ -118,6 +122,7 @@ jobs:
           node wenyan/scripts/test-junior.mjs
           node wenyan/scripts/test-practice.mjs
           node wenyan/scripts/test-live-character-card.mjs
+          node wenyan/scripts/test-origin-character-glosses.mjs
           node wenyan/scripts/test-candidate-readability.mjs
       - name: Build local classical corpus
         env:
