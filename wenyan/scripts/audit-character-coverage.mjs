@@ -10,7 +10,7 @@ const files=["data-basic.js","data-classic.js","data-extra.js","data-junior.js",
  "study-annotations.js","study-crosslesson.js","study-verified-extra.js",
  "study-verified-more2.js","study-verified-common3.js","study-verified-corpus.js",
  "study-verified-batch4.js","study-verified-batch5.js","study-verified-batch6.js",
- "study-verified-batch7.js","study-verified-batch8.js","study-verified-batch9.js","study-verified-batch10.js","study-verified-batch11.js","study-verified-batch12.js","study-lesson-character-glosses.js","study-verified-characters.js","study-junior-glosses.js"];
+ "study-verified-batch7.js","study-verified-batch8.js","study-verified-batch9.js","study-verified-batch10.js","study-verified-batch11.js","study-verified-batch12.js","study-lesson-character-glosses.js","study-reference-dictionary.js","study-verified-characters.js","study-junior-glosses.js"];
 for(const f of files)vm.runInNewContext(fs.readFileSync(path.join(root,f),"utf8"),{window:win},{filename:f});
 const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[]),...(win.WENYAN_DATA_4||[])];
 const stores=[win.WENYAN_ANNOTATIONS,win.WENYAN_CROSSLESSON,win.WENYAN_VERIFIED_EXTRA,
@@ -89,6 +89,8 @@ const summary={
  characterLessonUses:uses.length,
  singleCharacterEvidenceKeys:stores.reduce((n,store)=>n+Object.keys(store?.words||{}).length,0),
  nonCharacterEvidenceKeys:invalidEvidenceKeys.length,
+ dictionaryReferenceCovered:letters.filter(c=>win.WENYAN_REFERENCE_DICTIONARY?.words?.[c]?.s?.length).length,
+ dictionaryReferenceMissing:letters.filter(c=>!win.WENYAN_REFERENCE_DICTIONARY?.words?.[c]?.s?.length),
  priorityCharacters:characters.filter(x=>x.priority).length,
  charactersWithSomeSource:characters.filter(x=>x.anyOriginAnnotated).length,
  charactersFullyOriginAnnotated:characters.filter(x=>x.originAnnotated).length,
@@ -102,6 +104,7 @@ const summary={
 };
 if(works.length!==51||letters.length<=231||!letters.includes("辩")||!letters.includes("斗"))throw Error("main-text-only coverage regression");
 if(summary.priorityCharacters>summary.bodyUniqueCharacters||summary.bodyOccurrences<summary.bodyUniqueCharacters)throw Error("wrong denominator");
+if(summary.dictionaryReferenceCovered!==letters.length||summary.dictionaryReferenceMissing.length)throw Error("dictionary reference must cover all 1302 published Han glyphs without pretending source-word verification");
 const perWork=works.map(w=>{
  const items=uses.filter(x=>x.work===w.title);
  const missing=items.filter(x=>!x.originAnnotated).map(x=>x.char);
