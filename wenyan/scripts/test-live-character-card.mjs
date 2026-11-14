@@ -20,7 +20,7 @@ for(const file of [
  "study-annotations.js","study-editor.js","study-crosslesson.js","study-verified-extra.js","study-verified-more2.js",
  "study-verified-common3.js","study-verified-corpus.js","study-verified-batch4.js","study-verified-batch5.js",
  "study-verified-batch6.js","study-verified-batch7.js","study-verified-batch8.js","study-verified-batch9.js",
- "study-verified-batch10.js","study-verified-batch11.js","study-verified-characters.js","study-junior-glosses.js","study-grammar-more.js","study-candidate-quality.js","study-explorer.js"
+ "study-verified-batch10.js","study-verified-batch11.js","study-verified-batch12.js","study-lesson-character-glosses.js","study-verified-characters.js","study-junior-glosses.js","study-grammar-more.js","study-candidate-quality.js","study-explorer.js"
 ])vm.runInNewContext(fs.readFileSync(base+file,"utf8"),context,{filename:file});
 const debug=win.WENYAN_STUDY_DEBUG;
 assert(debug,"student character study debug API unavailable");
@@ -45,6 +45,12 @@ for(const char of ["汲","溉"]){
  assert(stats.complete&&stats.verifiedBooks>=5&&stats.sameSenseBooks>=2,JSON.stringify({char,stats}));
  assert.equal(win.WENYAN_VERIFIED_BATCH11.words[char].examples.length,5,"five independently sourced examples required for "+char);
 }
+const nuclear=(win.WENYAN_DATA_4||[]).find(w=>w.title==="核舟记");
+assert(nuclear,"核舟记 must remain in 51 work baseline");
+const diameter=debug.origin("径",{title:"核舟记",text:nuclear.lines[0][0],offset:nuclear.lines[0][0].indexOf("径")});
+assert(diameter.verified&&diameter.code==="diameter"&&diameter.meaning.includes("直径"),"核舟记 径 must mean diameter");
+const diameterCoverage=debug.coverage("径",{title:"核舟记",text:nuclear.lines[0][0],offset:nuclear.lines[0][0].indexOf("径")});
+assert.equal(diameterCoverage.sameSenseBooks,2,"two verified independently sourced geometric examples, not 狼 straight");
 const candidateQuality=win.WENYAN_CANDIDATE_QUALITY;
 assert(!candidateQuality.format({title:"晋书·五行志",text:"汲桑被苟晞击败。"},"汲",{meaning:"打水"}),"汲桑 false-person-name hit");
 assert(!candidateQuality.format({title:"资治通鉴·第21篇",text:"水出南羌中东北入泽溉民田余无所见"},"溉",{meaning:"灌溉"}),"unpunctuated long fragment");
