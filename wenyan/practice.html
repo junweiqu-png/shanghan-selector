@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f8f5ec"><title>文言拾句 · 练习</title>
+<link rel="stylesheet" href="practice.css?build=20261114-practice1"></head>
+<body>
+<div class="page">
+<header class="site-header"><a href="./" class="brand"><b>文言拾句</b><small>返回诵读</small></a>
+<div><span class="eyebrow">独立模块</span><h1>举一反三 · 文言练习</h1><p>先自己动笔，再核对原文。没有计时、没有惩罚。</p></div></header>
+<main>
+<section class="intro"><h2>练习方式</h2><div id="modes" class="mode-picker" role="group" aria-label="选择练习类型">
+<button type="button" data-mode="reverse" class="current">现代汉语 → 文言文</button>
+<button type="button" data-mode="exam">真题易错单字</button></div>
+<div class="filters"><label>类别 <select id="topicFilter" aria-label="按句式筛选"><option value="all">全部句式</option></select></label>
+<label id="levelWrap" hidden>试卷 <select id="examLevel"><option value="all">中考＋高考</option><option value="中考">中考真题</option><option value="高考">高考真题</option></select></label>
+<label class="weak-filter"><input type="checkbox" id="weakOnly"> 只练待巩固</label></div>
+<p class="explain" id="modeExplainer"></p></section>
+<section class="workout" aria-live="polite">
+<div class="work-head"><span id="position"></span><span id="score"></span></div>
+<div class="progress" role="progressbar" aria-label="本组练习进度"><span id="progressBar"></span></div>
+<div id="questionRegion"><noscript>请启用 JavaScript 后练习。</noscript></div>
+</section>
+</main>
+<nav class="bottom" aria-label="学习模块"><a href="./">诵读</a><a href="./?view=library">篇目</a><a href="./?view=review">积累</a><a href="practice.html" class="active" aria-current="page">练习</a></nav>
+</div>
+<script src="data-basic.js?build=20261111-character1"></script>
+<script src="data-classic.js?build=20261110b"></script>
+<script src="data-extra.js?build=20261110e"></script>
+<script src="data-junior.js?build=20261111-junior10"></script>
+<script src="data-junior-batch2a.js?build=20261112-graded15a1"></script>
+<script src="data-junior-batch2b.js?build=20261112-graded15b1"></script>
+<script src="data-junior-batch2c.js?build=20261112-graded15c1"></script>
+<script src="practice-data.js?build=20261114-practice1"></script>
+<script src="practice.js?build=20261114-practice1"></script>
+</body></html>
