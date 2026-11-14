@@ -167,12 +167,23 @@ function open(title,html){
 function wrapHeader(){
  return chain.length?'<div class="study-toolbar"><button type="button" data-study-back>← 返回</button></div>':"";
 }
+function contextTranslation(origin){
+ const w=core.find(w=>w.title===origin.title);
+ if(!w)return "";
+ const row=(w.lines||[]).find(x=>x[0]===origin.text)
+  ||(w.lines||[]).find(x=>x[0]?.includes(origin.text)&&origin.text?.length>=6);
+ return row?.[1]||"";
+}
 function baseHeader(origin,isGrammar){
+ const translation=!isGrammar&&!origin.verified?contextTranslation(origin):"";
+ const provisional=translation?'<div class="study-context-translation"><b>已校课文整句译文（辅助理解，不等于本字已校释义）：</b><p>'+esc(translation)+'</p>'+
+ '<p class="study-caution">这句有译文，但“'+esc(origin.term)+'”字的独立字义仍待核对；请勿把这句译文当作字的释义。</p>'+
+ '<a href="https://www.zdic.net/hans/'+encodeURIComponent(origin.term)+'" target="_blank" rel="noopener noreferrer">查阅单字字典（具体义项仍需结合原句核对）↗</a></div>':"";
  return '<section class="study-origin">'+
  '<h3><em>'+esc(origin.term)+'</em><span>'+displayTitle(origin.title||"当前古文")+'</span></h3>'+
  (origin.text?'<p class="study-original">'+tokens(origin.text,origin.term,"source")+'</p>':'')+
  '<p class="study-origin-meaning"><b>'+(isGrammar?"本句句式：":"本文“"+esc(origin.term)+"”字：")+'</b>'+esc(origin.meaning)+
- (isGrammar?"":'<small>'+esc(origin.pos)+'</small>')+'</p></section>';
+ (isGrammar?"":'<small>'+esc(origin.pos)+'</small>')+'</p>'+provisional+'</section>';
 }
 function rowCard(row,index,origin,isGrammar){
  const meta=row.record,rel=relation(origin,meta,isGrammar),contextId="r"+index;
