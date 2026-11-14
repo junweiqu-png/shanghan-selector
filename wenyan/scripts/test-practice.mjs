@@ -1,4 +1,4 @@
-/* 练习的题目必须来自已发布正文译文或可核查的2024中高考试卷；回归原站黄金基线。 */
+/* 题目来自正文译文或可核查的2024—2025试卷；原题与真题考点拆解明确分开。 */
 import fs from "node:fs";
 import vm from "node:vm";
 import assert from "node:assert/strict";
@@ -50,4 +50,4 @@ assert(page.includes('id="shuffleBatch"')&&page.includes('id="batchInfo"'),"rand
 assert(controller.includes("function pickBatch(")&&controller.includes("BATCH_SIZE=10")&&controller.includes("data.examDecks"),"no persistent non-repeating batch shuffle");
 assert(controller.includes("isAdapted")&&controller.includes("真题考点拆解"),"adapted exam questions must be visibly labeled");
 for(const f of ["practice.js","practice-data.js","app.js"])new vm.Script(fs.readFileSync(root+f,"utf8"),{filename:f});
-console.log(JSON.stringify({ok:true,lessons:works.length,reverse:bank.reverse.length,exam:bank.exam.length,topics:[...topics],examSourceCount:realSources.size,authenticExamOnly:true}));
+console.log(JSON.stringify({ok:true,lessons:works.length,reverse:bank.reverse.length,exam:bank.exam.length,topics:[...topics],examSourceCount:realSources.size,authenticOriginalExamItems:10,adaptedExamPoints:22}));
