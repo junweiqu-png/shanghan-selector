@@ -102,3 +102,10 @@
 .study-reveal[open]{padding-bottom:7px}
 .study-reveal[open] summary{border-bottom:1px solid #e3eee2;margin-bottom:5px}
 .study-reveal .study-translation,.study-reveal .study-sense,.study-reveal .study-compare{margin:8px 0}
+
+/* 每字都可查离线词典参考义；严格区分“整句译文”和“原句已核字义”。 */
+.study-dictionary-reference,.study-context-translation{margin-top:12px;border:1px solid #dce7dc;background:#f8fbf5;padding:12px 14px;border-radius:12px;font-size:14px;line-height:1.75}
+.study-dictionary-reference b,.study-context-translation b{color:#326146}
+.study-dictionary-reference ol{padding-left:24px;margin:6px 0 8px;display:grid;gap:4px}
+.study-dictionary-reference a,.study-context-translation a{font-size:13px;color:#296849}
+.study-context-translation p{margin:8px 0;line-height:1.8}
