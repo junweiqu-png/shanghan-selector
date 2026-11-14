@@ -20,7 +20,7 @@ for(const file of [
  "study-annotations.js","study-editor.js","study-crosslesson.js","study-verified-extra.js","study-verified-more2.js",
  "study-verified-common3.js","study-verified-corpus.js","study-verified-batch4.js","study-verified-batch5.js",
  "study-verified-batch6.js","study-verified-batch7.js","study-verified-batch8.js","study-verified-batch9.js",
- "study-verified-batch10.js","study-verified-characters.js","study-junior-glosses.js","study-grammar-more.js","study-explorer.js"
+ "study-verified-batch10.js","study-verified-batch11.js","study-verified-characters.js","study-junior-glosses.js","study-grammar-more.js","study-candidate-quality.js","study-explorer.js"
 ])vm.runInNewContext(fs.readFileSync(base+file,"utf8"),context,{filename:file});
 const debug=win.WENYAN_STUDY_DEBUG;
 assert(debug,"student character study debug API unavailable");
@@ -35,6 +35,20 @@ for(const [sentence] of book.lines.filter(([s])=>s.includes("卮"))){
  validated++;
 }
 assert.equal(validated,3,"each of three 卮 occurrences must have a reviewed source sense");
+const story=(win.WENYAN_DATA_1||[]).find(w=>w.title==="穿井得一人");
+const storyLine=story?.lines?.[0]?.[0];
+assert(storyLine?.includes("溉汲"),"original sentence must be preserved unchanged");
+for(const char of ["汲","溉"]){
+ const ctx={title:story.title,text:storyLine,offset:storyLine.indexOf(char)};
+ const origin=debug.origin(char,ctx),stats=debug.coverage(char,ctx);
+ assert(origin.verified&&origin.code===(char==="汲"?"draw-water":"irrigate"),"literal sense incorrect for "+char);
+ assert(stats.complete&&stats.verifiedBooks>=5&&stats.sameSenseBooks>=2,JSON.stringify({char,stats}));
+ assert.equal(win.WENYAN_VERIFIED_BATCH11.words[char].examples.length,5,"five independently sourced examples required for "+char);
+}
+const candidateQuality=win.WENYAN_CANDIDATE_QUALITY;
+assert(!candidateQuality.format({title:"晋书·五行志",text:"汲桑被苟晞击败。"},"汲",{meaning:"打水"}),"汲桑 false-person-name hit");
+assert(!candidateQuality.format({title:"资治通鉴·第21篇",text:"水出南羌中东北入泽溉民田余无所见"},"溉",{meaning:"灌溉"}),"unpunctuated long fragment");
+
 const nameLine="王戎七岁，尝与诸小儿游。";
 const proper=debug.origin("戎",{title:"王戎不取道旁李",text:nameLine,offset:nameLine.indexOf("戎")});
 assert(proper.code==="proper-name","戎 in 王戎 must mean a personal name");
