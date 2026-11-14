@@ -25,7 +25,18 @@ function pickBatch(){
   deck.remaining=shuffled.filter(x=>!last.has(x)).concat(shuffled.filter(x=>last.has(x)));
   deck.round++;
  }
- examBatchIds=deck.remaining.splice(0,BATCH_SIZE);
+ const selected=deck.remaining.splice(0,BATCH_SIZE);
+ // 一轮剩余不足十道时，先做完剩余题，再从下一轮补齐；同批绝不出现重复ID。
+ if(selected.length<BATCH_SIZE&&ids.length>=BATCH_SIZE){
+  const selectedSet=new Set(selected),lastBatch=new Set(examBatchIds);
+  const fresh=shuffle(ids).filter(x=>!selectedSet.has(x));
+  const prioritized=fresh.filter(x=>!lastBatch.has(x)).concat(fresh.filter(x=>lastBatch.has(x)));
+  const n=BATCH_SIZE-selected.length;
+  selected.push(...prioritized.slice(0,n));
+  deck.remaining=prioritized.slice(n);
+  deck.round++;
+ }
+ examBatchIds=selected;
  data.examDecks[key]=deck;
  batchMeta={round:deck.round,remaining:deck.remaining.length,total:ids.length};
  index=0;shown=false;examChoice=null;save();render();
@@ -59,6 +70,7 @@ function setMode(next){
  $("levelWrap").hidden=mode!=="exam";
  $("shuffleBatch").hidden=mode!=="exam";
  $("batchInfo").hidden=mode!=="exam";
+ $("batchActions").hidden=mode!=="exam";
  $("modeExplainer").textContent=mode==="reverse"?
   "题目是本站现有51篇课文中已校译的现代汉语，答案取自相同原句。练习从原文反推句式，不要求每个字都与你写的一模一样才算理解正确。":
   "含可核查的原卷题及明确标注的“真题考点拆解”。拆解题只训练一个易错字，并非原卷原题；保留原试卷、年份和题号供核对。不把自编或改编题冒充真题，也不虚构全国考频。";
