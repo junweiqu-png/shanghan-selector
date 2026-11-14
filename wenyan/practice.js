@@ -107,6 +107,8 @@ $("modes").querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>setMode(b.da
 $("topicFilter").onchange=()=>{index=0;render()};
 $("examLevel").onchange=()=>{index=0;render()};
 $("weakOnly").onchange=()=>{index=0;render()};
-setMode("reverse");
+const deepLink=new URLSearchParams(location.search),requestedTopic=deepLink.get("topic");
+if(requestedTopic&&[...$("topicFilter").options].some(x=>x.value===requestedTopic))$("topicFilter").value=requestedTopic;
+setMode(deepLink.get("mode")==="exam"?"exam":"reverse");
 window.WENYAN_PRACTICE_DEBUG={bank,normalize,withHighlights,items,progress:()=>data.states};
 })();
