@@ -46,7 +46,7 @@ function quoteContext(s,at,word){
 }
 function usableContext(full,variant){
  let at=-1,count=0;
- while((at=full.indexOf(variant,at+1))>=0&&count++<30){
+ while((at=full.indexOf(variant,at+1))>=0&&count++<12){
   if(variant==="汲"&&/汲(?:桑|黯|仁|郡|縣|县|冢|塚)/.test(full.slice(at,at+4)))continue;
   const sentence=quoteContext(full,at,variant);
   if(sentence)return sentence;
@@ -114,6 +114,7 @@ for await(const raw of input){
  texts[hash(id)%32].push(part);
  rows++;chars+=full.length;stats[source]=(stats[source]||0)+1;charsByBook[source]=(charsByBook[source]||0)+full.length;
  if(source==="说文解字")continue; // 字书提供词典，避免将释文混作教学文章的句式例句
+ if(!/[。！？；]/.test(full))continue; // 原卷无句读，不伪造标点，不参与学生候选索引
  // One evidence sample from each book chapter, selected by stable hash, not by arbitrary first 100.
  const seen=new Set(),candidates=[];
  for(const term of searchTerms){
