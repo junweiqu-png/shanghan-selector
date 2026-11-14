@@ -176,14 +176,20 @@ function contextTranslation(origin){
 }
 function baseHeader(origin,isGrammar){
  const translation=!isGrammar&&!origin.verified?contextTranslation(origin):"";
+ const dictionary=!isGrammar&&!origin.verified&&[...origin.term].length===1?window.WENYAN_REFERENCE_DICTIONARY?.words?.[origin.term]:null;
+ const dictionaryMarkup=dictionary?.s?.length?'<div class="study-dictionary-reference">'+
+  '<b>这一个字的常见字典义（仅供比较，不等于本句义项）：</b>'+
+  '<ol>'+dictionary.s.map(s=>'<li>'+esc(s)+'</li>').join("")+'</ol>'+
+  '<p class="study-caution">读音参考：'+esc(dictionary.p||"见原文注音")+'。以上是词典列出的不同可能义项，不能直接选择第一项当作本文的解释，也不计入“已校译”。</p>'+
+  '<a href="https://github.com/mapull/chinese-dictionary" target="_blank" rel="noopener noreferrer">参考字典来源 · MIT ↗</a></div>':"";
  const provisional=translation?'<div class="study-context-translation"><b>已校课文整句译文（辅助理解，不等于本字已校释义）：</b><p>'+esc(translation)+'</p>'+
- '<p class="study-caution">这句有译文，但“'+esc(origin.term)+'”字的独立字义仍待核对；请勿把这句译文当作字的释义。</p>'+
- '<a href="https://www.zdic.net/hans/'+encodeURIComponent(origin.term)+'" target="_blank" rel="noopener noreferrer">查阅单字字典（具体义项仍需结合原句核对）↗</a></div>':"";
+ '<p class="study-caution">这句有译文，但“'+esc(origin.term)+'”字的独立字义仍待核对；请勿把整句译文当作该字的释义。</p>'+
+ '<a href="https://www.zdic.net/hans/'+encodeURIComponent(origin.term)+'" target="_blank" rel="noopener noreferrer">继续查阅这个单字 ↗</a></div>':"";
  return '<section class="study-origin">'+
  '<h3><em>'+esc(origin.term)+'</em><span>'+displayTitle(origin.title||"当前古文")+'</span></h3>'+
  (origin.text?'<p class="study-original">'+tokens(origin.text,origin.term,"source")+'</p>':'')+
  '<p class="study-origin-meaning"><b>'+(isGrammar?"本句句式：":"本文“"+esc(origin.term)+"”字：")+'</b>'+esc(origin.meaning)+
- (isGrammar?"":'<small>'+esc(origin.pos)+'</small>')+'</p>'+provisional+'</section>';
+ (isGrammar?"":'<small>'+esc(origin.pos)+'</small>')+'</p>'+dictionaryMarkup+provisional+'</section>';
 }
 function rowCard(row,index,origin,isGrammar){
  const meta=row.record,rel=relation(origin,meta,isGrammar),contextId="r"+index;
