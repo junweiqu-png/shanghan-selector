@@ -4,7 +4,7 @@
 const $=id=>document.getElementById(id), DB=window.WENYAN_ANNOTATIONS||{words:{},grammar:{},meta:{groups:{},families:{}}};
 const esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const core=[...(window.WENYAN_DATA_1||[]),...(window.WENYAN_DATA_2||[]),...(window.WENYAN_DATA_3||[]),...(window.WENYAN_DATA_4||[])];
-const rawTerms=()=>[...new Set([...Object.keys(DB.words||{}),...Object.keys(window.WENYAN_CROSSLESSON?.words||{}),...Object.keys(window.WENYAN_VERIFIED_EXTRA?.words||{}),...Object.keys(window.WENYAN_VERIFIED_MORE2?.words||{}),...Object.keys(window.WENYAN_VERIFIED_COMMON3?.words||{}),...Object.keys(window.WENYAN_VERIFIED_CORPUS?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH4?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH5?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH6?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH7?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH8?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH9?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH10?.words||{}),...core.flatMap(w=>(w.lines||[]).map(line=>line[0])),...core.flatMap(w=>(w.terms||[]).map(t=>t[0])),...(window.WENYAN_STUDY_EDITOR?.words()||[])])].filter(Boolean);
+const rawTerms=()=>[...new Set([...Object.keys(DB.words||{}),...Object.keys(window.WENYAN_CROSSLESSON?.words||{}),...Object.keys(window.WENYAN_VERIFIED_EXTRA?.words||{}),...Object.keys(window.WENYAN_VERIFIED_MORE2?.words||{}),...Object.keys(window.WENYAN_VERIFIED_COMMON3?.words||{}),...Object.keys(window.WENYAN_VERIFIED_CORPUS?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH4?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH5?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH6?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH7?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH8?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH9?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH10?.words||{}),...Object.keys(window.WENYAN_VERIFIED_BATCH11?.words||{}),...core.flatMap(w=>(w.lines||[]).map(line=>line[0])),...core.flatMap(w=>(w.terms||[]).map(t=>t[0])),...(window.WENYAN_STUDY_EDITOR?.words()||[])])].filter(Boolean);
 const allTerms=()=>[...new Set(rawTerms().flatMap(t=>[...String(t)].filter(c=>/\p{Script=Han}/u.test(c))))].sort((a,b)=>a.localeCompare(b,"zh-CN"));
 let chain=[],state=null;
 const order={"过秦论":1,"烛之武退秦师":2,"唐雎不辱使命":3,"曹刿论战":4,"孙权劝学":5,"爱莲说":6,"陋室铭":7,"卖油翁":8,"狼":9,"记承天寺夜游":10,"咏雪":40,"陈太丘与友期行":41};
@@ -12,10 +12,10 @@ const sortEntries=(a,b)=>(order[a.title]||20)-(order[b.title]||20)||a.title.loca
 const family=s=>DB.meta?.families?.[s]||s;
 const normalizeSense=s=>({look:"turn-look",lookback:"turn-look"}[s]||s);
 function knowTerm(word){
- const builtin=DB.words?.[word],junior=window.WENYAN_JUNIOR_GLOSSES?.words?.[word],cross=window.WENYAN_CROSSLESSON?.words?.[word],verified=window.WENYAN_VERIFIED_EXTRA?.words?.[word],more=window.WENYAN_VERIFIED_MORE2?.words?.[word],common=window.WENYAN_VERIFIED_COMMON3?.words?.[word],corpus=window.WENYAN_VERIFIED_CORPUS?.words?.[word],batch=window.WENYAN_VERIFIED_BATCH4?.words?.[word],batch5=window.WENYAN_VERIFIED_BATCH5?.words?.[word],batch6=window.WENYAN_VERIFIED_BATCH6?.words?.[word],batch7=window.WENYAN_VERIFIED_BATCH7?.words?.[word],batch8=window.WENYAN_VERIFIED_BATCH8?.words?.[word],batch9=window.WENYAN_VERIFIED_BATCH9?.words?.[word],batch10=window.WENYAN_VERIFIED_BATCH10?.words?.[word],characters=window.WENYAN_VERIFIED_CHARACTERS?.words?.[word],personal=window.WENYAN_STUDY_EDITOR?.lookupWord(word);
- if(!builtin&&!junior&&!cross&&!verified&&!more&&!common&&!corpus&&!batch&&!batch5&&!batch6&&!batch7&&!batch8&&!batch9&&!batch10&&!characters&&!personal)return null;
- return {sources:[...(personal?.sources||[]),...(batch10?.sources||[]),...(batch9?.sources||[]),...(batch8?.sources||[]),...(builtin?.sources||[]),...(junior?.sources||[]),...(verified?.sources||[]),...(more?.sources||[]),...(common?.sources||[]),...(corpus?.sources||[]),...(batch?.sources||[]),...(batch5?.sources||[]),...(batch6?.sources||[]),...(batch7?.sources||[]),...(characters?.sources||[]),...(cross?.sources||[])],
- examples:[...(personal?.examples||[]),...(batch10?.examples||[]),...(batch9?.examples||[]),...(batch8?.examples||[]),...(builtin?.examples||[]),...(junior?.examples||[]),...(verified?.examples||[]),...(more?.examples||[]),...(common?.examples||[]),...(corpus?.examples||[]),...(batch?.examples||[]),...(batch5?.examples||[]),...(batch6?.examples||[]),...(batch7?.examples||[]),...(characters?.examples||[]),...(cross?.examples||[])]};
+ const builtin=DB.words?.[word],junior=window.WENYAN_JUNIOR_GLOSSES?.words?.[word],cross=window.WENYAN_CROSSLESSON?.words?.[word],verified=window.WENYAN_VERIFIED_EXTRA?.words?.[word],more=window.WENYAN_VERIFIED_MORE2?.words?.[word],common=window.WENYAN_VERIFIED_COMMON3?.words?.[word],corpus=window.WENYAN_VERIFIED_CORPUS?.words?.[word],batch=window.WENYAN_VERIFIED_BATCH4?.words?.[word],batch5=window.WENYAN_VERIFIED_BATCH5?.words?.[word],batch6=window.WENYAN_VERIFIED_BATCH6?.words?.[word],batch7=window.WENYAN_VERIFIED_BATCH7?.words?.[word],batch8=window.WENYAN_VERIFIED_BATCH8?.words?.[word],batch9=window.WENYAN_VERIFIED_BATCH9?.words?.[word],batch10=window.WENYAN_VERIFIED_BATCH10?.words?.[word],batch11=window.WENYAN_VERIFIED_BATCH11?.words?.[word],characters=window.WENYAN_VERIFIED_CHARACTERS?.words?.[word],personal=window.WENYAN_STUDY_EDITOR?.lookupWord(word);
+ if(!builtin&&!junior&&!cross&&!verified&&!more&&!common&&!corpus&&!batch&&!batch5&&!batch6&&!batch7&&!batch8&&!batch9&&!batch10&&!batch11&&!characters&&!personal)return null;
+ return {sources:[...(personal?.sources||[]),...(batch11?.sources||[]),...(batch10?.sources||[]),...(batch9?.sources||[]),...(batch8?.sources||[]),...(builtin?.sources||[]),...(junior?.sources||[]),...(verified?.sources||[]),...(more?.sources||[]),...(common?.sources||[]),...(corpus?.sources||[]),...(batch?.sources||[]),...(batch5?.sources||[]),...(batch6?.sources||[]),...(batch7?.sources||[]),...(characters?.sources||[]),...(cross?.sources||[])],
+ examples:[...(personal?.examples||[]),...(batch11?.examples||[]),...(batch10?.examples||[]),...(batch9?.examples||[]),...(batch8?.examples||[]),...(builtin?.examples||[]),...(junior?.examples||[]),...(verified?.examples||[]),...(more?.examples||[]),...(common?.examples||[]),...(corpus?.examples||[]),...(batch?.examples||[]),...(batch5?.examples||[]),...(batch6?.examples||[]),...(batch7?.examples||[]),...(characters?.examples||[]),...(cross?.examples||[])]};
 }
 function grammarSpec(name){
  const built=DB.grammar?.[name]||null,added=window.WENYAN_GRAMMAR_MORE?.grammar?.[name]||null,
@@ -231,7 +231,7 @@ function readingCandidates(char,origin,reviewed){
  const stores=[DB,window.WENYAN_VERIFIED_EXTRA,window.WENYAN_VERIFIED_MORE2,
   window.WENYAN_VERIFIED_COMMON3,window.WENYAN_VERIFIED_CORPUS,
   window.WENYAN_VERIFIED_BATCH4,window.WENYAN_VERIFIED_BATCH5,window.WENYAN_VERIFIED_BATCH6,
-  window.WENYAN_VERIFIED_BATCH7,window.WENYAN_VERIFIED_BATCH8,window.WENYAN_VERIFIED_BATCH9,window.WENYAN_VERIFIED_BATCH10,window.WENYAN_VERIFIED_CHARACTERS];
+  window.WENYAN_VERIFIED_BATCH7,window.WENYAN_VERIFIED_BATCH8,window.WENYAN_VERIFIED_BATCH9,window.WENYAN_VERIFIED_BATCH10,window.WENYAN_VERIFIED_BATCH11,window.WENYAN_VERIFIED_CHARACTERS];
  for(const store of stores)for(const spec of Object.values(store?.words||{}))
   for(const x of spec.examples||[])add(x[0],x[1],x[2],x[3],x[8]);
  return rows.slice(0,10);
@@ -249,8 +249,11 @@ function largeCandidateCard(row,index,char){
  return '<article class="study-example study-unverified">'+
   '<h4 class="study-example-top">'+displayTitle(row.title||"扩展古籍原文")+'</h4>'+
   '<p class="study-original">'+tokens(row.text,char,"lc"+index)+'</p>'+
-  '<p class="study-caution">公开古籍全文库命中。此处目前只有原文片段和书目元数据，尚未逐字校译；不计入上方已校译篇数或同义篇数。</p>'+
-  (meta?'<p class="study-sense">来源信息：'+esc(meta)+'</p>':'')+
+  '<details class="study-reveal"><summary>查看简明阅读提示（非人工译文）</summary>'+
+  '<p class="study-sense">'+esc(row.readingHint||"这段原文的字义尚待逐字核对。")+'</p>'+
+  '<p class="study-compare unknown">这只是依据句面词语生成的阅读线索，没有给出经校对的现代译文，也不能算同义例句。</p></details>'+
+  '<p class="study-caution">只保留原典自带的标点；未经逐字校译，不计入5篇／2篇关联要求。</p>'+
+  (meta?'<p class="study-sense">来源：'+esc(meta)+'</p>':'')+
   '<div class="study-actions">'+
   (row.url?'<a href="'+esc(row.url)+'" target="_blank" rel="noopener noreferrer">查看语料库来源 ↗</a>':'')+
   '<button type="button" data-study-large-edit="'+index+'">人工校译并加入</button></div></article>';
@@ -269,19 +272,19 @@ async function loadLargeCandidates(term,origin,reviewed,previews,active){
   const seen=new Set([...reviewed.map(x=>x.record.title),...previews.map(x=>x.title),origin.title]);
   const candidates=[];
   for(const hit of hits||[]){
-   const title=String(hit.title||hit.work||"");
-   if(!title||!hit.text?.includes(term)||seen.has(title))continue;
-   seen.add(title);candidates.push({...hit,title});
+   const row=window.WENYAN_CANDIDATE_QUALITY?.format(hit,term,origin);
+   if(!row||seen.has(row.title))continue;
+   seen.add(row.title);candidates.push(row);
    if(candidates.length>=8)break;
   }
   active.largeCandidates=candidates;
   candidates.forEach((row,i)=>active.contexts.set("lc"+i,{title:row.title,text:row.text,annotated:false}));
   if(!candidates.length){
-   host.innerHTML='<div class="study-sectionhead"><b>扩展古籍全文库候选（待逐字校译）</b></div><p class="study-caution">全文库检索已完成。与当前已展示篇目重复的原句已自动去重；未校译的全文命中不会冒充已核义例句。</p>';
+   host.innerHTML='<div class="study-sectionhead"><b>扩展古籍全文库候选（待逐字校译）</b></div><p class="study-caution">全文库检索完成。目前没有可显示的清晰带标点原文（无句读、残损字、人名假命中及重复篇目已过滤）。不会用猜测补标点或假译文。</p>';
    return;
   }
   host.innerHTML='<div class="study-sectionhead"><b>扩展古籍全文库候选（待逐字校译） · '+candidates.length+' 篇</b></div>'+
-   '<p class="study-caution">已从更大范围的经典、史书和编年史全文中找到含本字的原文。以下只展示原文候选；人工核对原典、补全翻译和本句义项后，才会计入上方达标数量。</p>'+
+   '<p class="study-caution">只显示保留来源标点、内容可读的候选句，并提供简明阅读提示。提示并非校核后的现代译文，人工核对字义与句译后方可计入上方达标数量。</p>'+
    candidates.map((row,i)=>largeCandidateCard(row,i,term)).join("");
   host.querySelectorAll("[data-study-large-edit]").forEach(button=>button.onclick=()=>{
    const row=active.largeCandidates[Number(button.dataset.studyLargeEdit)];
