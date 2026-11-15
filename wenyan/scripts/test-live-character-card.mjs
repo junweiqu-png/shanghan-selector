@@ -96,7 +96,7 @@ for(const [lineIndex,fragment,offsetInFragment,meaning] of reverseChecks){
 const reverseSite=[];
 for(const work of [...everyLesson].reverse()){
  let total=0,unresolved=0,firstUnresolved=[];
- for(const [lineIndex,row] of [...work.lines].entries().reverse()){
+ for(const [lineIndex,row] of [...work.lines.entries()].reverse()){
   assert(String(row[1]||"").trim(),"missing modern translation "+work.title+" #"+(lineIndex+1));
   const glyphs=[...row[0]];
   for(let offset=glyphs.length-1;offset>=0;offset--){
