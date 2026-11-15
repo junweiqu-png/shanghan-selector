@@ -27,7 +27,7 @@ for(const [lineIndex,line] of work.lines.entries()){
  const [sentence,translation]=line,seen=Object.create(null),over=pairs(overrides[lineIndex]),named=pairs(names[lineIndex]),used=new Set();
  if(!translation?.trim())throw Error("出师表第"+(lineIndex+1)+"句缺翻译");
  for(const [offset,char] of [...sentence].entries()){
-  if(!/^\\p{Script=Han}$/u.test(char))continue;
+  if(!/^\p{Script=Han}$/u.test(char))continue;
   const count=seen[char]=(seen[char]||0)+1,key=char+"@"+count;
   const meaningful=named.get(key)||named.get(char)||over.get(key)||over.get(char)||all.get(char);
   if(!meaningful)throw Error("出师表第"+(lineIndex+1)+"句未解释："+char+" @"+offset);
