@@ -16,11 +16,11 @@ const fetch=async uri=>{
 };
 const context={window:win,document,localStorage,location:{search:""},URLSearchParams,console,fetch,setTimeout,clearTimeout,TextEncoder,TextDecoder,Uint8Array};
 for(const file of [
- "data-basic.js","data-classic.js","data-extra.js","data-junior.js","data-junior-batch2a.js","data-junior-batch2b.js","data-junior-batch2c.js",
+ "data-basic.js","data-classic.js","data-extra.js","data-junior.js","data-junior-batch2a.js","data-junior-batch2b.js","data-junior-batch2c.js","data-chushi-full.js",
  "study-annotations.js","study-editor.js","study-crosslesson.js","study-verified-extra.js","study-verified-more2.js",
  "study-verified-common3.js","study-verified-corpus.js","study-verified-batch4.js","study-verified-batch5.js",
  "study-verified-batch6.js","study-verified-batch7.js","study-verified-batch8.js","study-verified-batch9.js",
- "study-verified-batch10.js","study-verified-batch11.js","study-verified-batch12.js","study-lesson-character-glosses.js","study-reference-dictionary.js","study-verified-characters.js","study-junior-glosses.js","study-grammar-more.js","study-candidate-quality.js","study-explorer.js"
+ "study-verified-batch10.js","study-verified-batch11.js","study-verified-batch12.js","study-lesson-character-glosses.js","study-reference-dictionary.js","study-chushi-character-glosses.js","study-verified-characters.js","study-junior-glosses.js","study-grammar-more.js","study-candidate-quality.js","study-explorer.js"
 ])vm.runInNewContext(fs.readFileSync(base+file,"utf8"),context,{filename:file});
 const debug=win.WENYAN_STUDY_DEBUG;
 assert(debug,"student character study debug API unavailable");
@@ -47,6 +47,24 @@ for(const char of ["汲","溉"]){
 }
 const nuclear=(win.WENYAN_DATA_4||[]).find(w=>w.title==="核舟记");
 assert(nuclear,"核舟记 must remain in 51 work baseline");
+const completeChuShi=(win.WENYAN_DATA_4||[]).find(x=>x.title==="出师表");
+assert.equal(completeChuShi.lines.length,25,"full original text with per-line translations");
+let chushiChecked=0;
+for(const [lineIndex,row] of completeChuShi.lines.entries()){
+ for(const [offset,char] of [...row[0]].entries()){
+  if(!/\\p{Script=Han}/u.test(char))continue;
+  const origin=debug.origin(char,{title:"出师表",text:row[0],offset});
+  assert(origin.verified&&origin.meaning&&origin.code&&origin.usage,
+   "missing or unanchored full Chu Shi Biao glyph meaning: line "+(lineIndex+1)+" "+char+" @"+offset);
+  chushiChecked++;
+ }
+}
+assert.equal(chushiChecked,627);
+assert(debug.lookupWord("陟").examples.some(e=>e[0]==="出师表"&&e[3]),"original translation linked into existing cross-lesson network");
+const repeat=(lineNum,term,pos)=>debug.origin(term,{title:"出师表",text:completeChuShi.lines[lineNum][0],offset:completeChuShi.lines[lineNum][0].indexOf(term,pos||0)});
+assert(repeat(5,"之").code==="proper-name","郭攸之 '之' is a name, not a function word");
+assert(repeat(21,"之",completeChuShi.lines[21][0].indexOf("攸")).code==="proper-name","郭攸之 name must be preserved later");
+assert(repeat(2,"以").meaning.includes("目的"),"以光 should express purpose");
 const diameter=debug.origin("径",{title:"核舟记",text:nuclear.lines[0][0],offset:nuclear.lines[0][0].indexOf("径")});
 assert(diameter.verified&&diameter.code==="diameter"&&diameter.meaning.includes("直径"),"核舟记 径 must mean diameter");
 const diameterCoverage=debug.coverage("径",{title:"核舟记",text:nuclear.lines[0][0],offset:nuclear.lines[0][0].indexOf("径")});
