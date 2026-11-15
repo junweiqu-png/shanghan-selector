@@ -2,7 +2,7 @@ import fs from "node:fs";
 import vm from "node:vm";
 import assert from "node:assert/strict";
 const win={};const dirs="wenyan/";
-for(const f of ["data-basic.js","data-classic.js","data-extra.js","data-junior.js","data-junior-batch2a.js","data-junior-batch2b.js","data-junior-batch2c.js","data-chushi-full.js","study-lesson-character-glosses.js","study-verified-batch12.js","study-reference-dictionary.js","study-chushi-character-glosses.js"])
+for(const f of ["data-basic.js","data-classic.js","data-extra.js","data-junior.js","data-junior-batch2a.js","data-junior-batch2b.js","data-junior-batch2c.js","data-chushi-full.js","study-lesson-character-glosses.js","study-verified-batch12.js","study-reference-dictionary.js","study-chushi-character-glosses.js","study-guanchao-reverse-glosses.js"])
  vm.runInNewContext(fs.readFileSync(dirs+f,"utf8"),{window:win},{filename:f});
 const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[]),...(win.WENYAN_DATA_4||[])];
 const curated=win.WENYAN_LESSON_CHARACTER_GLOSSES;
@@ -32,6 +32,7 @@ for(const title of curated.lessonTitles){
 }
 assert.equal(missing.length,0,"every target lesson character occurrence must receive a literal annotation: "+JSON.stringify(missing.slice(0,8)));
 assert(curated.lessonTitles.includes("出师表"),"full 出师表 must be audited alongside previous fully annotated lessons");
+assert(curated.lessonTitles.includes("观潮")&&win.WENYAN_GUANCHAO_REVERSE_AUDIT?.annotated===203,"观潮203字位均已校核");
 assert.equal(win.WENYAN_CHUSHI_GLOSS_AUDIT?.annotated,627,"all 627 original glyph positions require exact contextual annotation");
 assert.equal(works.find(w=>w.title==="出师表")?.lines.length,25,"full text must have 25 translated reading segments");
 assert.equal(works.find(w=>w.title==="出师表")?.lines.filter(row=>!row[1]).length,0,"no untranslated lines");
@@ -42,7 +43,7 @@ assert(win.WENYAN_VERIFIED_BATCH12.words["径"].examples.length>=2&&new Set(win.
 const first=works.find(x=>x.title==="核舟记").lines[0];
 assert(first[1].includes("直径一寸")&&!first[1].includes("一寸见方"),"correct sentence translation itself, not only glossary");
 const page=fs.readFileSync("wenyan/index.html","utf8"),explore=fs.readFileSync("wenyan/study-explorer.js","utf8");
-for(const asset of ["data-chushi-full.js","study-chushi-character-glosses.js","study-lesson-character-glosses.js","study-verified-batch12.js","study-reference-dictionary.js"])assert(page.includes(asset));
+for(const asset of ["data-chushi-full.js","study-chushi-character-glosses.js","study-guanchao-reverse-glosses.js","study-lesson-character-glosses.js","study-verified-batch12.js","study-reference-dictionary.js"])assert(page.includes(asset));
 assert(explore.includes("WENYAN_LESSON_CHARACTER_GLOSSES")&&explore.includes("WENYAN_VERIFIED_BATCH12"));
 assert(explore.includes("WENYAN_REFERENCE_DICTIONARY")&&explore.includes("不等于本句义项"),"dictionary meanings cannot substitute verified contextual senses");
 assert(page.includes("study-reference-dictionary.js"),"offline reference must load");
