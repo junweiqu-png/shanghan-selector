@@ -24,7 +24,7 @@ for(const q of bank.reverse){
 assert(topics.size>=8,"must cover at least 8 different reviewed grammar categories");
 const realSources=new Set(bank.exam.filter(q=>!q.isMock).map(q=>q.source));
 assert.equal(realSources.size,12,"must cover 2024 local exam sources and 2025 national exam points");
-assert.equal(bank.exam.filter(q=>!q.isAdapted).length,10,"existing original exam baseline remains");
+assert.equal(bank.exam.filter(q=>!q.isMock&&!q.isAdapted).length,10,"existing original exam baseline remains");
 assert.equal(bank.exam.filter(q=>q.isAdapted).length,22,"adapted points must be visibly distinct from original questions");
 const mocks=bank.exam.filter(q=>q.isMock);
 assert.equal(mocks.length,346,"unique in-text-character annotations must generate 346 mock exercises");
