@@ -84,6 +84,7 @@ jobs:
           node --check wenyan/study-verified-batch11.js
           node --check wenyan/study-verified-batch12.js
           node --check wenyan/study-lesson-character-glosses.js
+          node --check wenyan/study-chushi-character-glosses.js
           node --check wenyan/study-reference-dictionary.js
           node --check wenyan/scripts/test-origin-character-glosses.mjs
           node --check wenyan/study-candidate-quality.js
@@ -95,6 +96,7 @@ jobs:
           node --check wenyan/data-junior-batch2a.js
           node --check wenyan/data-junior-batch2b.js
           node --check wenyan/data-junior-batch2c.js
+          node --check wenyan/data-chushi-full.js
           node --check wenyan/study-junior-glosses.js
           node --check wenyan/junior-curriculum.js
           node --check wenyan/scripts/test-practice.mjs
