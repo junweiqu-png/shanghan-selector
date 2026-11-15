@@ -3,10 +3,11 @@ import fs from "node:fs";
 import vm from "node:vm";
 import assert from "node:assert/strict";
 const root="wenyan/",win={};
-for(const file of ["data-basic.js","data-classic.js","data-extra.js","data-junior.js","data-junior-batch2a.js","data-junior-batch2b.js","data-junior-batch2c.js","practice-data.js"])
+for(const file of ["data-basic.js","data-classic.js","data-extra.js","data-junior.js","data-junior-batch2a.js","data-junior-batch2b.js","data-junior-batch2c.js","data-chushi-full.js","practice-data.js"])
  vm.runInNewContext(fs.readFileSync(root+file,"utf8"),{window:win},{filename:file});
 const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[]),...(win.WENYAN_DATA_4||[])],bank=win.WENYAN_PRACTICE_BANK;
 assert.equal(works.length,51,"must preserve published 51 lessons");
+assert.equal(works.find(w=>w.title==="出师表")?.lines?.length,25,"full 出师表 must feed its mock questions and exam practice");
 assert.equal(bank.reverse.length,24,"require 24 vetted school-text reverse-translation prompts");
 assert.equal(bank.exam.length,378,"10 original + 22 exam-based breakdowns + 346 source-anchored original mock prompts");
 assert.equal(new Set(bank.reverse.concat(bank.exam).map(q=>q.id)).size,402,"all mock, source-based and reverse question IDs unique");

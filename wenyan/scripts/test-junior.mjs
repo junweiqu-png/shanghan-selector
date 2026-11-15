@@ -3,7 +3,7 @@ import fs from "node:fs";
 import vm from "node:vm";
 import assert from "node:assert/strict";
 const root=process.env.WENYAN_ROOT||"wenyan/";
-const win={},files=["data-basic.js","data-classic.js","data-extra.js","data-junior.js","data-junior-batch2a.js","data-junior-batch2b.js","data-junior-batch2c.js",
+const win={},files=["data-basic.js","data-classic.js","data-extra.js","data-junior.js","data-junior-batch2a.js","data-junior-batch2b.js","data-junior-batch2c.js","data-chushi-full.js",
  "study-junior-glosses.js","junior-curriculum.js"];
 for(const f of files)new vm.Script(fs.readFileSync(root+f,"utf8"),{filename:f}).runInNewContext({window:win});
 const old=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[])],
@@ -19,8 +19,13 @@ const added=newWorks.slice(10);
 assert.equal(added.length,15,"second batch must add exactly 15 works");
 const expectedTiers=[...Array(6).fill("初一"),...Array(5).fill("初二"),...Array(4).fill("初三")];
 assert.equal(JSON.stringify(added.map(w=>w.level.split("·")[0])),JSON.stringify(expectedTiers),"new 15 lessons must progress from easy to hard");
-const avg=added.reduce((n,w)=>n+(w.lines.map(x=>x[0]).join("").match(/\p{Script=Han}/gu)||[]).length,0)/added.length;
-assert(avg>=125&&avg<=200,"new graded lessons must have a balanced average body length, actual "+avg);
+const ordinary=added.filter(w=>w.title!=="出师表");
+const avg=ordinary.reduce((n,w)=>n+(w.lines.map(x=>x[0]).join("").match(/\p{Script=Han}/gu)||[]).length,0)/ordinary.length;
+assert(avg>=125&&avg<=200,"ordinary graded lessons must preserve an age-appropriate average, actual "+avg);
+const complete=added.find(w=>w.title==="出师表");
+assert(complete&&complete.lines.length===25,"complete 25-segment Former Chu Shi Biao required");
+assert(complete.lines[0][0].startsWith("臣亮言：先帝创业未半")&&complete.lines.at(-1)[0].endsWith("临表涕零，不知所言。"),"complete canonical beginning and ending required");
+assert(complete.lines.every(row=>row[0]&&row[1]&&row[2]),"no untranslated original sentence");
 assert(added.every(x=>x.hook&&x.theme&&x.terms.length>=5),"new lessons require engaging hooks and at least five single-character notes");
 assert(added.every(x=>x.missions[0].type!==x.missions[1].type),"each story must offer varied exercise types");
 
@@ -32,7 +37,7 @@ for(const w of newWorks){
  assert(/^https:\/\//.test(w.sourceUrl||""),"source must be HTTPS "+w.title);
  assert(w.hook&&w.theme,"child-friendly context must be present "+w.title);
  const text=lines.map(x=>x[0]).join(""),length=han(text).length;
- assert(length>=35&&length<=370,"age-appropriate length of 35–370 Han chars: "+w.title+" "+length);
+ assert(length>=35&&(w.title==="出师表"?length===627:length<=370),"complete original only exempt from 370-char teaching-piece limit: "+w.title+" "+length);
  grades.add(w.level.split("·")[0]);newBodyOccurrences+=length;
  for(const c of han(text))bodyChars.add(c);
  const annotations=new Set();
@@ -80,7 +85,7 @@ for(const [name,g] of Object.entries(guide)){
 }
 const index=fs.readFileSync(root+"index.html","utf8"),app=fs.readFileSync(root+"app.js","utf8"),
  explorer=fs.readFileSync(root+"study-explorer.js","utf8"),coverage=fs.readFileSync(root+"coverage.html","utf8");
-for(const item of ["data-junior.js","data-junior-batch2a.js","data-junior-batch2b.js","data-junior-batch2c.js","study-junior-glosses.js","junior-curriculum.js","missionLaunch","missionLaunchWhole"])assert(index.includes(item));
+for(const item of ["data-junior.js","data-junior-batch2a.js","data-junior-batch2b.js","data-junior-batch2c.js","data-chushi-full.js","study-junior-glosses.js","junior-curriculum.js","missionLaunch","missionLaunchWhole"])assert(index.includes(item));
 for(const item of ["new Set()","missionDone","function openMission(","gradeFilter","data-mission-choice","w.lines||[]"])assert(app.includes(item));
 assert(explorer.includes("WENYAN_DATA_4")&&explorer.includes("WENYAN_JUNIOR_GLOSSES")&&explorer.includes("function discoveryGuide("));
 assert(app.includes('addEventListener("touchend"')&&!app.includes('if(!start||e.target.closest(".token"))'),
@@ -88,7 +93,7 @@ assert(app.includes('addEventListener("touchend"')&&!app.includes('if(!start||e.
 assert(index.includes('id="showTranslation"')&&app.includes('class="reveal-line"'),
  "full-character clickable text needs explicit translation controls");
 assert(coverage.includes("正文单字")&&coverage.includes("bodyUniqueCharacters")&&coverage.includes("priorityCharacters"));
-for(const f of ["app.js","study-explorer.js","junior-curriculum.js","data-junior.js","data-junior-batch2a.js","data-junior-batch2b.js","data-junior-batch2c.js","study-junior-glosses.js"])
+for(const f of ["app.js","study-explorer.js","junior-curriculum.js","data-junior.js","data-junior-batch2a.js","data-junior-batch2b.js","data-junior-batch2c.js","data-chushi-full.js","study-junior-glosses.js"])
  new vm.Script(fs.readFileSync(root+f,"utf8"),{filename:f});
 console.log(JSON.stringify({ok:true,publishedWorks:works.length,addedStories:newWorks.length,
  juniorGrades:[...grades],newStoryBodyCharacters:newBodyOccurrences,
