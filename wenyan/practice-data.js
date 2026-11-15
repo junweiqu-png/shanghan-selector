@@ -122,6 +122,6 @@ for(const [wi,work] of works.entries()){
 const fullExam=exam.concat(examBreakdowns,mockExam);
 
 const ids=reverse.concat(fullExam).map(q=>q.id);
-if(new Set(ids).size!==ids.length||fullExam.some(x=>!x.sourceMeta.url||!x.sourceMeta.year))throw Error("真题来源或练习ID有误");
+if(new Set(ids).size!==ids.length||fullExam.some(x=>!x.sourceMeta.url||(!x.isMock&&!x.sourceMeta.year)))throw Error("题目ID重复或真实试卷缺年份及来源");
 window.WENYAN_PRACTICE_BANK={reverse,exam:fullExam,sources,version:"20261115-mock1"};
 })();
