@@ -2,13 +2,13 @@ import fs from "node:fs";
 import vm from "node:vm";
 import assert from "node:assert/strict";
 const win={};const dirs="wenyan/";
-for(const f of ["data-basic.js","data-classic.js","data-extra.js","data-junior.js","data-junior-batch2a.js","data-junior-batch2b.js","data-junior-batch2c.js","study-lesson-character-glosses.js","study-verified-batch12.js","study-reference-dictionary.js"])
+for(const f of ["data-basic.js","data-classic.js","data-extra.js","data-junior.js","data-junior-batch2a.js","data-junior-batch2b.js","data-junior-batch2c.js","data-chushi-full.js","study-lesson-character-glosses.js","study-verified-batch12.js","study-reference-dictionary.js","study-chushi-character-glosses.js"])
  vm.runInNewContext(fs.readFileSync(dirs+f,"utf8"),{window:win},{filename:f});
 const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[]),...(win.WENYAN_DATA_4||[])];
 const curated=win.WENYAN_LESSON_CHARACTER_GLOSSES;
 const allChars=new Set(works.flatMap(w=>w.lines.flatMap(line=>[...line[0]].filter(c=>/\p{Script=Han}/u.test(c)))));
 const dictionary=win.WENYAN_REFERENCE_DICTIONARY;
-assert.equal(allChars.size,1302,"published body unique glyphs changed");
+assert.equal(allChars.size,1378,"published body must include all 76 newly introduced characters from full 出师表");
 assert(dictionary?.source?.includes("chinese-dictionary")&&dictionary.license==="MIT");
 for(const c of allChars)assert(dictionary.words[c]?.s?.length,"every original-body glyph must have a clearly labeled dictionary reference: "+c);
 let checked=0,missing=[];
@@ -31,6 +31,10 @@ for(const title of curated.lessonTitles){
  }
 }
 assert.equal(missing.length,0,"every target lesson character occurrence must receive a literal annotation: "+JSON.stringify(missing.slice(0,8)));
+assert(curated.lessonTitles.includes("出师表"),"full 出师表 must be audited alongside previous fully annotated lessons");
+assert.equal(win.WENYAN_CHUSHI_GLOSS_AUDIT?.annotated,627,"all 627 original glyph positions require exact contextual annotation");
+assert.equal(works.find(w=>w.title==="出师表")?.lines.length,25,"full text must have 25 translated reading segments");
+assert.equal(works.find(w=>w.title==="出师表")?.lines.filter(row=>!row[1]).length,0,"no untranslated lines");
 const origin=curated.words["径"].sources.find(s=>s[0]==="核舟记");
 assert(origin&&origin[2]==="直径"&&origin[1].includes("径"),"径寸 must mean diameter");
 assert(win.WENYAN_VERIFIED_BATCH12.words["径"].sources.some(x=>x[4]==="diameter"));
@@ -38,7 +42,7 @@ assert(win.WENYAN_VERIFIED_BATCH12.words["径"].examples.length>=2&&new Set(win.
 const first=works.find(x=>x.title==="核舟记").lines[0];
 assert(first[1].includes("直径一寸")&&!first[1].includes("一寸见方"),"correct sentence translation itself, not only glossary");
 const page=fs.readFileSync("wenyan/index.html","utf8"),explore=fs.readFileSync("wenyan/study-explorer.js","utf8");
-for(const asset of ["study-lesson-character-glosses.js","study-verified-batch12.js","study-reference-dictionary.js"])assert(page.includes(asset));
+for(const asset of ["data-chushi-full.js","study-chushi-character-glosses.js","study-lesson-character-glosses.js","study-verified-batch12.js","study-reference-dictionary.js"])assert(page.includes(asset));
 assert(explore.includes("WENYAN_LESSON_CHARACTER_GLOSSES")&&explore.includes("WENYAN_VERIFIED_BATCH12"));
 assert(explore.includes("WENYAN_REFERENCE_DICTIONARY")&&explore.includes("不等于本句义项"),"dictionary meanings cannot substitute verified contextual senses");
 assert(page.includes("study-reference-dictionary.js"),"offline reference must load");
