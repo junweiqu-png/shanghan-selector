@@ -73,12 +73,12 @@ for(const [lineIndex,row] of completeChuShi.lines.entries()){
  }
 }
 assert.equal(chushiChecked,627);
-const chushiMeaning=(i,needle)=>{const sentence=completeChuShi.lines[i][0],offset=sentence.indexOf(needle);assert(offset>=0);return debug.origin(needle.at(-1),{title:"出师表",text:sentence,offset:offset+needle.length-1}).meaning;};
+const chushiMeaning=(i,needle,charIndex=0)=>{const sentence=completeChuShi.lines[i][0],offset=sentence.indexOf(needle);assert(offset>=0);return debug.origin(needle[charIndex],{title:"出师表",text:sentence,offset:offset+charIndex}).meaning;};
 assert(chushiMeaning(9,"先汉").includes("西汉"),"先汉 means Western Han, not a deceased emperor");
 assert(chushiMeaning(9,"后汉").includes("东汉"),"后汉 means Eastern Han");
 assert(chushiMeaning(8,"行阵").includes("军队行列"),"行阵 行 means ranks, not activity");
-assert(chushiMeaning(9,"贤臣").includes("臣子"),"贤臣 is a minister, not Zhuge Liang himself");
-assert(chushiMeaning(8,"营中").includes("军营内部"),"营中 is inside the camp");
+assert(chushiMeaning(9,"贤臣",1).includes("臣子"),"贤臣 is a minister, not Zhuge Liang himself");
+assert(chushiMeaning(8,"营中",1).includes("军营内部"),"营中 is inside the camp");
 assert(chushiMeaning(0,"臣").includes("诸葛亮"),"opening speaker 臣 refers to Zhuge Liang");
 const uiFile=fs.readFileSync(base+"study-explorer.js","utf8");
 assert(uiFile.includes("本文原句的现代汉语译文：")&&uiFile.includes("const translation=!isGrammar?contextTranslation(origin)"),
