@@ -49,6 +49,10 @@ const nuclear=(win.WENYAN_DATA_4||[]).find(w=>w.title==="核舟记");
 assert(nuclear,"核舟记 must remain in 51 work baseline");
 const completeChuShi=(win.WENYAN_DATA_4||[]).find(x=>x.title==="出师表");
 assert.equal(completeChuShi.lines.length,25,"full original text with per-line translations");
+const everyLesson=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[]),...(win.WENYAN_DATA_4||[])];
+assert.equal(everyLesson.length,51,"keep all previous lessons");
+const notTranslated=everyLesson.flatMap(w=>(w.lines||[]).flatMap(([ancient,modern],i)=>!String(ancient||"").trim()||!String(modern||"").trim()?[w.title+"#"+i]:[]));
+assert.equal(notTranslated.length,0,"all 51 lessons must have complete text and translation: "+notTranslated.slice(0,6));
 let chushiChecked=0;
 for(const [lineIndex,row] of completeChuShi.lines.entries()){
  for(const [offset,char] of [...row[0]].entries()){
@@ -56,10 +60,29 @@ for(const [lineIndex,row] of completeChuShi.lines.entries()){
   const origin=debug.origin(char,{title:"出师表",text:row[0],offset});
   assert(origin.verified&&origin.meaning&&origin.code&&origin.usage,
    "missing or unanchored full Chu Shi Biao glyph meaning: line "+(lineIndex+1)+" "+char+" @"+offset);
+  // 每一个字必须对应它当前的完整原句和确切位置，不能只与另一处“先帝”“之”“以”短锚重合。
+  const sources=win.WENYAN_LESSON_CHARACTER_GLOSSES.words[char]?.sources?.filter(
+   s=>s[0]==="出师表"&&s[6]===row[0]&&s[7]===offset)||[];
+  assert.equal(sources.length,1,"every glyph must have exactly one position-specific annotation: "+lineIndex+"/"+offset+"/"+char);
+  assert.equal(origin.meaning,sources[0][2],"wrong contextual sense for "+lineIndex+"/"+offset+"/"+char);
+  assert.equal(origin.code,sources[0][4],"wrong source position for "+lineIndex+"/"+offset+"/"+char);
+  assert(origin.usage.includes("该句译为："+row[1]),"wrong sentence translation associated with "+lineIndex+"/"+offset+"/"+char);
+  assert(debug.lookupWord(char)?.examples?.some(e=>e[0]==="出师表"&&e[2]===row[0]&&e[3]===row[1]),
+   "cross-text index lacks literal translated original for "+lineIndex+"/"+char);
   chushiChecked++;
  }
 }
 assert.equal(chushiChecked,627);
+const chushiMeaning=(i,needle)=>{const sentence=completeChuShi.lines[i][0],offset=sentence.indexOf(needle);assert(offset>=0);return debug.origin(needle.at(-1),{title:"出师表",text:sentence,offset:offset+needle.length-1}).meaning;};
+assert(chushiMeaning(9,"先汉").includes("西汉"),"先汉 means Western Han, not a deceased emperor");
+assert(chushiMeaning(9,"后汉").includes("东汉"),"后汉 means Eastern Han");
+assert(chushiMeaning(8,"行阵").includes("军队行列"),"行阵 行 means ranks, not activity");
+assert(chushiMeaning(9,"贤臣").includes("臣子"),"贤臣 is a minister, not Zhuge Liang himself");
+assert(chushiMeaning(8,"营中").includes("军营内部"),"营中 is inside the camp");
+assert(chushiMeaning(0,"臣").includes("诸葛亮"),"opening speaker 臣 refers to Zhuge Liang");
+const uiFile=fs.readFileSync(base+"study-explorer.js","utf8");
+assert(uiFile.includes("本文原句的现代汉语译文：")&&uiFile.includes("const translation=!isGrammar?contextTranslation(origin)"),
+ "verified character cards should show the full correct modern translation, not only isolated glosses");
 assert(debug.lookupWord("陟").examples.some(e=>e[0]==="出师表"&&e[3]),"original translation linked into existing cross-lesson network");
 const repeat=(lineNum,term,pos)=>debug.origin(term,{title:"出师表",text:completeChuShi.lines[lineNum][0],offset:completeChuShi.lines[lineNum][0].indexOf(term,pos||0)});
 assert(repeat(5,"之").code==="proper-name","郭攸之 '之' is a name, not a function word");
