@@ -11,11 +11,14 @@ let mode="reverse",index=0,shown=false,examChoice=null,examBatchIds=[],batchMeta
 const BATCH_SIZE=10;
 const shuffle=arr=>{const out=[...arr];for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]];}return out;};
 const normalize=s=>String(s||"").replace(/[\p{P}\p{S}\s]/gu,"").replace(/[臺檯]/g,"台").replace(/[裏裡]/g,"里");
-const examPool=()=>bank.exam.filter(q=>($("examLevel").value==="all"||q.level===$("examLevel").value)&&(!$("weakOnly").checked||data.states[q.id]==="again"));
+const questionCategory=q=>q.isMock?"mock":q.isAdapted?"adapted":"original";
+const examPool=()=>bank.exam.filter(q=>($("examLevel").value==="all"||q.level===$("examLevel").value)&&
+ ($("questionType").value==="all"||questionCategory(q)===$("questionType").value)&&
+ (!$("weakOnly").checked||data.states[q.id]==="again"));
 const items=()=>mode==="reverse"?bank.reverse.filter(q=>($("topicFilter").value==="all"||q.topic===$("topicFilter").value)&&(!$("weakOnly").checked||data.states[q.id]==="again")):
  examBatchIds.map(id=>examPool().find(q=>q.id===id)).filter(Boolean);
 function pickBatch(){
- const pool=examPool(),ids=pool.map(q=>q.id),key=$("examLevel").value+":"+($("weakOnly").checked?"retry":"all");
+ const pool=examPool(),ids=pool.map(q=>q.id),key=$("examLevel").value+":"+ $("questionType").value+":"+($("weakOnly").checked?"retry":"all");
  const signature=[...ids].sort().join("|");data.examDecks=data.examDecks||{};
  let deck=data.examDecks[key];
  if(!deck||deck.signature!==signature||!Array.isArray(deck.remaining))
@@ -44,6 +47,11 @@ function pickBatch(){
 function optionsInit(){
  const options=[...new Set(bank.reverse.map(x=>x.topic))].sort((a,b)=>a.localeCompare(b,"zh-CN"));
  $("topicFilter").innerHTML='<option value="all">全部句式 · '+bank.reverse.length+'题</option>'+options.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join("");
+ const count=kind=>bank.exam.filter(q=>questionCategory(q)===kind).length;
+ $("questionType").innerHTML='<option value="all">全部 · '+bank.exam.length+'题</option>'+
+  '<option value="original">考试原题 · '+count("original")+'题</option>'+
+  '<option value="adapted">真题考点拆解 · '+count("adapted")+'题</option>'+
+  '<option value="mock">课文模拟 · '+count("mock")+'题</option>';
 }
 function withHighlights(ancient,written){
  const truth=[...ancient],a=[...normalize(ancient)],b=[...normalize(written)];
@@ -68,12 +76,13 @@ function setMode(next){
  $("modes").querySelectorAll("button").forEach(b=>{b.classList.toggle("current",b.dataset.mode===mode);b.setAttribute("aria-pressed",String(b.dataset.mode===mode));});
  $("topicFilter").closest("label").hidden=mode!=="reverse";
  $("levelWrap").hidden=mode!=="exam";
+ $("questionTypeWrap").hidden=mode!=="exam";
  $("shuffleBatch").hidden=mode!=="exam";
  $("batchInfo").hidden=mode!=="exam";
  $("batchActions").hidden=mode!=="exam";
  $("modeExplainer").textContent=mode==="reverse"?
   "题目是本站现有51篇课文中已校译的现代汉语，答案取自相同原句。练习从原文反推句式，不要求每个字都与你写的一模一样才算理解正确。":
-  "含可核查的原卷题及明确标注的“真题考点拆解”。拆解题只训练一个易错字，并非原卷原题；保留原试卷、年份和题号供核对。不把自编或改编题冒充真题，也不虚构全国考频。";
+  "共 "+bank.exam.length+" 题：10道考试原题、22道真题考点拆解、"+bank.exam.filter(q=>q.isMock).length+"道课文原创模拟。模拟题来自51篇正文中的单字注释，保留原句和译文，绝不冒充真实试卷。每次抽10题，优先轮完不重复。";
  if(mode==="exam")pickBatch();else render();
 }
 function render(){
@@ -89,8 +98,8 @@ function render(){
  if(!n){host.innerHTML='<p class="empty">没有符合当前条件的题目。若选了“只练待巩固”，可以取消筛选或先完成题目并标记需要再练。</p>';return;}
  const q=rows[index],status=data.states[q.id]||"",isReverse=q.kind==="reverse";
  const meta=isReverse?'<span class="tag">'+esc(q.topic)+'</span><span>《'+esc(q.work)+'》 · 第'+(q.lineIndex+1)+'句</span>':
-  '<span class="tag">'+esc(q.isAdapted?"真题考点拆解":q.level+"原题")+'</span><span>'+esc(q.sourceMeta.label)+' '+esc(q.part)+'</span>';
- const desc=isReverse?"请把下面这句现代汉语写回原文（尽量还原古文的句式）：":q.isAdapted?"真题考点拆解：请解释原卷考查的这个单字（题目经重新编排）：":"请做原试卷的这道文言字义题：";
+  '<span class="tag">'+esc(q.isMock?"课文原创模拟":q.isAdapted?"真题考点拆解":q.level+"原题")+'</span><span>'+esc(q.sourceMeta.label)+' '+esc(q.part||"")+'</span>';
+ const desc=isReverse?"请把下面这句现代汉语写回原文（尽量还原古文的句式）：":q.isMock?"课文模拟：结合原句，解释这个汉字在此处的含义（非考试原题）：":q.isAdapted?"真题考点拆解：请解释原卷考查的这个单字（题目经重新编排）：":"请做原试卷的这道文言字义题：";
  const prompt=isReverse?'<div class="prompt">'+esc(q.modern)+'</div>':
   '<div class="prompt">'+esc(q.q)+'</div><p class="ask">重点辨认：<b>'+esc(q.focus)+'</b></p>';
  const input=isReverse?'<label for="answerText" class="ask">写出古文原句：</label><textarea id="answerText" class="answer-field" rows="4" autocomplete="off" spellcheck="false" placeholder="先自己写，再点击核对答案">'+esc(data.drafts[q.id]||"")+'</textarea>':
@@ -127,9 +136,11 @@ function showAnswer(q){
   html+='<p>'+(typed?(matched?'<span class="correct">与你填写的义项一致。</span>':'请对照原题答案：近义解释可根据语境自行判断。'):'未填写，可先看释义再重练。')+'</p>';
  }
  if(q.kind==="exam"){
-  html+='<p><b>易错点：</b>'+esc(q.tip)+'</p>'+
-   (q.isAdapted?'<p>这是按原试卷考点拆成的单字练习，不是原卷题目；可打开来源查看完整考查方式。</p>':'')+
-   '<p><a class="source-link" href="'+esc(q.sourceMeta.url)+'" target="_blank" rel="noopener noreferrer">查看 '+esc(q.sourceMeta.label)+' 试卷及答案出处 ↗</a></p>';
+  html+='<p><b>学习提示：</b>'+esc(q.tip)+'</p>'+
+   (q.isMock?'<p><b>课文现代译文：</b>'+esc(q.translation)+'</p><p>参考课文单字注释（'+esc(q.lessonLevel)+'），非考试命题。</p>':
+   q.isAdapted?'<p>这是按原试卷考点拆成的单字练习，不是原卷题目；可打开来源查看完整考查方式。</p>':'')+
+   '<p><a class="source-link" href="'+esc(q.sourceMeta.url)+'" target="_blank" rel="noopener noreferrer">'+
+   (q.isMock?"查看课文原文来源":"查看试卷及答案出处")+'：'+esc(q.sourceMeta.label)+' ↗</a></p>';
  }
  html+='<div class="self-rating"><button type="button" id="markCorrect">✓ 我理解了</button><button type="button" id="markRetry">↻ 还需再练</button><button type="button" id="againQ">不看答案再写一次</button></div>';
  region.innerHTML=html;region.hidden=false;shown=true;
@@ -141,10 +152,11 @@ optionsInit();
 $("modes").querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
 $("topicFilter").onchange=()=>{index=0;render()};
 $("examLevel").onchange=()=>{if(mode==="exam")pickBatch();else {index=0;render();}};
+$("questionType").onchange=()=>{if(mode==="exam")pickBatch();else {index=0;render();}};
 $("weakOnly").onchange=()=>{if(mode==="exam")pickBatch();else {index=0;render();}};
 $("shuffleBatch").onclick=()=>{if(mode==="exam")pickBatch();};
 const deepLink=new URLSearchParams(location.search),requestedTopic=deepLink.get("topic");
 if(requestedTopic&&[...$("topicFilter").options].some(x=>x.value===requestedTopic))$("topicFilter").value=requestedTopic;
 setMode(deepLink.get("mode")==="exam"?"exam":"reverse");
-window.WENYAN_PRACTICE_DEBUG={bank,normalize,withHighlights,items,progress:()=>data.states,currentBatch:()=>[...examBatchIds],pickBatch};
+window.WENYAN_PRACTICE_DEBUG={bank,normalize,withHighlights,items,examPool,progress:()=>data.states,currentBatch:()=>[...examBatchIds],pickBatch};
 })();

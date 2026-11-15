@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f8f5ec"><title>文言拾句 · 练习</title>
-<link rel="stylesheet" href="practice.css?build=20261114-random2"></head>
+<link rel="stylesheet" href="practice.css?build=20261115-mock1"></head>
 <body>
 <div class="page">
 <header class="site-header"><a href="./" class="brand"><b>文言拾句</b><small>返回诵读</small></a>
@@ -10,9 +10,10 @@
 <main>
 <section class="intro"><h2>练习方式</h2><div id="modes" class="mode-picker" role="group" aria-label="选择练习类型">
 <button type="button" data-mode="reverse" class="current">现代汉语 → 文言文</button>
-<button type="button" data-mode="exam">真题易错单字</button></div>
+<button type="button" data-mode="exam">易错单字 · 真题＋模拟</button></div>
 <div class="filters"><label>类别 <select id="topicFilter" aria-label="按句式筛选"><option value="all">全部句式</option></select></label>
-<label id="levelWrap" hidden>试卷 <select id="examLevel"><option value="all">中考＋高考</option><option value="中考">中考真题</option><option value="高考">高考真题</option></select></label>
+<label id="levelWrap" hidden>方向 <select id="examLevel"><option value="all">中考＋高考</option><option value="中考">中考方向（含模拟）</option><option value="高考">高考真题／拆解</option></select></label>
+<label id="questionTypeWrap" hidden>题型 <select id="questionType" aria-label="选择原题、真题拆解或模拟题"><option value="all">全部题目</option><option value="original">考试原题</option><option value="adapted">真题考点拆解</option><option value="mock">课文模拟题</option></select></label>
 <label class="weak-filter"><input type="checkbox" id="weakOnly"> 只练待巩固</label></div>
 <div class="batch-actions" id="batchActions" hidden><button id="shuffleBatch" type="button" hidden>🎲 随机换一批（10题）</button><span id="batchInfo" class="batch-info" hidden aria-live="polite"></span></div>
 <p class="explain" id="modeExplainer"></p></section>
@@ -31,6 +32,6 @@
 <script src="data-junior-batch2a.js?build=20261112-graded15a1"></script>
 <script src="data-junior-batch2b.js?build=20261112-graded15b1"></script>
 <script src="data-junior-batch2c.js?build=20261112-graded15c1"></script>
-<script src="practice-data.js?build=20261114-random2"></script>
-<script src="practice.js?build=20261114-random2"></script>
+<script src="practice-data.js?build=20261115-mock1"></script>
+<script src="practice.js?build=20261115-mock1"></script>
 </body></html>
