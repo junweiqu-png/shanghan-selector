@@ -52,7 +52,7 @@ assert.equal(completeChuShi.lines.length,25,"full original text with per-line tr
 let chushiChecked=0;
 for(const [lineIndex,row] of completeChuShi.lines.entries()){
  for(const [offset,char] of [...row[0]].entries()){
-  if(!/\\p{Script=Han}/u.test(char))continue;
+  if(!/\p{Script=Han}/u.test(char))continue;
   const origin=debug.origin(char,{title:"出师表",text:row[0],offset});
   assert(origin.verified&&origin.meaning&&origin.code&&origin.usage,
    "missing or unanchored full Chu Shi Biao glyph meaning: line "+(lineIndex+1)+" "+char+" @"+offset);
