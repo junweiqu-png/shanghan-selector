@@ -20,7 +20,7 @@ for(const file of [
  "study-annotations.js","study-editor.js","study-crosslesson.js","study-verified-extra.js","study-verified-more2.js",
  "study-verified-common3.js","study-verified-corpus.js","study-verified-batch4.js","study-verified-batch5.js",
  "study-verified-batch6.js","study-verified-batch7.js","study-verified-batch8.js","study-verified-batch9.js",
- "study-verified-batch10.js","study-verified-batch11.js","study-verified-batch12.js","study-lesson-character-glosses.js","study-reference-dictionary.js","study-chushi-character-glosses.js","study-verified-characters.js","study-junior-glosses.js","study-grammar-more.js","study-candidate-quality.js","study-explorer.js"
+ "study-verified-batch10.js","study-verified-batch11.js","study-verified-batch12.js","study-lesson-character-glosses.js","study-reference-dictionary.js","study-chushi-character-glosses.js","study-guanchao-reverse-glosses.js","study-verified-characters.js","study-junior-glosses.js","study-grammar-more.js","study-candidate-quality.js","study-explorer.js"
 ])vm.runInNewContext(fs.readFileSync(base+file,"utf8"),context,{filename:file});
 const debug=win.WENYAN_STUDY_DEBUG;
 assert(debug,"student character study debug API unavailable");
@@ -75,6 +75,32 @@ for(let lineIndex=completeChuShi.lines.length-1;lineIndex>=0;lineIndex--){
  }
 }
 assert.equal(chushiChecked,627);
+const tide=(win.WENYAN_DATA_4||[]).find(x=>x.title==="观潮");
+assert.equal(tide?.lines.length,7,"观潮原文七段应全部保留");
+let tideChecked=0;
+for(let line=tide.lines.length-1;line>=0;line--){
+ const [original,modern]=tide.lines[line];
+ assert(original.trim()&&modern.trim(),"观潮每句原文及译文不得空白");
+ for(let offset=original.length-1;offset>=0;offset--){
+  const term=original[offset];if(!/\p{Script=Han}/u.test(term))continue;
+  const spec=win.WENYAN_LESSON_CHARACTER_GLOSSES.words[term]?.sources?.filter(x=>x[0]==="观潮"&&x[6]===original&&x[7]===offset)||[];
+  assert.equal(spec.length,1,"观潮唯一语境位置缺义："+line+"/"+offset+"/"+term);
+  const origin=debug.origin(term,{title:"观潮",text:original,offset});
+  assert(origin.verified&&origin.meaning===spec[0][2]&&origin.code===spec[0][4],
+   "观潮本句字义错配："+line+"/"+offset+"/"+term);
+  assert(origin.usage.includes("该句译为："+modern),"观潮字卡串译："+line+"/"+offset+"/"+term);
+  assert(debug.lookupWord(term)?.examples?.some(e=>e[0]==="观潮"&&e[2]===original&&e[3]===modern),
+   "观潮原文译文未进入跨篇学习："+line+"/"+term);
+  tideChecked++;
+ }
+}
+assert.equal(tideChecked,203,"观潮正文203字位必须全部校释");
+assert(tide.lines[1][1].includes("吞没天空")&&tide.lines[3][1].includes("五种阵势")&&tide.lines[6][1].includes("十幅大彩旗"),
+ "观潮旧译漏掉吞天沃日、五阵、十幅彩旗");
+const tideGlyph=(li,text,i=0)=>{const row=tide.lines[li][0],at=row.indexOf(text);assert(at>=0);return debug.origin(text[i],{title:"观潮",text:row,offset:at+i}).meaning;};
+assert(tideGlyph(1,"沃日").includes("冲荡"),"观潮沃日之沃是浸没冲荡");
+assert(tideGlyph(6,"文身").includes("刺花纹"),"观潮文身之文是刺花纹而非文章");
+assert(tideGlyph(5,"为火所焚").includes("被"),"观潮为……所……是被动结构");
 // 自末段向首段、从每句末字向首字再次严审，检查缺义、错句、同字异义和跨篇译文。
 const reverseChecks=[
  [24,"所言",1,"说、表达"],[22,"雅言",1,"言论、意见"],[22,"善道",0,"好的、妥善的"],
@@ -113,6 +139,7 @@ for(const work of [...everyLesson].reverse()){
  reverseSite.push({title:work.title,total,unresolved,firstUnresolved});
 }
 assert.equal(reverseSite.find(w=>w.title==="出师表")?.unresolved,0,"出师表全文倒查不能有空白字义");
+assert.equal(reverseSite.find(w=>w.title==="观潮")?.unresolved,0,"观潮全文倒查不能有空白字义");
 const unresolvedOthers=reverseSite.filter(x=>x.title!=="出师表"&&x.unresolved>0);
 console.log("REVERSE_SITE_AUDIT "+JSON.stringify({works:reverseSite.length,fullChuShiGlyphs:chushiChecked,
  untranslatedSegments:notTranslated.length,unresolvedElsewhere:unresolvedOthers.reduce((n,x)=>n+x.unresolved,0),
