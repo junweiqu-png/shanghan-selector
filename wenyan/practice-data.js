@@ -1,6 +1,6 @@
 /* 文言练习来源：反向翻译只读取本站51篇已校译正文；试卷来源均可逐项核查。
  * 保留2024安徽、甘肃中考和2024高考三卷的原题/小题；另外单字拆解题从2024各地中考、2025高考的真实考点改编，绝不冒充原卷题目。
- * 无法据此估算全国“高频排序”，仅按考试考法分组；不把自编题标为真题。
+ * 模拟题仅取正文中只出现一次的单字释义，保留原句、译文；不宣称官方出题或全国“高频排序”。
  */
 (()=>{
 "use strict";
@@ -91,9 +91,37 @@ const examBreakdowns=[
  {id:"gk25-ii-11-jiang",source:"gaokaoII25",part:"第11题·考点拆解",q:"当奖率三军",focus:"奖",answer:"勉励；鼓励",accept:["勉励","鼓励","激励"],tip:"《出师表》“奖率”指激励并率领，不宜只用现代“奖励奖品”理解。"},
  {id:"gk25-ii-11-zhi",source:"gaokaoII25",part:"第11题·考点拆解",q:"卜者知其指意",focus:"指",answer:"同“旨”，意图",accept:["旨","同旨","意图","意旨"],tip:"这是“指”的通假用法，与普通手指之义不同。"}
 ].map(item=>({...item,kind:"exam",isAdapted:true,sourceMeta:sources[item.source],level:sources[item.source].level}));
-const fullExam=exam.concat(examBreakdowns);
+// 本站原创“中考方向模拟”，以正式课文已给出的逐字释义为依据，不声称是真实考试原题。
+// 为避免同篇同字多处出现造成偷换义项，只选择全篇正文仅出现一次的单字。
+// 不把词组拆出臆测字义；每题都有可逐句定位的原句、原有译文和原注释。
+const mockExam=[];
+const oneHan=c=>[...String(c)].length===1&&/^\p{Script=Han}$/u.test(c);
+for(const [wi,work] of works.entries()){
+ const lines=work.lines||[],terms=work.terms||[];
+ for(const [ti,term] of terms.entries()){
+  const [focus,pos,meaning]=term;
+  if(!oneHan(focus)||!String(meaning||"").trim()||!String(pos||"").trim())continue;
+  const locations=lines.flatMap((line,li)=>{
+   const count=String(line[0]||"").split(focus).length-1;
+   return count?Array.from({length:count},()=>li):[];
+  });
+  if(locations.length!==1)continue;
+  const lineIndex=locations[0],line=lines[lineIndex];
+  if(!line?.[1]?.trim())continue;
+  mockExam.push({
+   id:"mock-"+String(wi+1).padStart(2,"0")+"-"+String(ti+1).padStart(2,"0"),
+   kind:"exam",isMock:true,level:"中考",work:work.title,source:work.source||"",
+   lineIndex,part:"第"+(lineIndex+1)+"句·单字辨义模拟",
+   q:line[0],focus,answer:meaning,accept:[meaning],
+   translation:line[1],pos,lessonLevel:work.level||"课文积累",
+   tip:"本题为本站依据课文已给出注释编写的模拟题；不是中考真题。先结合原句理解“"+focus+"”的"+pos+"用法，再对照逐句译文。",
+   sourceMeta:{label:"《"+work.title+"》课文模拟",level:"中考",url:work.sourceUrl||"./?view=library"}
+  });
+ }
+}
+const fullExam=exam.concat(examBreakdowns,mockExam);
 
 const ids=reverse.concat(fullExam).map(q=>q.id);
 if(new Set(ids).size!==ids.length||fullExam.some(x=>!x.sourceMeta.url||!x.sourceMeta.year))throw Error("真题来源或练习ID有误");
-window.WENYAN_PRACTICE_BANK={reverse,exam:fullExam,sources,version:"20261114-random2"};
+window.WENYAN_PRACTICE_BANK={reverse,exam:fullExam,sources,version:"20261115-mock1"};
 })();
