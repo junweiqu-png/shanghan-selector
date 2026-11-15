@@ -182,16 +182,19 @@ function contextTranslation(origin){
  return row?.[1]||"";
 }
 function baseHeader(origin,isGrammar){
- const translation=!isGrammar&&!origin.verified?contextTranslation(origin):"";
+ const translation=!isGrammar?contextTranslation(origin):"";
  const dictionary=!isGrammar&&!origin.verified&&[...origin.term].length===1?window.WENYAN_REFERENCE_DICTIONARY?.words?.[origin.term]:null;
  const dictionaryMarkup=dictionary?.s?.length?'<div class="study-dictionary-reference">'+
   '<b>这一个字的常见字典义（仅供比较，不等于本句义项）：</b>'+
   '<ol>'+dictionary.s.map(s=>'<li>'+esc(s)+'</li>').join("")+'</ol>'+
   '<p class="study-caution">读音参考：'+esc(dictionary.p||"见原文注音")+'。以上是词典列出的不同可能义项，不能直接选择第一项当作本文的解释，也不计入“已校译”。</p>'+
   '<a href="https://github.com/mapull/chinese-dictionary" target="_blank" rel="noopener noreferrer">参考字典来源 · MIT ↗</a></div>':"";
- const provisional=translation?'<div class="study-context-translation"><b>已校课文整句译文（辅助理解，不等于本字已校释义）：</b><p>'+esc(translation)+'</p>'+
- '<p class="study-caution">这句有译文，但“'+esc(origin.term)+'”字的独立字义仍待核对；请勿把整句译文当作该字的释义。</p>'+
- '<a href="https://www.zdic.net/hans/'+encodeURIComponent(origin.term)+'" target="_blank" rel="noopener noreferrer">继续查阅这个单字 ↗</a></div>':"";
+ const provisional=translation?'<div class="study-context-translation"><b>'+
+  (origin.verified?"本文原句的现代汉语译文：":"已校课文整句译文（辅助理解，不等于本字已校释义）：")+
+  '</b><p>'+esc(translation)+'</p>'+
+  (origin.verified?"":'<p class="study-caution">这句有译文，但“'+esc(origin.term)+'”字的独立字义仍待核对；请勿把整句译文当作该字的释义。</p>'+
+   '<a href="https://www.zdic.net/hans/'+encodeURIComponent(origin.term)+'" target="_blank" rel="noopener noreferrer">继续查阅这个单字 ↗</a>')+
+  '</div>':"";
  return '<section class="study-origin">'+
  '<h3><em>'+esc(origin.term)+'</em><span>'+displayTitle(origin.title||"当前古文")+'</span></h3>'+
  (origin.text?'<p class="study-original">'+tokens(origin.text,origin.term,"source")+'</p>':'')+
