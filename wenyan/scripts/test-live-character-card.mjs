@@ -54,8 +54,10 @@ assert.equal(everyLesson.length,51,"keep all previous lessons");
 const notTranslated=everyLesson.flatMap(w=>(w.lines||[]).flatMap(([ancient,modern],i)=>!String(ancient||"").trim()||!String(modern||"").trim()?[w.title+"#"+i]:[]));
 assert.equal(notTranslated.length,0,"all 51 lessons must have complete text and translation: "+notTranslated.slice(0,6));
 let chushiChecked=0;
-for(const [lineIndex,row] of completeChuShi.lines.entries()){
- for(const [offset,char] of [...row[0]].entries()){
+for(let lineIndex=completeChuShi.lines.length-1;lineIndex>=0;lineIndex--){
+ const row=completeChuShi.lines[lineIndex];
+ for(let offset=row[0].length-1;offset>=0;offset--){
+  const char=row[0][offset];
   if(!/\p{Script=Han}/u.test(char))continue;
   const origin=debug.origin(char,{title:"出师表",text:row[0],offset});
   assert(origin.verified&&origin.meaning&&origin.code&&origin.usage,
@@ -73,6 +75,48 @@ for(const [lineIndex,row] of completeChuShi.lines.entries()){
  }
 }
 assert.equal(chushiChecked,627);
+// 自末段向首段、从每句末字向首字再次严审，检查缺义、错句、同字异义和跨篇译文。
+const reverseChecks=[
+ [24,"所言",1,"说、表达"],[22,"雅言",1,"言论、意见"],[22,"善道",0,"好的、妥善的"],
+ [21,"兴德之言",3,"劝谏之言"],[20,"之效",1,"任务、重任"],[20,"不效",1,"取得成效"],
+ [20,"之灵",1,"亡灵、英灵"],[19,"忠言",1,"忠言"],[16,"不毛",0,"不、没有"],
+ [16,"托付不效",2,"未能、没有"],[14,"一年",0,"数字一"],[14,"奉命",1,"命令、使命"],
+ [12,"性命",0,"生命"],[12,"性命",1,"人的生命"],[9,"小人",0,"品行卑下"],
+ [9,"亲贤臣",0,"形容词作动词"],[8,"得所",1,"合适的位置"],[6,"广益",1,"益处、好处"],
+ [4,"有司",0,"各有所司"],[0,"中道",0,"中途、半途"]
+];
+for(const [lineIndex,fragment,offsetInFragment,meaning] of reverseChecks){
+ const sentence=completeChuShi.lines[lineIndex][0],start=sentence.indexOf(fragment);
+ assert(start>=0,"test fragment not in original: "+lineIndex+"/"+fragment);
+ const term=fragment[offsetInFragment],at=start+offsetInFragment;
+ const resolved=debug.origin(term,{title:"出师表",text:sentence,offset:at});
+ assert(resolved.meaning.includes(meaning),
+  "reverse semantic audit failed at "+(lineIndex+1)+" "+fragment+"（"+term+"）expected "+meaning+" but got "+resolved.meaning);
+}
+const reverseSite=[];
+for(const work of [...everyLesson].reverse()){
+ let total=0,unresolved=0,firstUnresolved=[];
+ for(const [lineIndex,row] of [...work.lines].entries().reverse()){
+  assert(String(row[1]||"").trim(),"missing modern translation "+work.title+" #"+(lineIndex+1));
+  const glyphs=[...row[0]];
+  for(let offset=glyphs.length-1;offset>=0;offset--){
+   const char=glyphs[offset];
+   if(!/\p{Script=Han}/u.test(char))continue;
+   total++;
+   const sense=debug.origin(char,{title:work.title,text:row[0],offset});
+   if(!sense.verified||!sense.code||!sense.meaning||/尚待校核|未标注|待核对|待分字/.test(sense.meaning)){
+    unresolved++;
+    if(firstUnresolved.length<3)firstUnresolved.push({line:lineIndex+1,char});
+   }
+  }
+ }
+ reverseSite.push({title:work.title,total,unresolved,firstUnresolved});
+}
+assert.equal(reverseSite.find(w=>w.title==="出师表")?.unresolved,0,"出师表全文倒查不能有空白字义");
+const unresolvedOthers=reverseSite.filter(x=>x.title!=="出师表"&&x.unresolved>0);
+console.log("REVERSE_SITE_AUDIT "+JSON.stringify({works:reverseSite.length,fullChuShiGlyphs:chushiChecked,
+ untranslatedSegments:notTranslated.length,unresolvedElsewhere:unresolvedOthers.reduce((n,x)=>n+x.unresolved,0),
+ remainingWorkCount:unresolvedOthers.length,reverseFirst10:reverseSite.slice(0,10)}));
 const chushiMeaning=(i,needle,charIndex=0)=>{const sentence=completeChuShi.lines[i][0],offset=sentence.indexOf(needle);assert(offset>=0);return debug.origin(needle[charIndex],{title:"出师表",text:sentence,offset:offset+charIndex}).meaning;};
 assert(chushiMeaning(9,"先汉").includes("西汉"),"先汉 means Western Han, not a deceased emperor");
 assert(chushiMeaning(9,"后汉").includes("东汉"),"后汉 means Eastern Han");
