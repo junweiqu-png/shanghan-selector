@@ -15,7 +15,7 @@ const specialNames=new Set(["郭","攸","费","祎","董","允","向","宠","桓
 function pairs(str){const out=new Map();for(const item of String(str||"").split("|")){if(!item)continue;const i=item.indexOf("=");if(i<1||!item.slice(i+1))throw Error("出师表释义字段有空项："+item);out.set(item.slice(0,i),item.slice(i+1));}return out;}
 const all=pairs(lexicon),curated=target.words,refs=window.WENYAN_REFERENCE_DICTIONARY,virtual=new Set([..."之而以其者于乃则焉也乎矣哉盖若如为所且或将无不非"]);
 function anchor(sentence,at,char){
- const leftBound=sentence.lastIndexOf(char,at-1)+1,rightNext=sentence.indexOf(char,at+1),rightBound=rightNext<0?sentence.length:rightNext;
+ const leftBound=(at===0?-1:sentence.lastIndexOf(char,at-1))+1,rightNext=sentence.indexOf(char,at+1),rightBound=rightNext<0?sentence.length:rightNext;
  for(let len=2;len<=30;len++)for(let start=Math.max(leftBound,at-len+1);start<=at;start++){
   const str=sentence.slice(start,start+len);if(str.length!==len||start+len>rightBound||str.indexOf(char)!==at-start||str.indexOf(char)!==str.lastIndexOf(char))continue;
   if(sentence.indexOf(str)===sentence.lastIndexOf(str))return str;
