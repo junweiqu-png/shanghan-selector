@@ -10,7 +10,7 @@ const files=["data-basic.js","data-classic.js","data-extra.js","data-junior.js",
  "study-annotations.js","study-crosslesson.js","study-verified-extra.js",
  "study-verified-more2.js","study-verified-common3.js","study-verified-corpus.js",
  "study-verified-batch4.js","study-verified-batch5.js","study-verified-batch6.js",
- "study-verified-batch7.js","study-verified-batch8.js","study-verified-batch9.js","study-verified-batch10.js","study-verified-batch11.js","study-verified-batch12.js","study-lesson-character-glosses.js","study-reference-dictionary.js","study-chushi-character-glosses.js","study-verified-characters.js","study-junior-glosses.js"];
+ "study-verified-batch7.js","study-verified-batch8.js","study-verified-batch9.js","study-verified-batch10.js","study-verified-batch11.js","study-verified-batch12.js","study-lesson-character-glosses.js","study-reference-dictionary.js","study-chushi-character-glosses.js","study-guanchao-reverse-glosses.js","study-verified-characters.js","study-junior-glosses.js"];
 for(const f of files)vm.runInNewContext(fs.readFileSync(path.join(root,f),"utf8"),{window:win},{filename:f});
 const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[]),...(win.WENYAN_DATA_4||[])];
 const stores=[win.WENYAN_ANNOTATIONS,win.WENYAN_CROSSLESSON,win.WENYAN_VERIFIED_EXTRA,
