@@ -88,11 +88,18 @@ function termOrigin(term,context){
  if(!text.includes(term))return {title:"单字索引",text:"",term,meaning:"尚未定位到含此字的原句",pos:"",code:null,usage:"请选择或录入包含此字的古文及准确译文。",verified:false};
  if(spec){
   const candidates=(spec.sources||[]).filter(s=>s[0]===title&&(!s[1]||text.includes(s[1])));
-  const hit=candidates.find(s=>{
-    if(!Number.isInteger(context?.offset)||!s[1])return false;
+  // 完整逐字课文以【标题+原句+字位】精确定位；单用短句片段会让“先帝”“之”“以”等跨句串义。
+  // 第7、8列是新式来源的正文原句和字符偏移；旧来源继续沿用原有短句锚点。
+  const haveOffset=Number.isInteger(context?.offset)&&context.offset>=0;
+  const precise=haveOffset?candidates.find(s=>typeof s[6]==="string"&&Number.isInteger(s[7])&&s[6]===text&&s[7]===context.offset):null;
+  const legacy=candidates.filter(s=>!(typeof s[6]==="string"&&Number.isInteger(s[7])));
+  const loose=legacy.find(s=>{
+    if(!haveOffset||!s[1])return false;
     let start=text.indexOf(s[1]);while(start!==-1){if(context.offset>=start&&context.offset+term.length<=start+s[1].length)return true;start=text.indexOf(s[1],start+1);}
     return false;
-  })||(Number.isInteger(context?.offset)&&context.offset>=0?null:candidates[0]);
+  });
+  const sameSentence=haveOffset?null:candidates.find(s=>s[6]===text&&s[7]===text.indexOf(term));
+  const hit=precise||loose||sameSentence||(!haveOffset?legacy[0]:null);
   if(hit)return {title,text,term,meaning:hit[2],pos:hit[3],code:hit[4],usage:hit[5],verified:true};
   const occurrenceCount=text.split(term).length-1;
   // 同一原句中多次出现同字，不能借其他位置的例句标注猜当前字义。
