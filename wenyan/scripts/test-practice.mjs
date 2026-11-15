@@ -1,4 +1,4 @@
-/* 题目来自正文译文或可核查的2024—2025试卷；原题与真题考点拆解明确分开。 */
+/* 考试原题和真题考点拆解有可核查试卷来源；原创模拟只来自发布正文已注释单字、原句和译文。 */
 import fs from "node:fs";
 import vm from "node:vm";
 import assert from "node:assert/strict";
@@ -8,8 +8,8 @@ for(const file of ["data-basic.js","data-classic.js","data-extra.js","data-junio
 const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[]),...(win.WENYAN_DATA_4||[])],bank=win.WENYAN_PRACTICE_BANK;
 assert.equal(works.length,51,"must preserve published 51 lessons");
 assert.equal(bank.reverse.length,24,"require 24 vetted school-text reverse-translation prompts");
-assert.equal(bank.exam.length,32,"10 original exam items plus 22 clearly labeled exam-point breakdowns");
-assert.equal(new Set(bank.reverse.concat(bank.exam).map(q=>q.id)).size,56,"question IDs unique");
+assert.equal(bank.exam.length,378,"10 original + 22 exam-based breakdowns + 346 source-anchored original mock prompts");
+assert.equal(new Set(bank.reverse.concat(bank.exam).map(q=>q.id)).size,402,"all mock, source-based and reverse question IDs unique");
 const seen=new Set(),topics=new Set();
 for(const q of bank.reverse){
  const work=works.find(w=>w.title===q.work),line=work?.lines?.[q.lineIndex];
@@ -22,11 +22,26 @@ for(const q of bank.reverse){
  assert(line[2]===q.topic||line[2]?.includes(q.topic),"grammar label must correspond to source original "+q.id+" "+line[2]);
 }
 assert(topics.size>=8,"must cover at least 8 different reviewed grammar categories");
-const realSources=new Set(bank.exam.map(q=>q.source));
+const realSources=new Set(bank.exam.filter(q=>!q.isMock).map(q=>q.source));
 assert.equal(realSources.size,12,"must cover 2024 local exam sources and 2025 national exam points");
 assert.equal(bank.exam.filter(q=>!q.isAdapted).length,10,"existing original exam baseline remains");
 assert.equal(bank.exam.filter(q=>q.isAdapted).length,22,"adapted points must be visibly distinct from original questions");
-for(const q of bank.exam){
+const mocks=bank.exam.filter(q=>q.isMock);
+assert.equal(mocks.length,346,"unique in-text-character annotations must generate 346 mock exercises");
+const workSet=new Set(),mockAnchorSet=new Set();
+for(const q of mocks){
+ const w=works.find(x=>x.title===q.work),line=w?.lines[q.lineIndex],annotation=w?.terms.find(x=>x[0]===q.focus);
+ assert(w&&line&&annotation,"mock must anchor to published article and single-character teaching note "+q.id);
+ assert.equal(q.q,line[0],"mock must quote exact original sentence "+q.id);
+ assert.equal(q.translation,line[1],"mock must show exact original reviewed line translation "+q.id);
+ assert.equal(q.answer,annotation[2],"mock answer is taken only from original one-character annotation "+q.id);
+ assert.equal([...q.focus].length,1,"mock focus is one character "+q.id);
+ assert.equal(w.lines.reduce((n,l)=>n+l[0].split(q.focus).length-1,0),1,"avoid polysemy from multiple positions in same work "+q.id);
+ assert(q.level==="中考"&&q.sourceMeta?.url&&(q.sourceMeta.label||"").includes(q.work),"mock must be labeled, not mistaken for official question");
+ const key=q.work+"|"+q.focus;assert(!mockAnchorSet.has(key),"duplicate mock in a single work "+key);mockAnchorSet.add(key);workSet.add(q.work);
+}
+assert.equal(workSet.size,51,"mock exercises must span all published 51 articles");
+for(const q of bank.exam.filter(q=>!q.isMock)){
  assert([2024,2025].includes(q.sourceMeta?.year)&&/^https:\/\//.test(q.sourceMeta.url),"exam points must carry checkable original source "+q.id);
  assert(/^202[45]/.test(q.sourceMeta.label)&&q.part&&q.focus,"missing year or exam subquestion "+q.id);
  if(q.isAdapted)assert(q.part.includes("拆解")&&!q.options,"adapted practice must not masquerade as an original question: "+q.id);
@@ -47,7 +62,10 @@ assert(controller.includes('data.states')&&controller.includes('localStorage.set
 assert(controller.includes('q.sourceMeta.url')&&controller.includes('q.sourceMeta.label'),"exam source links must be visible");
 assert(page.includes('id="weakOnly"')&&styles.includes(".answer-field"),"review and accessible controls missing");
 assert(page.includes('id="shuffleBatch"')&&page.includes('id="batchInfo"'),"random batch control and status missing");
+assert(page.includes('id="questionType"')&&page.includes('id="questionTypeWrap"'),"mock/original filter missing");
+assert(controller.includes("questionCategory(")&&controller.includes("isMock"),"mock questions must be clearly labeled and filtered");
+assert(page.includes("20261115-mock1"),"new mock dataset must invalidate previous JS cache");
 assert(controller.includes("function pickBatch(")&&controller.includes("BATCH_SIZE=10")&&controller.includes("data.examDecks"),"no persistent non-repeating batch shuffle");
 assert(controller.includes("isAdapted")&&controller.includes("真题考点拆解"),"adapted exam questions must be visibly labeled");
 for(const f of ["practice.js","practice-data.js","app.js"])new vm.Script(fs.readFileSync(root+f,"utf8"),{filename:f});
-console.log(JSON.stringify({ok:true,lessons:works.length,reverse:bank.reverse.length,exam:bank.exam.length,topics:[...topics],examSourceCount:realSources.size,authenticOriginalExamItems:10,adaptedExamPoints:22}));
+console.log(JSON.stringify({ok:true,lessons:works.length,reverse:bank.reverse.length,exam:bank.exam.length,topics:[...topics],examSourceCount:realSources.size,authenticOriginalExamItems:10,adaptedExamPoints:22,originalMockExercises:mocks.length,mockLessonCount:workSet.size}));
