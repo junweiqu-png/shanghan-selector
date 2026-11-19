@@ -86,6 +86,8 @@ jobs:
           node --check wenyan/study-lesson-character-glosses.js
           node --check wenyan/study-chushi-character-glosses.js
           node --check wenyan/study-guanchao-reverse-glosses.js
+          node --check wenyan/study-complete-glosses.js
+          node --check wenyan/study-translated-classics.js
           node --check wenyan/study-reference-dictionary.js
           node --check wenyan/scripts/test-origin-character-glosses.mjs
           node --check wenyan/study-candidate-quality.js
@@ -127,6 +129,7 @@ jobs:
           node wenyan/scripts/test-live-character-card.mjs
           node wenyan/scripts/test-origin-character-glosses.mjs
           node wenyan/scripts/test-candidate-readability.mjs
+          node wenyan/scripts/test-complete-translations.mjs
       - name: Build local classical corpus
         env:
           CORPUS_MAX_BOOKS: 700

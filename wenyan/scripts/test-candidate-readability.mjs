@@ -29,5 +29,5 @@ assert(indexBuilder.includes('if(!/[。！？；]/.test(full))continue')&&indexB
  "index generation must guard every full-text chapter, not only web presentation");
 const html=fs.readFileSync("wenyan/index.html","utf8"),explorer=fs.readFileSync("wenyan/study-explorer.js","utf8");
 assert(html.includes("study-candidate-quality.js")&&html.includes("study-verified-batch11.js"));
-assert(explorer.includes('WENYAN_CANDIDATE_QUALITY?.format')&&explorer.includes('readingHint'));
+assert(!explorer.includes('readingHint')&&html.includes('study-translated-classics.js'), 'student UI must show translated classical examples');
 console.log(JSON.stringify({ok:true,unpunctuatedExcluded:true,interlinearNotesExcluded:true,personNamesExcluded:true,preservedOriginalPunctuation:true,studentHintWithoutFakeTranslation:true}));

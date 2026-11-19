@@ -1,6 +1,6 @@
 Reference character definitions source:
 https://github.com/mapull/chinese-dictionary
-Selected dictionary senses for 1,302 glyphs are distributed as wenyan/study-reference-dictionary.js. They are lexical reference meanings, NOT manually verified meanings in individual lesson contexts.
+Selected dictionary senses for 1,809 glyphs (including a small original editorial supplement marked editorial:true) are distributed as wenyan/study-reference-dictionary.js. They are lexical reference meanings, NOT manually verified meanings in individual lesson contexts.
 
 MIT License
 

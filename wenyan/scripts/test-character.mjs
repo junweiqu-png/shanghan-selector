@@ -65,13 +65,13 @@ assert(!reader.includes("t[0].includes(term)")&&!reader.includes("t[0].includes(
 assert(reader.includes("单字标注（每行：字 | 类型 | 字义）"));
 assert(!reader.includes("词语标注"));
 
-assert(explorer.includes("function readingCandidates("));
-assert(explorer.includes("含本字的古文（义项待核）"));
+assert(explorer.includes("function createWordRows("));
+assert(!explorer.includes("含本字的古文（义项待核）"));
 for(const file of ["app.js","study-explorer.js","study-editor.js","study-verified-characters.js"])
  new vm.Script(fs.readFileSync(root+file,"utf8"),{filename:file});
 const start=reader.indexOf("const hanCharacter="),end=reader.indexOf("function bindTokens(",start);
 assert(start>=0&&end>start);
-const sandbox={window:w,base:books,custom:[],escape:s=>String(s),testWord:books.find(x=>x.title==="两小儿辩日")};
+const sandbox={window:w,base:books,custom:[],highlights:Object.create(null),escape:s=>String(s),testWord:books.find(x=>x.title==="两小儿辩日")};
 const html=vm.runInNewContext(reader.slice(start,end)+"\nmarked('孔子东游，见两小儿辩斗，问其故。',testWord)",sandbox);
 assert(html.includes('data-term="辩"')&&html.includes('data-term="斗"'));
 assert(!html.includes('data-term="辩斗"'));

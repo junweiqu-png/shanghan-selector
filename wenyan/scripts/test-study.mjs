@@ -86,11 +86,8 @@ const expl=fs.readFileSync(dir+'study-explorer.js','utf8');
 new vm.Script(expl,{filename:'study-explorer.js'});
 assert(!/上句|下句|命中句/.test(expl),'old up/down/target labels present in visible UI code');
 assert(!/rawCount|原典命中|字形匹配/.test(expl),'uncurated raw hits or background counts leaked to learning page');
-assert(expl.includes('active.contexts.set("lc"+i'),"expanded corpus candidates must retain their own source context");
-assert(expl.includes("loadLargeCandidates(term,origin,filtered,previews,active)")&&expl.includes("studyLargeCandidates"),
- 'single-character study cards must load the expanded classical corpus asynchronously');
-assert(expl.includes("未经逐字校译，不计入5篇／2篇关联要求"),
- 'untranslated full-corpus hits must never inflate verified coverage counts');
+assert(expl.includes('translation:r.record.translation'),"every external example must retain its own complete translation context");
+assert(!expl.includes("readingHint")&&!expl.includes("loadLargeCandidates"),"student cards must show prepared translations without loading raw untranslatable hits");
 const keywordAudit=fs.readFileSync(dir+'scripts/audit-keyword-coverage.mjs','utf8');
 assert(keywordAudit.includes("'data-junior.js'")&&keywordAudit.includes("study-verified-batch8.js")&&keywordAudit.includes("WENYAN_DATA_4"),
  'keyword coverage audit must include all 36 published works and the newest single-character store');
@@ -225,9 +222,9 @@ assert(zhi9?.examples.length===7&&new Set(zhi9.examples.map(x=>x[0])).size===7,'
 assert(zhi9.examples.every(x=>x[2].includes('智')&&x[3]&&x[8]),'智 examples need quote, translation, and source');
 assert(!zhi9.examples.some(x=>x[6]==='judge-clever'),'cannot count wisdom nouns as putative usage');
 assert(expl.includes('WENYAN_VERIFIED_BATCH10'),'explorer must read tenth verified store');
-assert(expl.includes('const isName=!isGrammar&&origin.code==="proper-name"'),'names must not be treated as unverified lexemes');
-assert(expl.includes('<details class="study-reveal">'),'example translations and definitions must be collapsed by default');
-assert(expl.includes("studyLargeCandidates")&&expl.includes(":'')+"),"expanded-corpus host must actually be mounted");
+assert(expl.includes('r.record.code==="proper-name"'),'translated name examples must be separated from ordinary meanings');
+assert(expl.indexOf('class="study-translation"')<expl.indexOf('class="study-reveal"'),'show translation before optional comparison');
+assert(app.includes("study-translated-classics.js"),"prepared classical translations must load");
 const cross7=extendedWindow.WENYAN_CROSSLESSON;
 assert(!(cross7.words['宁']?.sources||[]).some(x=>x[0]==='管宁割席'||x[0]==='诫子书'),'names and 宁静 must not be translated as 宁愿');
 assert(cross7.words['信']?.sources?.some(x=>x[1].includes('自信')&&x[4]==='believe'),'自信 cannot mean 果然');

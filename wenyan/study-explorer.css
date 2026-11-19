@@ -109,3 +109,7 @@
 .study-dictionary-reference ol{padding-left:24px;margin:6px 0 8px;display:grid;gap:4px}
 .study-dictionary-reference a,.study-context-translation a{font-size:13px;color:#296849}
 .study-context-translation p{margin:8px 0;line-height:1.8}
+.study-example .study-translation,.study-example .study-sense{font-size:16px;line-height:1.85}
+.study-names{margin-top:18px;padding-top:12px;border-top:1px solid #dce5dc}
+.study-names>summary{cursor:pointer;font-size:16px;color:#45634e}
+#studyMoreExamples{display:block;min-height:44px;margin:14px auto}

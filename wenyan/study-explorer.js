@@ -81,9 +81,12 @@ function indexOrigin(term){
 }
 function termOrigin(term,context){
  const spec=knowTerm(term);
- if(context?.annotated&&context.annotatedTerm===term)return {
- title:context.title,text:context.text,term,meaning:context.meaning,pos:context.pos,code:context.code,usage:context.usage,verified:true};
  const title=context?.title||activeOrigin().title,text=context?.text||activeOrigin().text;
+ const offset=Number.isInteger(context?.offset)?context.offset:text.indexOf(term);
+ const complete=window.WENYAN_COMPLETE_TRANSLATIONS?.lookup(title,text,offset);
+ if(complete&&complete.term===term)return complete;
+ if(context?.annotated&&context.annotatedTerm===term)return {
+ title:context.title,text:context.text,term,meaning:context.meaning,pos:context.pos,code:context.code,usage:context.usage,translation:context.translation,verified:true};
  // 任何入口都不能把不含该字的当前句当成“原字原文”。
  if(!text.includes(term))return {title:"单字索引",text:"",term,meaning:"尚未定位到含此字的原句",pos:"",code:null,usage:"请选择或录入包含此字的古文及准确译文。",verified:false};
  if(spec){
@@ -100,20 +103,20 @@ function termOrigin(term,context){
   });
   const sameSentence=haveOffset?null:candidates.find(s=>s[6]===text&&s[7]===text.indexOf(term));
   const hit=precise||loose||sameSentence||(!haveOffset?legacy[0]:null);
-  if(hit)return {title,text,term,meaning:hit[2],pos:hit[3],code:hit[4],usage:hit[5],verified:true};
+  if(hit)return {title,text,term,meaning:hit[2],pos:hit[3],code:hit[4],usage:hit[5],translation:context?.translation,verified:true};
   const occurrenceCount=text.split(term).length-1;
   // 同一原句中多次出现同字，不能借其他位置的例句标注猜当前字义。
   if(occurrenceCount===1){
    const example=(spec.examples||[]).find(x=>x[0]===title&&x[2]?.includes(term)&&(text.includes(x[2])||x[2].includes(text)));
-   if(example)return {title,text,term,meaning:example[4],pos:example[5],code:example[6],usage:example[7],verified:true};
+   if(example)return {title,text,term,meaning:example[4],pos:example[5],code:example[6],usage:example[7],translation:context?.translation||example[3],verified:true};
   }
  }
- const defs=localDefs(term),entry=defs.find(x=>x.w.title===title);
+ const defs=localDefs(term),entry=defs.find(x=>x.w.title===title),reference=window.WENYAN_REFERENCE_DICTIONARY?.words?.[term];
  return {title,text,term,
-  meaning:entry?.compound?("所在语境“"+entry.d[0]+"”整体意为："+entry.d[2]+"；“"+term+"”的独立义项待校核。"):entry?.d[2]||"当前原文的具体字义尚待校核",
-  pos:entry?.compound?"待分字":entry?.d[1]||"未标注",code:null,
-  usage:entry?.compound?"只把原文短语的整体译注作为语境提示，不能把短语意思自动赋给其中一个字。":entry?"课文已提供本字释义，但还未独立核对跨篇同异。":"本字在当前句子的义项尚待逐字核校。",
-  verified:!!entry&&!entry.compound,sourceLevel:entry?(entry.compound?"phrase-context":"lesson-gloss"):"unverified"};
+  meaning:entry&&!entry.compound?entry.d[2]:(reference?.s||[]).join("；"),
+  pos:entry&&!entry.compound?entry.d[1]:"字典释义",code:null,
+  usage:"",translation:context?.translation,
+  verified:!!entry&&!entry.compound,sourceLevel:entry&&!entry.compound?"lesson-gloss":"dictionary"};
 }
 function grammarOrigin(pattern,context){
  const title=context?.title||activeOrigin().title,text=context?.text||activeOrigin().text;
@@ -144,22 +147,13 @@ function relation(origin,example,grammar=false){
  return {type,badge,diff};
 }
 function tokens(sentence,selected,contextId,grammar=false){
- const s=String(sentence||"");let out="",i=0;const words=allTerms();
- while(i<s.length){
-  let t=words.find(word=>s.startsWith(word,i));
-  if(selected){
-   const nextSelected=s.indexOf(selected,i);
-   if(nextSelected===i)t=selected;
-   else if(t&&nextSelected>i&&nextSelected<i+t.length)t=null;
-  }
-  if(t){
-    const highlighted=t===selected?" hit-word":"";
-    let display="";for(let j=0;j<t.length;j++)display+=window.WENYAN_PINYIN?.span(s,i+j)||esc(s[i+j]);out+='<button class="study-token'+highlighted+'" type="button" data-study-word="'+esc(t)+'" data-study-offset="'+i+'" data-study-context="'+esc(contextId||"")+'" aria-label="查询“'+esc(t)+'”的不同古文用法">'+display+'</button>';i+=t.length;
-  }else {out+=window.WENYAN_PINYIN?.span(s,i)||esc(s[i]);i++;}
- }
- if(selected&&!s.includes(selected))return esc(s);
- return out;
+ const text=String(sentence||"");let html="";
+ for(let offset=0;offset<text.length;offset++){
+  const char=text[offset],shown=window.WENYAN_PINYIN?.span(text,offset)||esc(char);
+  html+=/\p{Script=Han}/u.test(char)?'<button class="study-token'+(char===selected?' hit-word':'')+'" type="button" data-study-word="'+esc(char)+'" data-study-offset="'+offset+'" data-study-context="'+esc(contextId||"")+'" aria-label="查询“'+esc(char)+'”的字义">'+shown+'</button>':shown;
+ }return html;
 }
+
 function displayTitle(name){
  const title=String(name||"").replace(/^《|》$/g,"");
  return "《"+esc(title)+"》";
@@ -175,32 +169,25 @@ function wrapHeader(){
  return chain.length?'<div class="study-toolbar"><button type="button" data-study-back>← 返回</button></div>':"";
 }
 function contextTranslation(origin){
+ if(origin.translation)return origin.translation;
+ const translated=window.WENYAN_TRANSLATED_CLASSICS?.find(origin.title,origin.text);
+ if(translated)return translated.translation;
  const w=core.find(w=>w.title===origin.title);
- if(!w)return "";
+ if(!w){const example=knowTerm(origin.term)?.examples?.find(x=>x[0]===origin.title&&x[2]===origin.text);return example?.[3]||"";}
  const row=(w.lines||[]).find(x=>x[0]===origin.text)
   ||(w.lines||[]).find(x=>x[0]?.includes(origin.text)&&origin.text?.length>=6);
  return row?.[1]||"";
 }
 function baseHeader(origin,isGrammar){
- const translation=!isGrammar?contextTranslation(origin):"";
- const dictionary=!isGrammar&&!origin.verified&&[...origin.term].length===1?window.WENYAN_REFERENCE_DICTIONARY?.words?.[origin.term]:null;
- const dictionaryMarkup=dictionary?.s?.length?'<div class="study-dictionary-reference">'+
-  '<b>这一个字的常见字典义（仅供比较，不等于本句义项）：</b>'+
-  '<ol>'+dictionary.s.map(s=>'<li>'+esc(s)+'</li>').join("")+'</ol>'+
-  '<p class="study-caution">读音参考：'+esc(dictionary.p||"见原文注音")+'。以上是词典列出的不同可能义项，不能直接选择第一项当作本文的解释，也不计入“已校译”。</p>'+
-  '<a href="https://github.com/mapull/chinese-dictionary" target="_blank" rel="noopener noreferrer">参考字典来源 · MIT ↗</a></div>':"";
- const provisional=translation?'<div class="study-context-translation"><b>'+
-  (origin.verified?"本文原句的现代汉语译文：":"已校课文整句译文（辅助理解，不等于本字已校释义）：")+
-  '</b><p>'+esc(translation)+'</p>'+
-  (origin.verified?"":'<p class="study-caution">这句有译文，但“'+esc(origin.term)+'”字的独立字义仍待核对；请勿把整句译文当作该字的释义。</p>'+
-   '<a href="https://www.zdic.net/hans/'+encodeURIComponent(origin.term)+'" target="_blank" rel="noopener noreferrer">继续查阅这个单字 ↗</a>')+
-  '</div>':"";
+ const translation=contextTranslation(origin);
  return '<section class="study-origin">'+
  '<h3><em>'+esc(origin.term)+'</em><span>'+displayTitle(origin.title||"当前古文")+'</span></h3>'+
  (origin.text?'<p class="study-original">'+tokens(origin.text,origin.term,"source")+'</p>':'')+
- '<p class="study-origin-meaning"><b>'+(isGrammar?"本句句式：":"本文“"+esc(origin.term)+"”字：")+'</b>'+esc(origin.meaning)+
- (isGrammar?"":'<small>'+esc(origin.pos)+'</small>')+'</p>'+dictionaryMarkup+provisional+'</section>';
+ '<p class="study-origin-meaning"><b>'+(isGrammar?"本句句式：":origin.sourceLevel==="dictionary"?"字典释义：":"本文“"+esc(origin.term)+"”字：")+'</b>'+esc(origin.meaning)+
+ (isGrammar?"":'<small>'+esc(origin.pos)+'</small>')+'</p>'+
+ (translation?'<div class="study-context-translation"><b>本文原句的现代汉语译文：</b><p>'+esc(translation)+'</p></div>':'')+'</section>';
 }
+
 function rowCard(row,index,origin,isGrammar){
  const meta=row.record,rel=relation(origin,meta,isGrammar),contextId="r"+index;
  const title=displayTitle(meta.title),rawSource=String(meta.source||"").trim(),source=rawSource.replace(/[《》]/g,"")===String(meta.title).replace(/[《》]/g,"")?"":esc(rawSource);
@@ -213,12 +200,12 @@ function rowCard(row,index,origin,isGrammar){
  return '<article class="study-example">'+
  '<h4 class="study-example-top">'+title+(source?'<small> · '+source+'</small>':'')+'</h4>'+
  '<p class="study-original">'+tokens(meta.text,isGrammar?"":(meta.match||origin.term),contextId,isGrammar)+'</p>'+
- '<details class="study-reveal"><summary>查看译文、字义与比较</summary>'+ '<p class="study-translation">'+esc(meta.translation)+'</p>'+
+ '<p class="study-translation">'+esc(meta.translation)+'</p>'+
  '<p class="study-sense">'+desc+(isGrammar?'':'<small> · '+esc(meta.pos)+'</small>')+'</p>'+
- comparison+'</details>'+
+ '<details class="study-reveal"><summary>比较用法</summary>'+comparison+'</details>'+
  '<div class="study-actions">'+sourceLink(meta.url||"")+
  '<button type="button" data-study-add="'+contextId+'">加入背诵 ↗</button>'+
- (row.grammars||[]).map(g=>'<button type="button" data-study-grammar="'+esc(g)+'" data-study-context="'+contextId+'">'+esc(g)+' ↗</button>').join("")+
+ (row.grammars||enrichGrammars(meta)).map(g=>'<button type="button" data-study-grammar="'+esc(g)+'" data-study-context="'+contextId+'">'+esc(g)+' ↗</button>').join("")+
  '</div></article>';
 }
 function enrichGrammars(record){
@@ -230,9 +217,9 @@ function enrichGrammars(record){
 function createWordRows(term){
  const spec=knowTerm(term);
  if(!spec)return [];
- return (spec.examples||[]).filter(x=>x[2]&&x[3]&&x[4]&&x[5]&&x[6]&&x[6]!=="name"&&x[6]!=="proper-name"&&x[2].includes(x[9]||term)).map(x=>({
+ return (spec.examples||[]).filter(x=>x[2]&&x[3]&&x[4]&&x[5]&&x[6]&&x[6]!=="name"&&x[2].includes(x[9]||term)).map(x=>({
  title:x[0],record:{title:x[0],source:x[1],text:x[2],translation:x[3],meaning:x[4],pos:x[5],code:x[6],usage:x[7],url:x[8]||"",match:x[9]||term,rank:Number.isFinite(x[10])?x[10]:999}
- })).map(x=>({...x,grammars:enrichGrammars(x.record)})).sort((a,b)=>{
+ })).sort((a,b)=>{
    if(term==="因"){
      const popular=["因利乘便","因人之力而敝之","安陵君因使唐雎","因遗策","因河为池"];
      const rank=x=>{const i=popular.findIndex(t=>x.record.text.includes(t));return i<0?100:i;};
@@ -246,88 +233,9 @@ function createGrammarRows(name){
  title:x[0],record:{title:x[0],source:x[1],text:x[2],translation:x[3],meaning:grammarSpec(name)?.definition||name,pos:"句式",code:x[4],usage:x[5],url:x[6]||""}
  })).sort(sortEntries);
 }
-// 有整句译文但尚未核定本字义项的原典，只能作为学生的阅读候选，不能计入达标数。
-function readingCandidates(char,origin,reviewed){
- if([...char].length!==1)return [];
- const seen=new Set(reviewed.map(x=>x.record.title)),rows=[];
- const add=(title,source,text,translation,url)=>{
-  if(!title||title===origin.title||seen.has(title)||!text?.includes(char)||!translation)return;
-  seen.add(title);rows.push({title,source,text,translation,url:url||""});
- };
- for(const w of core)for(const line of w.lines||[])add(w.title,w.source,line[0],line[1],w.sourceUrl);
- const stores=[DB,window.WENYAN_VERIFIED_EXTRA,window.WENYAN_VERIFIED_MORE2,
-  window.WENYAN_VERIFIED_COMMON3,window.WENYAN_VERIFIED_CORPUS,
-  window.WENYAN_VERIFIED_BATCH4,window.WENYAN_VERIFIED_BATCH5,window.WENYAN_VERIFIED_BATCH6,
-  window.WENYAN_VERIFIED_BATCH7,window.WENYAN_VERIFIED_BATCH8,window.WENYAN_VERIFIED_BATCH9,window.WENYAN_VERIFIED_BATCH10,window.WENYAN_VERIFIED_BATCH11,window.WENYAN_VERIFIED_BATCH12,window.WENYAN_LESSON_CHARACTER_GLOSSES,window.WENYAN_VERIFIED_CHARACTERS];
- for(const store of stores)for(const spec of Object.values(store?.words||{}))
-  for(const x of spec.examples||[])add(x[0],x[1],x[2],x[3],x[8]);
- return rows.slice(0,10);
-}
-function previewCard(row,i,char){
- return '<article class="study-example study-unverified">'+
-  '<h4 class="study-example-top">'+displayTitle(row.title)+'</h4>'+
-  '<p class="study-original">'+tokens(row.text,char,"p"+i)+'</p>'+
-  '<details class="study-reveal"><summary>查看译文与核校提示</summary><p class="study-translation">'+esc(row.translation)+'</p>'+
-  '<p class="study-compare unknown">⚪ 本字在本句的具体义项尚未逐字校核，不能判断同义或异义。</p></details>'+
-  '<div class="study-actions">'+sourceLink(row.url)+'</div></article>';
-}
-function largeCandidateCard(row,index,char){
- const meta=[row.group,row.id?"语料记录 "+row.id:""].filter(Boolean).join(" · ");
- return '<article class="study-example study-unverified">'+
-  '<h4 class="study-example-top">'+displayTitle(row.title||"扩展古籍原文")+'</h4>'+
-  '<p class="study-original">'+tokens(row.text,char,"lc"+index)+'</p>'+
-  '<details class="study-reveal"><summary>查看简明阅读提示（非人工译文）</summary>'+
-  '<p class="study-sense">'+esc(row.readingHint||"这段原文的字义尚待逐字核对。")+'</p>'+
-  '<p class="study-compare unknown">这只是依据句面词语生成的阅读线索，没有给出经校对的现代译文，也不能算同义例句。</p></details>'+
-  '<p class="study-caution">只保留原典自带的标点；未经逐字校译，不计入5篇／2篇关联要求。</p>'+
-  (meta?'<p class="study-sense">来源：'+esc(meta)+'</p>':'')+
-  '<div class="study-actions">'+
-  (row.url?'<a href="'+esc(row.url)+'" target="_blank" rel="noopener noreferrer">查看语料库来源 ↗</a>':'')+
-  '<button type="button" data-study-large-edit="'+index+'">人工校译并加入</button></div></article>';
-}
-async function loadLargeCandidates(term,origin,reviewed,previews,active){
- const host=$("studyLargeCandidates");
- const search=window.WENYAN_STUDY_EDITOR?.searchClassics;
- if(!host||typeof search!=="function")return;
- host.innerHTML='<p class="study-caution">正在扩展古籍全文库中检索本字……</p>';
- try{
-  const hits=await Promise.race([
-    search(term),
-    new Promise((_,reject)=>setTimeout(()=>reject(new Error("古籍全文索引加载超时；已核译例句仍可使用，可稍后重试")),12000))
-   ]);
-  if(state!==active)return;
-  const seen=new Set([...reviewed.map(x=>x.record.title),...previews.map(x=>x.title),origin.title]);
-  const candidates=[];
-  for(const hit of hits||[]){
-   const row=window.WENYAN_CANDIDATE_QUALITY?.format(hit,term,origin);
-   if(!row||seen.has(row.title))continue;
-   seen.add(row.title);candidates.push(row);
-   if(candidates.length>=8)break;
-  }
-  active.largeCandidates=candidates;
-  candidates.forEach((row,i)=>active.contexts.set("lc"+i,{title:row.title,text:row.text,annotated:false}));
-  if(!candidates.length){
-   host.innerHTML='<div class="study-sectionhead"><b>扩展古籍全文库候选（待逐字校译）</b></div><p class="study-caution">全文库检索完成。目前没有可显示的清晰带标点原文（无句读、残损字、人名假命中及重复篇目已过滤）。不会用猜测补标点或假译文。</p>';
-   return;
-  }
-  host.innerHTML='<div class="study-sectionhead"><b>扩展古籍全文库候选（待逐字校译） · '+candidates.length+' 篇</b></div>'+
-   '<p class="study-caution">只显示保留来源标点、内容可读的候选句，并提供简明阅读提示。提示并非校核后的现代译文，人工核对字义与句译后方可计入上方达标数量。</p>'+
-   candidates.map((row,i)=>largeCandidateCard(row,i,term)).join("");
-  host.querySelectorAll("[data-study-large-edit]").forEach(button=>button.onclick=()=>{
-   const row=active.largeCandidates[Number(button.dataset.studyLargeEdit)];
-   if(!row)return;
-   window.WENYAN_STUDY_EDITOR?.open({kind:"word",name:term,title:row.title,
-    source:"公开古籍全文库（"+(row.group||"待核书目")+"）",original:row.text,anchor:""});
-  });
- }catch(error){
-  if(state!==active)return;
-  host.innerHTML='<div class="study-sectionhead"><b>扩展古籍全文库候选</b></div><p class="study-caution">全文库暂时不可读取：'+esc(error?.message||error)+'。已有人工校核例句不受影响。</p>';
- }
-}
 function renderPage(term,isGrammar,origin,push=true){
  if(push&&state)chain.push(state);
  state={term,isGrammar,origin};
- const isName=!isGrammar&&origin.code==="proper-name";
  const originalRows=isGrammar?createGrammarRows(term):createWordRows(term);
  // No source passage in results, no two hits for the same sense from the same work.
  const seen=new Set(),filtered=[];
@@ -338,6 +246,8 @@ function renderPage(term,isGrammar,origin,push=true){
   if(seen.has(key))continue;seen.add(key);filtered.push(row);
  }
  // 按学习要求：前两条例句必须与原句同义；后面先看不同义项，再看近义、其他同义。
+ const nameRows=filtered.filter(r=>r.record.code==="proper-name");
+ filtered.splice(0,filtered.length,...filtered.filter(r=>r.record.code!=="proper-name"));
  const same=[],diff=[],near=[],unknown=[];
  for(const r of filtered){
   const category=relation(origin,r.record,isGrammar).type;
@@ -359,30 +269,20 @@ function renderPage(term,isGrammar,origin,push=true){
  // 单字关联只依靠已校核的该字例句。候选整句译文不计入数字。
  const independentBooks=new Set(filtered.map(r=>r.record.title)).size;
  const sameBooks=new Set(same.map(r=>r.record.title)).size;
- const complete=!isName&&!!origin.verified&&!!origin.code&&independentBooks>=5&&sameBooks>=2;
- const missing=[];
- if(!origin.verified||!origin.code)missing.push(origin.sourceLevel==="lesson-gloss"?"本文已有课文释义，跨篇义项仍待核定":"本文字义尚未逐字校定");
- if(independentBooks<5)missing.push("还缺"+(5-independentBooks)+"篇逐字校核的古文");
- if(sameBooks<2)missing.push("还缺"+(2-sameBooks)+"篇同义例句");
- const previews=isGrammar||isName?[]:readingCandidates(term,origin,filtered);
- const auditLine=isName?'<p class="study-coverage ready">本字在这一原句中属于人物姓名：已核定为专名用字。此处不参加普通实词的“5篇跨文义项／2篇同义”评估；其他语境仍须重新辨义。</p>':
-  '<p class="study-coverage '+(complete?'ready':'partial')+'">'+
- (isGrammar?'已校核句式 ':'已逐字校译 ')+independentBooks+' 篇 · '+(isGrammar?'同类 ':'同义 ')+sameBooks+' 篇'+(isGrammar?'':' · 待核原句 '+previews.length+' 篇')+
- '<br><b>'+(complete?'✓ 本字跨篇例句数量与义项比较达标':'待完善：'+esc(missing.join('；')))+'</b></p>';
+ const auditLine='<p class="study-coverage">关联 '+independentBooks+' 篇 · '+(isGrammar?'同类 ':'同义 ')+sameBooks+' 篇</p>';
+ const visible=12;
  const html=wrapHeader()+baseHeader(origin,isGrammar)+
- auditLine+
  (isGrammar?discoveryGuide(term):'')+
- '<div class="study-sectionhead"><b>'+(isGrammar?'同类句式在其他古文中的用法':'同字关联古文（已核义）')+'</b><button id="editStudyTerm" type="button">＋ 补充例句</button></div>'+
- (isName?'<p class="study-empty">此处为姓名用字，不以普通词义强行凑出五篇；同形字在别的古文里仍可另行查询。</p>':filtered.length?filtered.map((r,i)=>rowCard(r,i,origin,isGrammar)).join(""):
- '<p class="study-empty">暂无已逐字校核的关联古文。可以从下方整句有译文的候选原文继续核验。</p>')+
- (previews.length?'<div class="study-sectionhead"><b>含本字的古文（义项待核）</b></div>'+
- '<p class="study-caution">这些句子已有现代译文，但尚未校核本字含义，不会计算到上方的关联数量。</p>'+
- previews.map((r,i)=>previewCard(r,i,term)).join(""):'')+
- '<div id="studyLargeCandidates"></div>';
-
+ (filtered.length?auditLine+'<div class="study-sectionhead"><b>'+(isGrammar?'同类句式':'同字关联古文')+'</b><button id="editStudyTerm" type="button">＋ 补充例句</button></div>'+ '<div id="studyExamples">'+filtered.slice(0,visible).map((r,i)=>rowCard(r,i,origin,isGrammar)).join("")+'</div>'+ (filtered.length>visible?'<button id="studyMoreExamples" type="button">再看 12 条</button>':''):'')+
+ (nameRows.length?'<details class="study-names"><summary>同字的姓名用法（'+nameRows.length+' 条）</summary>'+nameRows.map((r,i)=>rowCard(r,filtered.length+i,origin,isGrammar)).join("")+'</details>':'');
  open((isGrammar?"句式：":"字义：")+term,html);
- const active=state;if(!isGrammar&&!isName&&!complete)loadLargeCandidates(term,origin,filtered,previews,active);
- $("editStudyTerm").onclick=()=>window.WENYAN_STUDY_EDITOR?.open({kind:isGrammar?"grammar":"word",name:term,title:origin.title,original:origin.text});
+ if($("editStudyTerm"))$("editStudyTerm").onclick=()=>window.WENYAN_STUDY_EDITOR?.open({kind:isGrammar?"grammar":"word",name:term,title:origin.title,original:origin.text});
+ let shown=visible;
+ if($("studyMoreExamples"))$("studyMoreExamples").onclick=()=>{
+  const next=filtered.slice(shown,shown+12);$("studyExamples").insertAdjacentHTML("beforeend",next.map((r,i)=>rowCard(r,shown+i,origin,isGrammar)).join(""));shown+=next.length;
+  if(shown>=filtered.length)$("studyMoreExamples").hidden=true;
+ };
+
  if(isGrammar){
   const guide=grammarSpec(term)?.guide;
   $("modalContent").querySelectorAll("[data-guide-option]").forEach(btn=>btn.onclick=()=>{
@@ -392,12 +292,11 @@ function renderPage(term,isGrammar,origin,push=true){
    else {result.textContent="再观察一下原句，看看哪些字能证明你的选择。";result.classList.remove("ready")}
   });
  }
- state.rows=filtered;
- state.contexts=new Map(filtered.map((r,i)=>["r"+i,{title:r.record.title,text:r.record.text,annotated:true,annotatedTerm:isGrammar?null:(r.record.match||term),
- meaning:r.record.meaning,pos:r.record.pos,code:r.record.code,usage:r.record.usage}]));
- for(const [i,p] of previews.entries())state.contexts.set("p"+i,{title:p.title,text:p.text,annotated:false});
+ state.rows=[...filtered,...nameRows];
+ state.contexts=new Map(state.rows.map((r,i)=>["r"+i,{title:r.record.title,text:r.record.text,annotated:true,annotatedTerm:isGrammar?null:(r.record.match||term),
+ meaning:r.record.meaning,pos:r.record.pos,code:r.record.code,usage:r.record.usage,translation:r.record.translation}]));
  state.contexts.set("source",{title:origin.title,text:origin.text,annotated:!!origin.verified,annotatedTerm:isGrammar?null:term,
- meaning:origin.meaning,pos:origin.pos,code:origin.code,usage:origin.usage});
+ meaning:origin.meaning,pos:origin.pos,code:origin.code,usage:origin.usage,translation:contextTranslation(origin)});
 }
 
 function addTranslatedCard(key){
@@ -458,9 +357,9 @@ document.addEventListener('click',e=>{
 window.WENYAN_STUDY_DEBUG={terms:()=>allTerms(),patterns:()=>grammarNames(),getState:()=>state&&({term:state.term,count:state.rows?.length,origin:state.origin}),lookupWord:term=>knowTerm(term),origin:(term,context)=>termOrigin(term,context),rows:term=>createWordRows(term),coverage:(term,context)=>{
  const origin=termOrigin(term,context);if(!origin)return null;
  const seen=new Set(),rows=[];
- for(const row of createWordRows(term)){const r=row.record;if(r.title===origin.title)continue;const key=r.title+"|"+normalizeSense(r.code);if(seen.has(key))continue;seen.add(key);rows.push(row);}
+ for(const row of createWordRows(term)){const r=row.record;if(r.title===origin.title||r.code==="proper-name")continue;const key=r.title+"|"+normalizeSense(r.code);if(seen.has(key))continue;seen.add(key);rows.push(row);}
  const same=rows.filter(row=>relation(origin,row.record,false).type==="same");
- const previews=readingCandidates(term,origin,rows);
+ const previews=[];
  const verifiedBooks=new Set(rows.map(row=>row.record.title)).size;
  const sameSenseBooks=new Set(same.map(row=>row.record.title)).size;
  return {verifiedBooks,sameSenseBooks,pendingBooks:previews.length,complete:!!origin.verified&&!!origin.code&&verifiedBooks>=5&&sameSenseBooks>=2};

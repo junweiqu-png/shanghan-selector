@@ -4,6 +4,7 @@ const $=id=>document.getElementById(id);
 const escape=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const base=[...(window.WENYAN_DATA_1||[]),...(window.WENYAN_DATA_2||[]),...(window.WENYAN_DATA_3||[]),...(window.WENYAN_DATA_4||[])];
 const KEY="wenyan-recall-v1", tryJSON=(v,f)=>{if(typeof v!=="string"||!v.trim())return f;try{const parsed=JSON.parse(v);return parsed&&typeof parsed==="object"&&!Array.isArray(parsed)?parsed:f}catch{return f}};
+const MARK_KEY="wenyan-highlight-v1",highlights=Object.assign(Object.create(null),tryJSON(localStorage.getItem(MARK_KEY),{}));
 let stored=tryJSON(localStorage.getItem(KEY),{}), custom=Array.isArray(stored.custom)?stored.custom:[];
 let works=()=>[...base,...custom], wi=Math.max(0,Math.min(Number(stored.wi)||0,works().length-1)),si=Number(stored.si)||0, whole=!!stored.whole,show=!!stored.show;
 let visited=new Set(stored.visited||[]), learned=new Set(stored.learned||[]), completions=new Set(stored.completions||[]), missionDone=new Set(stored.missionDone||[]);
@@ -18,8 +19,25 @@ function tokensFor(w){
  for(const row of w.lines||[])for(const ch of String(row[0]||""))if(hanCharacter(ch))out.add(ch);
  return out;
 }
+function defaultHighlights(w){return [...new Set((w.terms||[]).flatMap(t=>[...t[0]].filter(hanCharacter)))];}
+function highlighted(w){return new Set(Array.isArray(highlights[w.title])?highlights[w.title].filter(c=>tokensFor(w).has(c)):defaultHighlights(w));}
+function chooseHighlights(title=work().title){
+ const w=works().find(x=>x.title===title)||work(),all=[...tokensFor(w)],selected=highlighted(w);
+ const html='<p class="help">选择《'+escape(w.title)+'》要加虚线的字。点一下选择，再点一下取消。</p>'+
+ '<div class="row"><button id="markDefaults" type="button">课文默认</button><button id="markAll" type="button">全选</button><button id="markNone" type="button">清空</button></div>'+
+ '<p id="markCount" class="help" aria-live="polite"></p><div class="highlight-grid">'+all.map(c=>'<label class="highlight-choice"><input type="checkbox" value="'+escape(c)+'"'+(selected.has(c)?' checked':'')+'><span>'+escape(c)+'</span></label>').join('')+'</div>'+
+ '<div class="highlight-save"><button id="saveHighlights" type="button">保存虚线字</button><button id="cancelHighlights" type="button">取消</button></div>';
+ modal("选择虚线字",html,root=>{
+  const inputs=[...root.querySelectorAll('.highlight-choice input')],update=()=>{$("markCount").textContent='已选 '+inputs.filter(x=>x.checked).length+' / '+all.length+' 字';};
+  const preset=chars=>{const set=new Set(chars);inputs.forEach(x=>x.checked=set.has(x.value));update();};
+  inputs.forEach(x=>x.onchange=update);$("markDefaults").onclick=()=>preset(defaultHighlights(w));$("markAll").onclick=()=>preset(all);$("markNone").onclick=()=>preset([]);
+  $("saveHighlights").onclick=()=>{const chosen=inputs.filter(x=>x.checked).map(x=>x.value);try{localStorage.setItem(MARK_KEY,JSON.stringify({...highlights,[w.title]:chosen}));highlights[w.title]=chosen;close();render();}catch{ $("markCount").textContent="保存失败，请先导出数据并释放浏览器存储后重试。";}};
+  $("cancelHighlights").onclick=close;update();
+ });
+}
+window.WENYAN_HIGHLIGHTS={choose:chooseHighlights,get:title=>{const w=works().find(x=>x.title===title);return w?[...highlighted(w)]:[];}};
 function marked(text,w){
- const known=tokensFor(w),priority=new Set((w.terms||[]).flatMap(t=>[...t[0]].filter(hanCharacter)));let out="",i=0;
+ const known=tokensFor(w),priority=highlighted(w);let out="",i=0;
  for(const ch of text){
   const shown=window.WENYAN_PINYIN?.span(text,i,w)||escape(ch);
   if(known.has(ch)){
@@ -29,7 +47,7 @@ function marked(text,w){
  }
  return out;
 }
-function bindTokens(root,w){root.querySelectorAll(".token").forEach(n=>{n.addEventListener("click",e=>{e.stopPropagation();openTerm(n.dataset.term,w)});n.addEventListener("keydown",e=>{if(e.key==="Enter"){e.stopPropagation();openTerm(n.dataset.term,w)}})});}
+function bindTokens(root,w){root.querySelectorAll(".token").forEach(n=>{n.addEventListener("click",e=>{e.stopPropagation();openTerm(n.dataset.term,w)});n.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();e.stopPropagation();n.click();}})});}
 function setNav(active){document.querySelectorAll(".bottom button").forEach(b=>b.classList.remove("active"));$(active).classList.add("active");}
 function render(){
  const w=work(),row=line();visited.add(w.title);save();
@@ -168,8 +186,8 @@ function settings(){
  '<p class="help">内置篇目、注释与例句为首版学习底稿，尚非经过出版社审定的权威教材。遇到古籍版本差异，以教材指定版本为准。</p>';
  modal("我的 · 添加与备份",html,root=>{
  $("add").onclick=showAdd;$("studyEditSettings").onclick=()=>window.WENYAN_STUDY_EDITOR?.open();
- $("export").onclick=()=>{const blob=new Blob([JSON.stringify({version:1,data:stored={custom,wi,si,whole,show,visited:[...visited],learned:[...learned],completions:[...completions],missionDone:[...missionDone]},study:window.WENYAN_STUDY_EDITOR?.data()||null},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="文言拾句-学习备份-"+new Date().toISOString().slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);};
- $("import").onchange=async e=>{try{const data=JSON.parse(await e.target.files[0].text());if(data.version!==1||!data.data||!Array.isArray(data.data.custom))throw Error("文件格式不正确");if(!confirm("导入将替换当前学习进度与自定义篇目，确认继续？"))return;localStorage.setItem(KEY,JSON.stringify(data.data));if(data.study?.version===1&&data.study.words&&data.study.grammar)localStorage.setItem("wenyan-recall-study-v1",JSON.stringify(data.study));location.reload();}catch(err){alert("导入失败："+err.message)}};
+ $("export").onclick=()=>{const blob=new Blob([JSON.stringify({version:1,data:stored={custom,wi,si,whole,show,visited:[...visited],learned:[...learned],completions:[...completions],missionDone:[...missionDone]},highlights,study:window.WENYAN_STUDY_EDITOR?.data()||null},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="文言拾句-学习备份-"+new Date().toISOString().slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);};
+ $("import").onchange=async e=>{try{const data=JSON.parse(await e.target.files[0].text());if(data.version!==1||!data.data||!Array.isArray(data.data.custom))throw Error("文件格式不正确");if(!confirm("导入将替换当前学习进度与自定义篇目，确认继续？"))return;localStorage.setItem(KEY,JSON.stringify(data.data));if(data.highlights&&typeof data.highlights==="object"&&!Array.isArray(data.highlights))localStorage.setItem(MARK_KEY,JSON.stringify(data.highlights));if(data.study?.version===1&&data.study.words&&data.study.grammar)localStorage.setItem("wenyan-recall-study-v1",JSON.stringify(data.study));location.reload();}catch(err){alert("导入失败："+err.message)}};
  root.querySelectorAll("[data-remove]").forEach(b=>b.onclick=()=>{if(!confirm("确定删除这篇自定义文章？"))return;custom.splice(Number(b.dataset.remove),1);wi=Math.min(wi,works().length-1);si=0;save();settings();});
  });
 }
@@ -187,6 +205,7 @@ $("choose").onclick=list;$("mode").onclick=()=>{whole=!whole;save();render();};$
 $("homeTab").onclick=()=>{close();render()};$("libraryTab").onclick=list;$("reviewTab").onclick=review;$("practiceTab").onclick=()=>{location.href="practice.html";};$("settingsTab").onclick=settings;
 $("close").onclick=close;$("overlay").onclick=e=>{if(e.target===$("overlay"))close();};
 $("hideAll").onclick=()=>{const nodes=$("wholeBody").querySelectorAll(".wholetranslation");let any=[...nodes].some(n=>!n.hidden);nodes.forEach(n=>n.hidden=any);$("hideAll").textContent=any?"显示译文":"隐藏译文";};
+$("chooseHighlights").onclick=()=>chooseHighlights();$("chooseHighlightsWhole").onclick=()=>chooseHighlights();
 window.addEventListener("error",e=>console.error("文言拾句运行错误",e.message));
 const requestedView=new URLSearchParams(location.search).get("view");
 if(requestedView==="library")list();else if(requestedView==="review")review();else render();

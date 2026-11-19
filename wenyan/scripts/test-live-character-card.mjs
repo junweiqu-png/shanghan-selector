@@ -20,7 +20,7 @@ for(const file of [
  "study-annotations.js","study-editor.js","study-crosslesson.js","study-verified-extra.js","study-verified-more2.js",
  "study-verified-common3.js","study-verified-corpus.js","study-verified-batch4.js","study-verified-batch5.js",
  "study-verified-batch6.js","study-verified-batch7.js","study-verified-batch8.js","study-verified-batch9.js",
- "study-verified-batch10.js","study-verified-batch11.js","study-verified-batch12.js","study-lesson-character-glosses.js","study-reference-dictionary.js","study-chushi-character-glosses.js","study-guanchao-reverse-glosses.js","study-verified-characters.js","study-junior-glosses.js","study-grammar-more.js","study-candidate-quality.js","study-explorer.js"
+ "study-verified-batch10.js","study-verified-batch11.js","study-verified-batch12.js","study-lesson-character-glosses.js","study-reference-dictionary.js","study-chushi-character-glosses.js","study-guanchao-reverse-glosses.js","study-verified-characters.js","study-junior-glosses.js","study-grammar-more.js","study-candidate-quality.js","study-complete-glosses.js","study-translated-classics.js","study-explorer.js"
 ])vm.runInNewContext(fs.readFileSync(base+file,"utf8"),context,{filename:file});
 const debug=win.WENYAN_STUDY_DEBUG;
 assert(debug,"student character study debug API unavailable");
@@ -138,6 +138,7 @@ for(const work of [...everyLesson].reverse()){
  }
  reverseSite.push({title:work.title,total,unresolved,firstUnresolved});
 }
+assert.equal(reverseSite.reduce((n,w)=>n+w.unresolved,0),0,"all 6446 original glyphs must resolve");
 assert.equal(reverseSite.find(w=>w.title==="出师表")?.unresolved,0,"出师表全文倒查不能有空白字义");
 assert.equal(reverseSite.find(w=>w.title==="观潮")?.unresolved,0,"观潮全文倒查不能有空白字义");
 const unresolvedOthers=reverseSite.filter(x=>x.title!=="出师表"&&x.unresolved>0);
@@ -152,7 +153,7 @@ assert(chushiMeaning(9,"贤臣",1).includes("臣子"),"贤臣 is a minister, not
 assert(chushiMeaning(8,"营中",1).includes("军营内部"),"营中 is inside the camp");
 assert(chushiMeaning(0,"臣").includes("诸葛亮"),"opening speaker 臣 refers to Zhuge Liang");
 const uiFile=fs.readFileSync(base+"study-explorer.js","utf8");
-assert(uiFile.includes("本文原句的现代汉语译文：")&&uiFile.includes("const translation=!isGrammar?contextTranslation(origin)"),
+assert(uiFile.includes("本文原句的现代汉语译文：")&&uiFile.includes("const translation=contextTranslation(origin)"),
  "verified character cards should show the full correct modern translation, not only isolated glosses");
 assert(debug.lookupWord("陟").examples.some(e=>e[0]==="出师表"&&e[3]),"original translation linked into existing cross-lesson network");
 const repeat=(lineNum,term,pos)=>debug.origin(term,{title:"出师表",text:completeChuShi.lines[lineNum][0],offset:completeChuShi.lines[lineNum][0].indexOf(term,pos||0)});
