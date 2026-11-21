@@ -1,0 +1,78 @@
+/* 教材常见翻译陷阱；按当前字位的已注释义判定，不把同字的所有用法一律着色。
+ * 分类参考教育局《中学中国语文建议学习重点》及《桃花源记》教学示例。
+ * 这是阅读提醒，不是全国失分率排名；不以姓名、生僻程度代替易错程度。
+ */
+(()=>{"use strict";
+const categories={
+ ancient:{label:"古今易混",className:"risk-ancient"},
+ loan:{label:"通假借字",className:"risk-loan"},
+ usage:{label:"词类活用",className:"risk-usage"},
+ poly:{label:"多义／虚词",className:"risk-poly"}
+};
+const ancient={
+ "走":/跑|奔/,"去":/离开|离去|距离|相距/,"汤":/热水|开水/,"涕":/眼泪/,"兵":/兵器|武器/,"亡":/逃|丢失|失去/,
+ "委":/丢|舍弃|放弃/,"顾":/回头|回望|拜访|探望/,"假":/借|凭/,"狱":/案件|诉讼/,"鄙":/边境|见识浅|鄙陋/,
+ "贼":/伤害|危害|祸害|叛|侵扰|强盗/,"河":/黄河/,"江":/长江/,"股":/大腿/,"书":/书信|写信|书写|写字|写下/,
+ "信":/实情|真实|确实|诚实|诚恳|随意|随便/,"但":/只|仅/,"是":/这|这样/,"或":/有人|有的人|有时/,
+ "闻":/听到|听见|听说|使.*听|传.*到/,"臭":/气味/,"再":/第二次|两次/,"加":/虚报|夸大/,"牺":/祭祀|祭品/,
+ "牲":/祭祀|祭品/,"妻":/妻子和儿女/,"子":/您|你|儿女|子女/,"绝":/隔绝|与世隔/,"交":/交错|交互/,"通":/相通|连通/,
+ "痛":/痛心/,"恨":/遗憾|遗恨/,"卑":/地位低|身份低/,"感":/感动|感奋/,"激":/振奋|激奋|感动/,
+ "秋":/时刻|时节|时候|关头/,"开":/扩大|开阔/,"张":/扩大|扩展/,"肉":/享厚禄|居高位/,"食":/享厚禄|当权/,
+ "居":/停留|经过/,"市":/买|购买/,"诛":/责备|责罚/,"诣":/到|拜访/,"涉":/粗略|浏览/,"猎":/粗略/,
+ "素":/向来|一向|平素|白色|不加装饰/,"布":/平民/,"衣":/平民/,"形":/身体/,"丁":/平民|没有功名/,
+ "疾":/快|迅速|猛烈|痛恨/,"病":/担心|困苦|毛病|缺点/,"恶":/哪里|怎么/,"慢":/懈怠|怠慢/,
+ "险":/轻薄/,"穷":/穷尽|尽头|走到尽头|困窘/,"至":/周到|周密/,"鲜":/少/,"许":/约数|左右|上下/,
+ "可":/大约|约|值得/,"阅":/经过|经历/,"竟":/完毕|终了|结束/,"及":/等到/,"比":/等到|靠近|挨着/,
+ "尝":/曾经/,"曾":/竟然|连.*都/,"坐":/因为|由于|犯罪|犯.*罪/,"易":/交换|改变|替换/,
+ "恃":/依靠|凭借/,"属":/类|一类|部属/,"安":/怎么|哪里/,"谢":/道歉|推辞|辞谢|告辞/,"辞":/推辞|告辞/,
+ "请":/请允许我/,"相":/偏指|指.*对方|指.*朋友/,"亲":/亲近/,"长":/首领|长官|擅长/,"工":/擅长|精巧/,
+ "美":/认为.*美|赞美/,"私":/偏爱/,"修":/身长|长.*八尺/,"孰":/谁/,"何":/多么/
+};
+// Modern-looking compounds must still be read as their component characters.
+const compounds=[
+ ["妻子","妻子、儿女"],["绝境","与外界隔绝"],["交通","交错相通"],["无论","不要说、更不必说"],
+ ["卑鄙","地位低微、见识浅陋"],["痛恨","痛心、遗憾"],["感激","感动、振奋"],
+ ["开张","扩大"],["牺牲","祭祀"],["布衣","平民"],["肉食者","居高位、享厚禄"]
+];
+const compoundWorks={"妻子":"桃花源记","绝境":"桃花源记","交通":"桃花源记","无论":"桃花源记","卑鄙":"出师表","痛恨":"出师表","感激":"出师表","开张":"出师表","牺牲":"曹刿论战","布衣":"出师表","肉食者":"曹刿论战"};
+const usage={"犬":/像狗/,"隧":/从.*隧道|隧道.*方式/,"洞":/打洞/,"蔓":/生.*蔓|长.*蔓/,"枝":/生.*枝|长.*枝/,
+ "智":/认为|以.*为/,"异":/觉得|认为|感到/,"然":/认为.*对|赞同/,"陋":/认为|以.*为/,"美":/认为|以.*为/,
+ "目":/看待|注视/,"乳":/喂奶|哺乳/,"宴":/宴请|设宴/,
+ "日":/^每天/,"锦":/用.*锦|用.*丝/,"囊":/装.*袋/,"笼":/用.*笼|笼.*装/,"文":/刺.*花|画.*纹/};
+const poly={
+ "之":/前往|到|去|代词|他|它|这|主谓|独立性|宾语|补足|音节/,"其":/其中|难道|恐怕|表示|那|这|语气/,
+ "而":/转折|却|修饰|因而|那么/,"以":/凭|因为|把|认为|以便|按照|用来|以致|以.*为/,
+ "于":/比|向|对|从|被/,"为":/被|向|对|是|为了|认为|因为|替|给/,"乃":/竟|才|只/,"则":/如果|那么/,
+ "且":/将近|况且|将要|尚且|暂且/,"焉":/哪里|于此|于之|那里|兼词/,"何":/怎么|为什么|多么/,
+ "若":/你|如果|及|比得上/,"如":/及|比得上/,"乎":/于|比|对/,"者":/停顿|时间|主谓/,"所":/结构|所字/,
+ "因":/趁|凭|沿|顺|于是|因此/,"故":/所以|缘故|原因|原来|原有|旧/,"得":/能够|能|实现/,"就":/接近|从事|完成/,
+ "从":/跟随|听从|依从/,"当":/掌管|担任|应当|面对/,"期":/约定|一周年|一年|整年/,"数":/几|屡次|多次/,
+ "度":/量|估计|推测/,"引":/拉|拿起|延长|带领|引用/,"益":/更加|增加|好处/,"善":/擅长|善于/,"属":/接连|连续|撰写/,
+ "治":/研究|处理|治罪|治理|医治/,"见":/拜见|召见|被/,"间":/参与|暗中|间隔|夹杂/,"名":/说出|著名|名声/,
+ "一":/全|整个/,"绝":/极|消失|断绝|停止/,"过":/拜访|过错|超过/,"足":/值得|足够/,"胜":/尽|承受|胜过/,
+ "既":/既然/,"诚":/果真|如果/,"复":/恢复|回答/,"归":/归附|归还/,"说":/劝说|说服/
+};
+function atPhrase(text,offset,phrase){
+ for(let at=text.indexOf(phrase);at>=0;at=text.indexOf(phrase,at+1))if(offset>=at&&offset<at+phrase.length)return true;
+ return false;
+}
+function classify(title,text,offset,annotation){
+ const char=text[offset];if(!char||!/\p{Script=Han}/u.test(char))return null;
+ // The exact positional classroom gloss always outranks an excerpt's broad gloss.
+ const exact=window.WENYAN_COMPLETE_TRANSLATIONS?.lookup(title,text,offset);
+ const a=exact||(annotation?.term===char?annotation:null);
+ if(!a?.meaning||a.code==="proper-name"||/专名/.test(a.pos||""))return null;
+ const meaning=a.meaning,grammar=meaning+" "+(a.pos||"");
+ let type=null;
+ if(/通假|通[“「]|同[“「]/.test(grammar))type="loan";
+ else if(/使动|意动|作状语|作动词|作名词|用作动词|用作名词|名词活用|形容词活用/.test(grammar)||
+  !"使令让遣命叫".includes(char)&&/^使[…\s]|^使.*(?:劳累|扰乱|听到)/.test(meaning)||usage[char]?.test(meaning)||
+  /^[东南西北]$/.test(char)&&new RegExp("^(向|朝)"+char).test(meaning))type="usage";
+ else if(compounds.some(([phrase,gloss])=>atPhrase(text,offset,phrase)&&(compoundWorks[phrase]===title||gloss.split(/[、，]/).some(k=>meaning.includes(k))))||ancient[char]?.test(meaning))type="ancient";
+ else if(poly[char]?.test(meaning))type="poly";
+ return type?{type,...categories[type]}:null;
+}
+function legend(){return '<div class="risk-legend" aria-label="易错字颜色图例"><span class="risk-caption">易错字</span>'+Object.values(categories).map(c=>'<span class="risk-key '+c.className+'">'+c.label+'</span>').join("")+'</div>';}
+window.WENYAN_TRANSLATION_RISKS={classify,legend,categories};
+if(typeof document!=="undefined")document.addEventListener("DOMContentLoaded",()=>window.WENYAN_READER_MARKS?.refresh());
+})();

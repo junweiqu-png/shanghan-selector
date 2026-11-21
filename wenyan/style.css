@@ -22,10 +22,13 @@
 nav.bottom button{flex:1;min-width:0;padding:9px 4px;font-size:14px}
 .highlight-launch{align-self:center;font-size:14px;padding:7px 12px;margin:3px 0 6px;min-height:38px}
 .whole-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-.highlight-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(48px,1fr));gap:8px;padding:6px 0 18px}
-.highlight-choice{position:relative;cursor:pointer}
+.highlight-grid{display:block;padding:6px 0 18px}
+.highlight-line{padding:10px 0;border-top:1px solid #e4e8df}
+.highlight-line>small{display:block;color:#738173;font-size:12px;margin-bottom:6px}
+.highlight-passage{font:24px/2.15 "Songti SC","STSong",serif;overflow-wrap:anywhere}
+.highlight-choice{display:inline-block;position:relative;cursor:pointer;vertical-align:baseline;margin:2px 1px}
 .highlight-choice input{position:absolute;inset:0;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
-.highlight-choice span{display:grid;place-items:center;min-height:48px;border:1px solid #cbd8ce;border-radius:10px;background:#fff;font:24px/1.3 "Songti SC","STSong",serif}
+.highlight-choice span{display:inline-flex;align-items:center;justify-content:center;min-width:36px;min-height:44px;padding:0 3px;border:1px solid #cbd8ce;border-radius:7px;background:#fff;font:24px/1.3 "Songti SC","STSong",serif}
 .highlight-choice input:checked+span{background:#e0efe3;border:2px solid #38764e;text-decoration:underline dotted;text-underline-offset:6px}
 .highlight-choice input:focus-visible+span{outline:3px solid #82a98d;outline-offset:2px}
 .highlight-save{position:sticky;bottom:-25px;background:#fffefa;display:flex;gap:10px;padding:14px 0;box-shadow:0 -8px 14px #fffefa}

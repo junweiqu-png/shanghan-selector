@@ -20,44 +20,84 @@ function tokensFor(w){
  return out;
 }
 function defaultHighlights(w){return [...new Set((w.terms||[]).flatMap(t=>[...t[0]].filter(hanCharacter)))];}
-function highlighted(w){return new Set(Array.isArray(highlights[w.title])?highlights[w.title].filter(c=>tokensFor(w).has(c)):defaultHighlights(w));}
+function characterPositions(w){
+ const out=[];w.lines.forEach(([text],lineIndex)=>{let offset=0;for(const char of text){if(hanCharacter(char))out.push({char,lineIndex,offset,key:lineIndex+":"+offset});offset+=char.length;}});return out;
+}
+function defaultHighlightPositions(w){const chars=new Set(defaultHighlights(w));return new Set(characterPositions(w).filter(p=>chars.has(p.char)).map(p=>p.key));}
+function highlighted(w){
+ const saved=highlights[w.title];
+ if(Array.isArray(saved)){const chars=new Set(saved);return new Set(characterPositions(w).filter(p=>chars.has(p.char)).map(p=>p.key));}
+ if(saved?.version===2&&Array.isArray(saved.positions)&&Array.isArray(saved.lines)){
+  const selected=new Set();
+  for(const key of saved.positions){
+   const match=/^(\d+):(\d+)$/.exec(String(key));if(!match)continue;
+   const oldLine=Number(match[1]),offset=Number(match[2]),text=saved.lines[oldLine];if(typeof text!=="string"||!hanCharacter(text[offset]||""))continue;
+   const lineIndex=w.lines[oldLine]?.[0]===text?oldLine:w.lines.findIndex(l=>l[0]===text);
+   if(lineIndex>=0)selected.add(lineIndex+":"+offset);
+  }
+  return selected;
+ }
+ return defaultHighlightPositions(w);
+}
 function chooseHighlights(title=work().title){
- const w=works().find(x=>x.title===title)||work(),all=[...tokensFor(w)],selected=highlighted(w);
- const html='<p class="help">选择《'+escape(w.title)+'》要加虚线的字。点一下选择，再点一下取消。</p>'+
+ const w=works().find(x=>x.title===title)||work(),all=characterPositions(w),selected=highlighted(w);
+ const html='<p class="help">按原文顺序选择《'+escape(w.title)+'》的虚线字。全文 '+all.length+' 个汉字全部列出，重复字可分别选择。向下滚动可查看全文。</p>'+(window.WENYAN_TRANSLATION_RISKS?.legend()||'')+
  '<div class="row"><button id="markDefaults" type="button">课文默认</button><button id="markAll" type="button">全选</button><button id="markNone" type="button">清空</button></div>'+
- '<p id="markCount" class="help" aria-live="polite"></p><div class="highlight-grid">'+all.map(c=>'<label class="highlight-choice"><input type="checkbox" value="'+escape(c)+'"'+(selected.has(c)?' checked':'')+'><span>'+escape(c)+'</span></label>').join('')+'</div>'+
+ '<p id="markCount" class="help" aria-live="polite"></p><div class="highlight-grid">'+w.lines.map(([text],lineIndex)=>{
+  let offset=0,ordinal=0;const passage=[...text].map(char=>{const key=lineIndex+":"+offset;offset+=char.length;
+   if(!hanCharacter(char))return escape(char);ordinal++;
+   const risk=window.WENYAN_TRANSLATION_RISKS?.classify(w.title,text,offset-char.length);
+   return '<label class="highlight-choice"><input type="checkbox" value="'+key+'" data-highlight-char="'+escape(char)+'" aria-label="第'+(lineIndex+1)+'句第'+ordinal+'字：'+escape(char)+'"'+(selected.has(key)?' checked':'')+'><span'+(risk?' class="risk-char '+risk.className+'" title="易错字：'+risk.label+'"':'')+'>'+escape(char)+'</span></label>';
+  }).join('');return '<div class="highlight-line"><small>第 '+(lineIndex+1)+' 句</small><div class="highlight-passage">'+passage+'</div></div>';
+ }).join('')+'</div>'+
  '<div class="highlight-save"><button id="saveHighlights" type="button">保存虚线字</button><button id="cancelHighlights" type="button">取消</button></div>';
  modal("选择虚线字",html,root=>{
   const inputs=[...root.querySelectorAll('.highlight-choice input')],update=()=>{$("markCount").textContent='已选 '+inputs.filter(x=>x.checked).length+' / '+all.length+' 字';};
-  const preset=chars=>{const set=new Set(chars);inputs.forEach(x=>x.checked=set.has(x.value));update();};
-  inputs.forEach(x=>x.onchange=update);$("markDefaults").onclick=()=>preset(defaultHighlights(w));$("markAll").onclick=()=>preset(all);$("markNone").onclick=()=>preset([]);
-  $("saveHighlights").onclick=()=>{const chosen=inputs.filter(x=>x.checked).map(x=>x.value);try{localStorage.setItem(MARK_KEY,JSON.stringify({...highlights,[w.title]:chosen}));highlights[w.title]=chosen;close();render();}catch{ $("markCount").textContent="保存失败，请先导出数据并释放浏览器存储后重试。";}};
+  const preset=positions=>{const set=new Set(positions);inputs.forEach(x=>x.checked=set.has(x.value));update();};
+  inputs.forEach(x=>x.onchange=update);$("markDefaults").onclick=()=>preset(defaultHighlightPositions(w));$("markAll").onclick=()=>preset(all.map(p=>p.key));$("markNone").onclick=()=>preset([]);
+  $("saveHighlights").onclick=()=>{const chosen={version:2,lines:w.lines.map(l=>l[0]),positions:inputs.filter(x=>x.checked).map(x=>x.value)};try{localStorage.setItem(MARK_KEY,JSON.stringify({...highlights,[w.title]:chosen}));highlights[w.title]=chosen;close();render();}catch{ $("markCount").textContent="保存失败，请先导出数据并释放浏览器存储后重试。";}};
   $("cancelHighlights").onclick=close;update();
  });
 }
-window.WENYAN_HIGHLIGHTS={choose:chooseHighlights,get:title=>{const w=works().find(x=>x.title===title);return w?[...highlighted(w)]:[];}};
-function marked(text,w){
+window.WENYAN_HIGHLIGHTS={choose:chooseHighlights,get:title=>{const w=works().find(x=>x.title===title);if(!w)return [];const selected=highlighted(w);return [...new Set(characterPositions(w).filter(p=>selected.has(p.key)).map(p=>p.char))];},getPositions:title=>{const w=works().find(x=>x.title===title);return w?[...highlighted(w)]:[];}};
+function marked(text,w,lineIndex=w.lines.findIndex(l=>l[0]===text)){
  const known=tokensFor(w),priority=highlighted(w);let out="",i=0;
  for(const ch of text){
   const shown=window.WENYAN_PINYIN?.span(text,i,w)||escape(ch);
   if(known.has(ch)){
-   out+='<span class="token'+(priority.has(ch)?" keychar":"")+'" role="button" tabindex="0" data-term="'+escape(ch)+'" data-study-offset="'+i+'" aria-label="查看“'+escape(ch)+'”的字义和关联古文">'+shown+'</span>';
+   const risk=window.WENYAN_TRANSLATION_RISKS?.classify(w.title,text,i);
+   out+='<span class="token'+(priority.has(lineIndex+":"+i)?" keychar":"")+(risk?' risk-char '+risk.className:'')+'" role="button" tabindex="0" data-term="'+escape(ch)+'" data-study-offset="'+i+'"'+(risk?' title="易错字：'+risk.label+'"':'')+' aria-label="查看“'+escape(ch)+'”的字义和关联古文'+(risk?'（'+risk.label+'）':'')+'">'+shown+'</span>';
   }else out+=shown;
   i+=ch.length;
  }
  return out;
 }
 function bindTokens(root,w){root.querySelectorAll(".token").forEach(n=>{n.addEventListener("click",e=>{e.stopPropagation();openTerm(n.dataset.term,w)});n.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();e.stopPropagation();n.click();}})});}
+// Keep the early reader visible while the remaining annotation files load.
+function refreshRiskColors(){
+ const w=work(),containers=whole?[...$("wholeBody").querySelectorAll(".wholetext")]:[$("sentence")];
+ for(const container of containers){
+  const text=container.dataset.plain||"";
+  for(const node of container.querySelectorAll("[data-term]")){
+   const risk=window.WENYAN_TRANSLATION_RISKS?.classify(w.title,text,Number(node.dataset.studyOffset));
+   node.classList.remove("risk-char","risk-ancient","risk-loan","risk-usage","risk-poly");
+   if(risk){node.classList.add("risk-char",risk.className);node.title="易错字："+risk.label;}else node.removeAttribute("title");
+   node.setAttribute("aria-label","查看“"+node.dataset.term+"”的字义和关联古文"+(risk?"（"+risk.label+"）":""));
+  }
+ }
+}
+window.WENYAN_READER_MARKS={refresh:refreshRiskColors};
 function setNav(active){document.querySelectorAll(".bottom button").forEach(b=>b.classList.remove("active"));$(active).classList.add("active");}
 function render(){
  const w=work(),row=line();visited.add(w.title);save();
+ for(const id of ["riskLegendSingle","riskLegendWhole"]){const node=$(id);if(node)node.innerHTML=window.WENYAN_TRANSLATION_RISKS?.legend()||"";}
  $("count").textContent=String(wi+1).padStart(2,"0")+" / "+works().length;
  $("mode").textContent=whole?"逐句":"整篇";
  $("single").hidden=whole;$("whole").hidden=!whole;
  if(!whole){
  $("title").textContent=w.title;$("source").textContent=w.source;$("level").textContent=w.level;
  $("progress").textContent="第 "+(si+1)+" / "+w.lines.length+" 句";
- $("sentence").dataset.plain=row[0];$("sentence").innerHTML=marked(row[0],w);
+ $("sentence").dataset.plain=row[0];$("sentence").innerHTML=marked(row[0],w,si);
  $("translation").textContent=row[1];$("translation").hidden=!show;
  $("tapHelp").textContent="点击汉字查义 · 点下方按钮看译文 · 上滑下一句";
  $("showTranslation").textContent=show?"▾ 收起这句译文":"▸ 查看这句译文";
@@ -69,7 +109,7 @@ function render(){
  bindTokens($("sentence"),w);
  } else {
  $("wholeTitle").textContent=w.title;$("wholeLevel").textContent=w.level;$("wholeSource").textContent=w.source;
- $("wholeBody").innerHTML=w.lines.map((x,i)=>'<article class="wholepara" data-i="'+i+'"><div class="wholetext" data-plain="'+escape(x[0])+'">'+marked(x[0],w)+'</div><button class="reveal-line" type="button" aria-label="显示或隐藏本句译文" aria-expanded="false">▸ 查看译文</button><div class="wholetranslation" hidden>'+escape(x[1])+'</div></article>').join("");
+ $("wholeBody").innerHTML=w.lines.map((x,i)=>'<article class="wholepara" data-i="'+i+'"><div class="wholetext" data-plain="'+escape(x[0])+'">'+marked(x[0],w,i)+'</div><button class="reveal-line" type="button" aria-label="显示或隐藏本句译文" aria-expanded="false">▸ 查看译文</button><div class="wholetranslation" hidden>'+escape(x[1])+'</div></article>').join("");
  $("wholeBody").querySelectorAll(".wholepara").forEach(n=>n.onclick=()=>{const target=n.querySelector(".wholetranslation"),button=n.querySelector(".reveal-line");target.hidden=!target.hidden;button.textContent=target.hidden?"▸ 查看译文":"▾ 收起译文";button.setAttribute("aria-expanded",String(!target.hidden));});
  bindTokens($("wholeBody"),w);
  $("missionLaunchWhole").hidden=!(w.missions?.length);

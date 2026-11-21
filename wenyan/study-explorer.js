@@ -144,11 +144,14 @@ function relation(origin,example,grammar=false){
  const near=!same&&(grammar?!(g1&&g2&&g1!==g2):family(origin.code)===family(example.code)||sharedMeaning);
  return {type:same?"same":near?"near":"diff"};
 }
-function tokens(sentence,selected,contextId,grammar=false){
+function tokens(sentence,selected,contextId,grammar=false,record=null){
  const text=String(sentence||"");let html="";
  for(let offset=0;offset<text.length;offset++){
   const char=text[offset],shown=window.WENYAN_PINYIN?.span(text,offset)||esc(char);
-  html+=/\p{Script=Han}/u.test(char)?'<button class="study-token'+(char===selected?' hit-word':'')+'" type="button" data-study-word="'+esc(char)+'" data-study-offset="'+offset+'" data-study-context="'+esc(contextId||"")+'" aria-label="查询“'+esc(char)+'”的字义">'+shown+'</button>':shown;
+  const head=record?.match||record?.term||selected;
+  const annotation=head===char&&text.indexOf(char)===text.lastIndexOf(char)?{...record,term:char}:null;
+  const risk=window.WENYAN_TRANSLATION_RISKS?.classify(record?.title||"",text,offset,annotation);
+  html+=/\p{Script=Han}/u.test(char)?'<button class="study-token'+(char===selected?' hit-word':'')+(risk?' risk-char '+risk.className:'')+'" type="button" data-study-word="'+esc(char)+'" data-study-offset="'+offset+'" data-study-context="'+esc(contextId||"")+'"'+(risk?' title="易错字：'+risk.label+'"':'')+' aria-label="查询“'+esc(char)+'”的字义'+(risk?'（'+risk.label+'）':'')+'">'+shown+'</button>':shown;
  }return html;
 }
 
@@ -177,7 +180,8 @@ function baseHeader(origin,isGrammar){
  const translation=contextTranslation(origin);
  return '<section class="study-origin">'+
  '<h3><em>'+esc(origin.term)+'</em><span>'+displayTitle(origin.title||"当前古文")+'</span></h3>'+
- (origin.text?'<p class="study-original">'+tokens(origin.text,origin.term,"source")+'</p>':'')+
+ (window.WENYAN_TRANSLATION_RISKS?.legend()||'')+
+ (origin.text?'<p class="study-original">'+tokens(origin.text,origin.term,"source",false,origin)+'</p>':'')+
  '<details class="study-reveal study-answer" data-answer-key="source"><summary>查看本句译文与字义</summary>'+
  '<p class="study-origin-meaning"><b>'+(isGrammar?"本句句式：":origin.sourceLevel==="dictionary"?"字典释义：":"本文“"+esc(origin.term)+"”字：")+'</b>'+esc(origin.meaning)+
  (isGrammar?"":'<small>'+esc(origin.pos)+'</small>')+'</p>'+
@@ -192,7 +196,7 @@ function rowCard(row,index,origin,isGrammar){
  const grammarLinks=(row.grammars||enrichGrammars(meta)).map(g=>'<button type="button" data-study-grammar="'+esc(g)+'" data-study-context="'+contextId+'">'+esc(g)+' ↗</button>').join("");
  return '<article class="study-example">'+
  '<h4 class="study-example-top">'+title+(source?'<small> · '+source+'</small>':'')+'</h4>'+
- '<p class="study-original">'+tokens(meta.text,isGrammar?"":(meta.match||origin.term),contextId,isGrammar)+'</p>'+
+ '<p class="study-original">'+tokens(meta.text,isGrammar?"":(meta.match||origin.term),contextId,isGrammar,meta)+'</p>'+
  '<details class="study-reveal study-answer" data-answer-key="'+esc(meta.title+'|'+meta.text)+'"><summary>查看译文与字义</summary>'+
  '<p class="study-translation">'+esc(meta.translation)+'</p>'+
  '<p class="study-sense">'+desc+(isGrammar?'':'<small> · '+esc(meta.pos)+'</small>')+'</p>'+
