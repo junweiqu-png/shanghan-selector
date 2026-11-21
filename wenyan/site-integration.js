@@ -74,6 +74,23 @@
       host.dataset.adMounted = "1";
     });
   }
-  window.WENYAN_SITE = { mountAds };
+  // 仅在未来广告正式启用时展示广告许可；站长流量统计无前台许可按钮。
+  function adsSettingsHTML() {
+    if (!config.ads?.enabled) return "";
+    return '<div class="sectionLabel">广告许可</div><p class="help">此选择仅涉及商业广告，不影响匿名网站访问统计。</p>' +
+      '<div class="row"><button type="button" id="wenyan-ad-accept">监护人同意广告</button>' +
+      '<button type="button" id="wenyan-ad-decline">拒绝／关闭广告</button></div>';
+  }
+  function bindAdSettings(root) {
+    root.querySelector("#wenyan-ad-accept")?.addEventListener("click", () => {
+      try { localStorage.setItem(AD_CONSENT, "yes"); } catch {}
+      location.reload();
+    });
+    root.querySelector("#wenyan-ad-decline")?.addEventListener("click", () => {
+      try { localStorage.setItem(AD_CONSENT, "no"); } catch {}
+      location.reload();
+    });
+  }
+  window.WENYAN_SITE = { mountAds, adsSettingsHTML, bindAdSettings };
   initAnalytics();
 })();
