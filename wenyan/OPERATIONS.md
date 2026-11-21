@@ -5,6 +5,25 @@
 - PV（Page Views）是浏览量；Visits 是访问次数（依统计平台定义）；UV 是估算的访客数（不保证等于真实人数）。
 - 这些指标必须通过有权限的统计平台后台核验，不把网页公开计数器当广告商认可的证明，也不能人为刷量。
 
+## 两个历史网址的单独流量统计（2026-11-21）
+Cloudflare Web Analytics 官方不会保存 `?view=`、`?v=`、`utm_source=` 这类查询参数，所以原来两个链接默认混在同一个 Path 里。
+
+现在在 *加载 Cloudflare beacon 前* 按精确的参数组合把地址栏路径做单页无刷新映射（`history.replaceState`），实际学习内容及查询参数保留：
+
+| 原始分享链接 | Cloudflare 统计 Path | 统计类别 |
+| --- | --- | --- |
+| `/shanghan-selector/wenyan/?view=library` | `/shanghan-selector/wenyan/entry-library.html` | A：篇目入口 |
+| `/shanghan-selector/wenyan/?v=20261111-char1&utm_source=chatgpt.com` | `/shanghan-selector/wenyan/entry-char1-chatgpt.html` | B：版本链接·ChatGPT 来源 |
+| 其他进入 `/shanghan-selector/wenyan/` 的链接 | `/shanghan-selector/wenyan/` | C：其他来源 |
+
+- **三个类别独立统计，不共享相同的 Path**。在 Cloudflare Web Analytics 的 Pages/Path 维度分别筛选即可。
+- 原始两条链接仍然可用，浏览器地址栏加载后会改为各自的 `entry-*.html` 标记路径（并保留查询参数）。页面不重新加载，因此不会重复报一次 PV。
+- `entry-library.html`、`entry-char1-chatgpt.html` 这两个静态小入口仅用于保证刷新/直接打开标记路径不报 404，会把访问者带回原始链接，并最终归入正确的类别；这两个文件不加载统计脚本。
+- 不读取或记录查询参数的其他内容、用户身份或学生学习进度。
+- **仅从此改动上线后新增的访问才能分组，历史混合数据无法拆分。**
+- 统计是网页访问，不是用户账号登录；在网站内部切换一篇古文不会被算成新的网页 PV。
+- Cloudflare 的脚本被拦截、加载失败或本地网络无法接通时会漏报，因此仍不能保证 100% 全量。
+
 ## 本次更改
 - 删除「我的」中统计数字、监护人同意/拒绝统计按钮和不蒜子代码。
 - 统计改为站长专用 Cloudflare Web Analytics（无 Cookie，不采集个人信息，官方说明：https://developers.cloudflare.com/web-analytics/about/）。
