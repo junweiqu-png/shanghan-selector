@@ -1,10 +1,4 @@
-/* 广告只出现在自然停顿处；未启用时完全不占空间 */
-.wenyan-ad[hidden],.wenyan-site-stats[hidden]{display:none!important}
+/* 广告不干扰学习：默认禁用，隐藏时零占位。站长统计完全不出现在学生界面。 */
+.wenyan-ad[hidden]{display:none!important}
 .wenyan-ad{margin:20px 0 12px;padding:12px;border:1px solid #e2e7dc;border-radius:12px;background:#fcfcf8;min-height:90px}
 .wenyan-ad__label{display:block;font-size:11px;letter-spacing:.08em;color:#7e8c7e;margin-bottom:9px}
-.wenyan-site-stats{border:1px solid #e3e8df;border-radius:12px;padding:12px;background:#f8faf5}
-.wenyan-site-stats p{margin:6px 0}
-.wenyan-site-stats strong{font-variant-numeric:tabular-nums;color:#296347}
-.wenyan-consent button{flex:0 1 auto}
-.wenyan-site-note{font-size:12px;line-height:1.7;color:#617165}
-.wenyan-site-note a{color:#2c6850}

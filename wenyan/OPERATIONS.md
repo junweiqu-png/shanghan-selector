@@ -1,26 +1,29 @@
-# 文言拾句 · 统计及商业化预留说明
+# 文言拾句：站长访问统计（面向大陆初中生）
 
-## 当前状态
-- 原站点功能及布局不变。
-- 已预留访问计数脚本：不蒜子 3.6.9。首次未经监护人同意时不会加载；仅在“我的”中同意后才计数。
-- 只使用 `busuanzi_page_pv` / `busuanzi_page_uv`，不用跨项目的 `busuanzi_site_*`。GitHub Pages 的 `junweiqu-png.github.io` 同时托管其他项目，全站计数会混入其他项目。
-- “页面”以真实网页地址为单位；同一单页应用中切换古文不会增加网页 PV，不能将篇目点击量称为网站 PV。
-- 百度统计需本人在 [百度统计](https://tongji.baidu.com/) 创建站点并获取 ID。填到 `site-config.js` 的 `analytics.baiduSiteId` 才能在同意后启用；百度统计后台能展示来源、趋势、地区等数据。
-- 不要将含查询参数的 URL 或多个不同子站数据混淆为小古文独立访客总数。
-- 不蒜子的计数有第三方依赖、按服务商规则去重，且可能仅覆盖同意者，不等于全体用户；出现加载错误不会影响学习网页。
+## 重要定义
+- 网站目前没有账号登录功能，所以不能叫“账号登录人数/登录次数”。
+- PV（Page Views）是浏览量；Visits 是访问次数（依统计平台定义）；UV 是估算的访客数（不保证等于真实人数）。
+- 这些指标必须通过有权限的统计平台后台核验，不把网页公开计数器当广告商认可的证明，也不能人为刷量。
 
-## 广告（默认禁用）
-`site-config.js` 统一配置：
-1. `ads.enabled` 默认 false，未通过广告平台审核、适龄广告与隐私合规审查时不得打开。
-2. 广告位预留在篇目列表底部（library）和整篇阅读结束后（afterReading），不覆盖学习按钮、不自动弹窗、不插入答题选项。
-3. AdSense：未来填 `ads.adsenseClient`（ca-pub-...）以及 `ads.slots.library` 和 `ads.slots.afterReading` 两个广告位 ID，另须按平台要求在域名根目录部署 ads.txt。
-4. 国内平台：可用配置里的 `ads.customRenderer` 函数，根据获批广告代码渲染 `library` 与 `afterReading`；不要直接复制未经审查的第三方代码。
-5. 有独立域名、广告平台审核、合规隐私与家长同意机制、托管适用性评估之前，不应启用广告；特别不要将小古文站点变为 GitHub Pages 托管的纯商业站。
-6. 广告使用单独的家长许可开关，不与访问统计同意合并；未授权时广告槽隐藏。
+## 本次更改
+- 删除「我的」中统计数字、监护人同意/拒绝统计按钮和不蒜子代码。
+- 统计改为站长专用 Cloudflare Web Analytics（无 Cookie，不采集个人信息，官方说明：https://developers.cloudflare.com/web-analytics/about/）。
+- 仅在三个小古文入口页面植入统计接入口：/wenyan/、/wenyan/practice.html、/wenyan/coverage.html；隐私说明页不接入统计脚本。
+- 广告位保留原布局但默认关闭，确保不打断学习。
+- 不在未配置站点 token 时向任何第三方统计服务提交访问数据。
 
-## 验证清单
-- 同意前开发者工具 Network 中无 `cdn.busuanzi.cc` / `hm.baidu.com` / AdSense 加载。
-- 进入“我的”→同意后计数脚本才请求；撤回即刷新，下一次加载不再触发。
-- “我的”能看到当前小古文页面 PV/UV 的外部服务结果；失败可正常学习。
-- 广告关闭时篇目列表/整篇阅读无空白广告框，移动端不遮挡底部导航。
-- 日后接入广告需再次完成监管及产品审核；仅填写代码不代表可合法或技术上成功投放。
+## 开通统计（唯一缺少站长平台站点 token）
+1. 登录 https://dash.cloudflare.com/ ，Web Analytics -> Add a site。
+2. 新增网站（GitHub Pages 当前使用的主机名：junweiqu-png.github.io）。Cloudflare 会提供一段包含 32 位 token 的网页统计代码。
+3. 将 token 写入 `wenyan/site-config.js` 的 `analytics.cloudflareToken`。公开的 Web Analytics **站点 token** 可用于网页脚本，切勿填写 Cloudflare **API Token** 或密钥。
+4. 推送代码后浏览 /wenyan/ 和 /wenyan/practice.html。用浏览器 Network 确认 beacon.min.js 已加载，并在 Cloudflare Web Analytics 仪表板按 Path 筛选 `/shanghan-selector/wenyan/`。不要和同一个 github.io 主机下其他项目汇总。
+5. 后台只允许账号所有者访问；共享广告商时使用正规平台报表/授权查看方式，不发布可任意修改的公开数字。
+6. 大陆网络对 Cloudflare 的可达性未做实测；统计漏报、广告拦截、脚本未运行等都可能使数字低于真实浏览。
+
+Cloudflare 当前统计的 Visits 不等价于每隔30分钟重算一次的“会话”。网站内部切换51篇古文不会产生新的真实网页访问，不应伪造 PV。未来如需“每篇热度”，另行新增不含个人身份数据的聚合事件后端。
+
+## 百度统计
+百度统计站长版虽适合中国大陆，但其 UV 使用 Cookie 规则，面向可能未满14周岁的学生时，直接对所有人静默追踪可能涉及个人信息处理与监护人同意要求。当前配置 `baiduEnabled:false`，不要因为追求统计全面就自行启用。该服务应在完成隐私、未成年人及跨境等合规评估后才可考虑使用。
+
+## 广告
+`site-config.js` 仍保留 `ads.enabled: false` 与两个广告位置（library、afterReading），未来需要经过平台审核、未成年人广告合规与托管条款评估。广告授权与站长匿名统计是不同概念。
