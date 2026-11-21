@@ -10,21 +10,44 @@
     set(key, value) { try { localStorage.setItem(key, value); } catch (_) { /* private mode */ } },
   };
   const yes = key => storage.get(key) === "yes";
-  function loadScript(src, callback) {
+  let counterIssue = "";
+  const validCounter = value => /^\d+(?:,\d{3})*$/.test(String(value || "").trim());
+  function loadScript(src, onLoad, onError) {
     const script = document.createElement("script");
     script.src = src;
     script.async = true;
-    if (callback) script.onload = callback;
-    script.onerror = () => { const status = $("wenyan-stat-status"); if (status) status.textContent = "统计服务暂不可用，不影响学习"; };
+    if (onLoad) script.onload = onLoad;
+    script.onerror = () => {
+      if (onError) onError();
+      else console.warn("第三方脚本未能加载", src.split("?")[0]);
+    };
     document.head.appendChild(script);
   }
   function updateCounter() {
+    const allowed = yes(CONSENT) && Boolean(config.analytics?.counter);
     const pv = $("busuanzi_page_pv"), uv = $("busuanzi_page_uv");
     const pvOut = $("wenyan-page-pv-value"), uvOut = $("wenyan-page-uv-value");
-    if (pvOut && pv) pvOut.textContent = pv.textContent || "—";
-    if (uvOut && uv) uvOut.textContent = uv.textContent || "—";
     const status = $("wenyan-stat-status");
-    if (status && pv && pv.textContent && pv.textContent !== "读取中…") status.textContent = "访客计数已开启（仅统计同意使用计数的浏览器）";
+    if (!allowed) {
+      if (pvOut) pvOut.textContent = "未开启";
+      if (uvOut) uvOut.textContent = "未开启";
+      if (status) status.textContent = "默认不启用第三方计数；需监护人同意后开始统计";
+      return;
+    }
+    const pvValue = pv?.textContent?.trim() || "";
+    const uvValue = uv?.textContent?.trim() || "";
+    const pvReady = validCounter(pvValue), uvReady = validCounter(uvValue);
+    if (pvReady && uvReady) counterIssue = "";
+    if (pvOut) pvOut.textContent = pvReady ? pvValue : (counterIssue ? "暂不可用" : "读取中…");
+    if (uvOut) uvOut.textContent = uvReady ? uvValue : (counterIssue ? "暂不可用" : "读取中…");
+    if (status) status.textContent = pvReady && uvReady
+      ? "访客计数已开启（仅统计同意使用计数的浏览器）"
+      : (counterIssue || "正在连接第三方计数服务；学习功能不受影响");
+  }
+  function counterFailed(message) {
+    if (!yes(CONSENT)) return;
+    counterIssue = message;
+    updateCounter();
   }
   function startStats() {
     if (!yes(CONSENT)) return;
@@ -33,7 +56,16 @@
       const observer = new MutationObserver(updateCounter);
       if (pv) observer.observe(pv, { childList: true, characterData: true, subtree: true });
       if (uv) observer.observe(uv, { childList: true, characterData: true, subtree: true });
-      loadScript("https://cdn.busuanzi.cc/busuanzi/3.6.9/busuanzi.min.js", updateCounter);
+      loadScript(
+        "https://cdn.busuanzi.cc/busuanzi/3.6.9/busuanzi.min.js",
+        updateCounter,
+        () => counterFailed("计数服务连接失败；可能被网络或浏览器拦截，不影响学习")
+      );
+      setTimeout(() => {
+        if (!validCounter(pv?.textContent) || !validCounter(uv?.textContent)) {
+          counterFailed("计数服务响应超时；可能是网络限制，稍后可刷新重试");
+        }
+      }, 9000);
     }
     const id = config.analytics?.baiduSiteId || "";
     if (/^[0-9a-f]{32}$/i.test(id)) {
