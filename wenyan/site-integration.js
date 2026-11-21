@@ -11,7 +11,7 @@
   };
   const yes = key => storage.get(key) === "yes";
   let counterIssue = "";
-  const validCounter = value => /^\\d+(?:,\\d{3})*$/.test(String(value || "").trim());
+  const validCounter = value => /^\d+(?:,\d{3})*$/.test(String(value || "").trim());
   function loadScript(src, onLoad, onError) {
     const script = document.createElement("script");
     script.src = src;
