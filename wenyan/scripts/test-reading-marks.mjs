@@ -9,6 +9,11 @@ const works=[1,2,3,4].flatMap(n=>win["WENYAN_DATA_"+n]||[]),risk=win.WENYAN_TRAN
 function inLesson(title,needle,char){const text=works.find(w=>w.title===title).lines.find(l=>l[0].includes(needle))[0];return risk.classify(title,text,text.indexOf(char));}
 assert.equal(inLesson("狼","犬坐","犬")?.type,"usage");
 assert.equal(inLesson("狼","一狼洞","洞")?.type,"usage");
+assert.equal(inLesson("狼","隧入","隧")?.type,"usage");
+assert.equal(inLesson("狼","缀行","缀")?.type,"ancient");
+assert.equal(inLesson("狼","径去","径")?.type,"poly");
+assert.equal(inLesson("狼","受其敌","敌")?.type,"usage");
+assert.equal(inLesson("狼","诱敌","敌"),null,"an opponent is not the verb attack");
 assert.equal(inLesson("爱莲说","不蔓","蔓")?.type,"usage");
 assert.equal(inLesson("曹刿论战","之狱","狱")?.type,"ancient");
 assert.equal(inLesson("桃花源记","无论","论")?.type,"ancient");
