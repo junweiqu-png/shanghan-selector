@@ -142,7 +142,10 @@ function word(title,text,offset,annotation){
  if(!entry)return [];
  const atoms=sense.split(/[，、；]/).map(x=>x.trim());
  const wrong=entry[1].filter(value=>!atoms.includes(value)).slice(0,3);
- return wrong.length?[{label:a.term,correct:a.meaning,wrong}]:[];
+ const repeated=Number.isInteger(offset)&&text[offset]===a.term&&text.indexOf(a.term)!==text.lastIndexOf(a.term);
+ const occurrence=repeated?[...text.slice(0,offset+1)].filter(c=>c===a.term).length:null;
+ const anchor=repeated?text.slice(Math.max(0,offset-3),Math.min(text.length,offset+4)):null;
+ return wrong.length?[{label:a.term,correct:a.meaning,wrong,occurrence,anchor}]:[];
 }
 function sentence(title,text,annotation,options={}){
  const out=[],seen=new Set(),covered=[];
@@ -161,6 +164,6 @@ function sentence(title,text,annotation,options={}){
  }
  return out;
 }
-function render(items){return items.length?'<div class="translation-mistakes"><b>易错提醒（本句）</b><ul>'+items.map(item=>'<li><strong>'+esc(item.label)+'：</strong>不是'+item.wrong.map(x=>'“'+esc(x)+'”').join('、')+'；这里是“'+esc(item.correct)+'”。</li>').join('')+'</ul></div>':"";}
+function render(items){return items.length?'<div class="translation-mistakes"><b>易错提醒（本句）</b><ul>'+items.map(item=>'<li><strong>'+esc(item.label)+(item.occurrence?'（第'+item.occurrence+'处：'+esc(item.anchor)+'）':'')+'：</strong>不是'+item.wrong.map(x=>'“'+esc(x)+'”').join('、')+'；这里是“'+esc(item.correct)+'”。</li>').join('')+'</ul></div>':"";}
 window.WENYAN_TRANSLATION_MISTAKES={word,sentence,render,wordHTML:(...args)=>render(word(...args)),sentenceHTML:(...args)=>render(sentence(...args)),ruleCharacters:Object.keys(rules),phraseCount:phrases.length,sentenceCount:sentences.length};
 })();

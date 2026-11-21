@@ -25,6 +25,9 @@ assert(m.sentence(peach.title,wifeText).some(i=>i.label==="绝境"&&i.wrong.some
 assert(m.sentence("课外原句","屠自后断其股").some(i=>i.wrong.includes("屠户砍断自己的大腿")));
 const zheng=works.find(w=>w.title==="郑人买履"),zhiText=zheng.lines.find(l=>l[0].includes("试之"))?.[0]||zheng.lines.find(l=>l[0].includes("之"))[0];
 assert(m.word(zheng.title,zhiText,zhiText.indexOf("之")).length,"a referent containing 的 must not suppress the warning against mistranslating the pronoun as 的");
+const chushi=works.find(w=>w.title==="出师表"),yiText=chushi.lines.find(l=>l[0].includes("先帝不以臣卑鄙"))[0];
+const yiNotes=m.sentence(chushi.title,yiText).filter(n=>n.label==="以");
+assert(yiNotes.length>=2&&yiNotes.every(n=>n.occurrence&&n.anchor),"different senses of 以 in one sentence need explicit occurrence anchors");
 let warned=0,riskPositions=0;
 for(const work of works)for(const [text]of work.lines){
  const notes=m.sentence(work.title,text);if(notes.length)warned++;
