@@ -6,6 +6,8 @@
   const yes = key => { try { return localStorage.getItem(key) === "yes"; } catch { return false; } };
 
   function initAnalytics() {
+    // 自动化课程校验在 Node.js VM 中运行；仅在真实浏览器注入统计脚本。
+    if (typeof document === "undefined" || !document.head) return;
     const a = config.analytics || {};
     // 无有效站点 token 时不加载任何统计脚本，也不会产生虚假的计数。
     if (a.provider === "cloudflare" && /^[a-f0-9]{32}$/i.test(a.cloudflareToken || "")) {
