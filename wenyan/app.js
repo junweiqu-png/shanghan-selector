@@ -124,8 +124,9 @@ function select(i){wi=i;si=0;show=false;whole=false;close();render();}
 function modal(title,html,after){$("modalTitle").textContent=title;$("modalContent").innerHTML=html;$("overlay").hidden=false;if(after)after($("modalContent"));}
 function close(){$("overlay").hidden=true;}
 function list(){
- let html='<p class="notice">先挑一个有趣的问题，再读原文寻找证据；难度逐级提升，课本篇目与趣味拓展分开标识。</p><input id="searchWork" class="search" placeholder="搜索篇目、正文或出处"><select id="gradeFilter" class="search" aria-label="按年级筛选"><option value="">全部难度</option><option value="初一">初一起步</option><option value="初二">初二进阶</option><option value="初三">初三挑战</option></select><div id="workItems"></div><button id="addWork" class="item">＋ 手动新增文章</button>';
+ let html='<p class="notice">先挑一个有趣的问题，再读原文寻找证据；难度逐级提升，课本篇目与趣味拓展分开标识。</p><input id="searchWork" class="search" placeholder="搜索篇目、正文或出处"><select id="gradeFilter" class="search" aria-label="按年级筛选"><option value="">全部难度</option><option value="初一">初一起步</option><option value="初二">初二进阶</option><option value="初三">初三挑战</option></select><div id="workItems"></div><div class="wenyan-ad" data-wenyan-ad="library" hidden></div><button id="addWork" class="item">＋ 手动新增文章</button>';
  modal("选择篇目",html,root=>{
+ window.WENYAN_SITE?.mountAds(root);
  const renderList=(q="")=>{
   const grade=$("gradeFilter").value;
   $("workItems").innerHTML=works().map((w,i)=>({w,i}))
@@ -227,8 +228,9 @@ function settings(){
  '<label class="item" style="cursor:pointer">导入备份 JSON（将替换当前数据）<input id="import" type="file" accept="application/json,.json" style="display:block;margin-top:9px"></label>'+
  '<div class="sectionLabel">我的文章</div>'+(custom.length?custom.map((w,i)=>'<div class="item"><b>'+escape(w.title)+'</b><small>'+w.lines.length+'句　<button data-remove="'+i+'">删除此自定义篇目</button></small></div>').join(""):'<p class="help">暂无自定义文章。</p>')+
  '<div class="sectionLabel">使用说明</div><p class="help">逐句模式：上滑下一句，下滑上一句；轻点正文空白区域展开译文；点带点线的实词、虚词可看本句释义及跨篇古文；点句式标签查其他古文中的应用。整篇模式可逐句点开译文。学习状态自动保存。</p>'+
- '<p class="help">内置篇目、注释与例句为首版学习底稿，尚非经过出版社审定的权威教材。遇到古籍版本差异，以教材指定版本为准。</p>';
+ '<p class="help">内置篇目、注释与例句为首版学习底稿，尚非经过出版社审定的权威教材。遇到古籍版本差异，以教材指定版本为准。</p>'+(window.WENYAN_SITE?.settingsHTML()||'');
  modal("我的 · 添加与备份",html,root=>{
+ window.WENYAN_SITE?.bindSettings(root);
  $("add").onclick=showAdd;$("studyEditSettings").onclick=()=>window.WENYAN_STUDY_EDITOR?.open();
  $("export").onclick=()=>{const blob=new Blob([JSON.stringify({version:1,data:stored={custom,wi,si,whole,show,visited:[...visited],learned:[...learned],completions:[...completions],missionDone:[...missionDone]},highlights,study:window.WENYAN_STUDY_EDITOR?.data()||null},null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="文言拾句-学习备份-"+new Date().toISOString().slice(0,10)+".json";a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);};
  $("import").onchange=async e=>{try{const data=JSON.parse(await e.target.files[0].text());if(data.version!==1||!data.data||!Array.isArray(data.data.custom))throw Error("文件格式不正确");if(!confirm("导入将替换当前学习进度与自定义篇目，确认继续？"))return;localStorage.setItem(KEY,JSON.stringify(data.data));if(data.highlights&&typeof data.highlights==="object"&&!Array.isArray(data.highlights))localStorage.setItem(MARK_KEY,JSON.stringify(data.highlights));if(data.study?.version===1&&data.study.words&&data.study.grammar)localStorage.setItem("wenyan-recall-study-v1",JSON.stringify(data.study));location.reload();}catch(err){alert("导入失败："+err.message)}};
@@ -253,4 +255,5 @@ $("chooseHighlights").onclick=()=>chooseHighlights();$("chooseHighlightsWhole").
 window.addEventListener("error",e=>console.error("文言拾句运行错误",e.message));
 const requestedView=new URLSearchParams(location.search).get("view");
 if(requestedView==="library")list();else if(requestedView==="review")review();else render();
+window.WENYAN_SITE?.mountAds(document);
 })();
