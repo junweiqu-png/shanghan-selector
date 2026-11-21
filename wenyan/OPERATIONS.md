@@ -8,7 +8,7 @@
 ## 本次更改
 - 删除「我的」中统计数字、监护人同意/拒绝统计按钮和不蒜子代码。
 - 统计改为站长专用 Cloudflare Web Analytics（无 Cookie，不采集个人信息，官方说明：https://developers.cloudflare.com/web-analytics/about/）。
-- 统一只对小古文四个独立页面植入统计接入口：/wenyan/、/wenyan/practice.html、/wenyan/coverage.html、/wenyan/privacy.html（隐私页不包含 beacon）。
+- 仅在三个小古文入口页面植入统计接入口：/wenyan/、/wenyan/practice.html、/wenyan/coverage.html；隐私说明页不接入统计脚本。
 - 广告位保留原布局但默认关闭，确保不打断学习。
 - 不在未配置站点 token 时向任何第三方统计服务提交访问数据。
 
