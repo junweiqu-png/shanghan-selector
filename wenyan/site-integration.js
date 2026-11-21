@@ -100,7 +100,8 @@
         element.dataset.adSlot = slot;
         element.dataset.adFormat = "auto";
         element.dataset.fullWidthResponsive = "true";
-        element.dataset.npa = "1";
+        element.dataset.tagForAgeTreatment = "1"; // 更保守的儿童保护标签（TFAT 2026）
+        (window.adsbygoogle = window.adsbygoogle || []).requestNonPersonalizedAds = 1;
         host.appendChild(element);
         if (!document.querySelector('script[data-wenyan-adsense]')) {
           const loader = document.createElement("script");
