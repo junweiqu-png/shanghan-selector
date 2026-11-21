@@ -39,4 +39,9 @@ assert(!/错误率|全国最高|\d+%/.test(rendered),"do not invent measured err
 const practice=fs.readFileSync("wenyan/practice.html","utf8");
 assert(practice.indexOf("translation-mistakes.js")<practice.indexOf("practice.js?"));
 assert(html.indexOf("translation-mistakes.js")<html.indexOf("app.js?"));
+vm.runInNewContext(fs.readFileSync("wenyan/practice-data.js","utf8"),{window:win});
+const bank=Object.values(win).find(value=>Array.isArray(value?.exam));
+const gaokao=bank.exam.filter(q=>(q.level==="gaokao"||String(q.level).includes("高考"))&&!q.options);
+assert(gaokao.length>=8);
+for(const q of gaokao){const offset=q.q.indexOf(q.focus);assert(m.word(q.work||"",q.q,offset,{term:q.focus,meaning:q.answer,pos:"参考字义",code:"practice-answer"}).length,"missing warning for the existing gaokao question "+q.focus);}
 console.log(JSON.stringify({ok:true,wordCharacters:m.ruleCharacters.length,phrasePatterns:m.phraseCount,sentencePatterns:m.sentenceCount,bodySentencesWithWarnings:warned,coloredPositionsWithConcreteWarnings:riskPositions,contextualOppositeMeanings:true,namesExcluded:true}));
