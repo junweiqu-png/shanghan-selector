@@ -5,9 +5,40 @@
   const AD_CONSENT = "wenyan-ad-consent-v1";
   const yes = key => { try { return localStorage.getItem(key) === "yes"; } catch { return false; } };
 
+  /*
+   * Cloudflare Web Analytics 忽略 URL 查询参数。
+   * 两个用户指定的分享链接使用不同的浏览器路径记录，避免混在一起；
+   * 保留原查询参数和学习模式，刷新备用入口时仍能访问原始内容。
+   */
+  function mapAnalyticsEntryPath() {
+    if (typeof window === "undefined" || !window.location || !window.history?.replaceState) return "unknown";
+    const loc = window.location;
+    if (!loc.pathname.endsWith("/wenyan/")) return "other";
+    const params = new URLSearchParams(loc.search);
+    const keys = [...params.keys()];
+    let name = "";
+    if (keys.length === 1 && params.get("view") === "library") {
+      name = "entry-library.html";
+    } else if (keys.length === 2 && params.get("v") === "20261111-char1"
+        && params.get("utm_source") === "chatgpt.com") {
+      name = "entry-char1-chatgpt.html";
+    }
+    if (!name) return "other";
+    const alias = loc.pathname + name + loc.search + loc.hash;
+    try {
+      window.history.replaceState(window.history.state, "", alias);
+      return name;
+    } catch (error) {
+      console.warn("入口统计路径转换失败，将按普通页面统计", error);
+      return "other";
+    }
+  }
+
   function initAnalytics() {
     // 自动化课程校验在 Node.js VM 中运行；仅在真实浏览器注入统计脚本。
     if (typeof document === "undefined" || !document.head) return;
+    // 在加载 Cloudflare beacon 前设置可区分的统计路径。
+    mapAnalyticsEntryPath();
     const a = config.analytics || {};
     // 无有效站点 token 时不加载任何统计脚本，也不会产生虚假的计数。
     if (a.provider === "cloudflare" && /^[a-f0-9]{32}$/i.test(a.cloudflareToken || "")) {
