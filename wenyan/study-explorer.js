@@ -178,14 +178,15 @@ function contextTranslation(origin){
 }
 function baseHeader(origin,isGrammar){
  const translation=contextTranslation(origin);
+ const mistakes=window.WENYAN_TRANSLATION_MISTAKES,wordNotes=isGrammar?[]:mistakes?.word(origin.title,origin.text,origin.offset,origin)||[];
  return '<section class="study-origin">'+
  '<h3><em>'+esc(origin.term)+'</em><span>'+displayTitle(origin.title||"当前古文")+'</span></h3>'+
  (window.WENYAN_TRANSLATION_RISKS?.legend()||'')+
  (origin.text?'<p class="study-original">'+tokens(origin.text,origin.term,"source",false,origin)+'</p>':'')+
  '<details class="study-reveal study-answer" data-answer-key="source"><summary>查看本句译文与字义</summary>'+
  '<p class="study-origin-meaning"><b>'+(isGrammar?"本句句式：":origin.sourceLevel==="dictionary"?"字典释义：":"本文“"+esc(origin.term)+"”字：")+'</b>'+esc(origin.meaning)+
- (isGrammar?"":'<small>'+esc(origin.pos)+'</small>')+'</p>'+
- (translation?'<div class="study-context-translation"><b>本文原句的现代汉语译文：</b><p>'+esc(translation)+'</p></div>':'')+'</details></section>';
+ (isGrammar?"":'<small>'+esc(origin.pos)+'</small>')+'</p>'+(mistakes?.render(wordNotes)||'')+
+ (translation?'<div class="study-context-translation"><b>本文原句的现代汉语译文：</b><p>'+esc(translation)+'</p>'+(mistakes?.sentenceHTML(origin.title,origin.text,origin,{skipWords:true,omitLabels:wordNotes.map(n=>n.label)})||'')+'</div>':'')+'</details></section>';
 }
 
 function rowCard(row,index,origin,isGrammar){
@@ -194,12 +195,17 @@ function rowCard(row,index,origin,isGrammar){
  const related=!isGrammar&&meta.match&&meta.match!==origin.term;
  const desc=isGrammar?'<b>句式：</b>'+esc(meta.code):(related?'<b>关联字“'+esc(meta.match)+'”：</b>':'<b>'+esc(origin.term)+'：</b>')+esc(meta.meaning);
  const grammarLinks=(row.grammars||enrichGrammars(meta)).map(g=>'<button type="button" data-study-grammar="'+esc(g)+'" data-study-context="'+contextId+'">'+esc(g)+' ↗</button>').join("");
+ const mistakes=window.WENYAN_TRANSLATION_MISTAKES,head=meta.match||origin.term,annotation={...meta,term:head};
+ const offset=meta.text.indexOf(head)===meta.text.lastIndexOf(head)?meta.text.indexOf(head):null;
+ const wordNotes=isGrammar?[]:mistakes?.word(meta.title,meta.text,offset,annotation)||[];
  return '<article class="study-example">'+
  '<h4 class="study-example-top">'+title+(source?'<small> · '+source+'</small>':'')+'</h4>'+
  '<p class="study-original">'+tokens(meta.text,isGrammar?"":(meta.match||origin.term),contextId,isGrammar,meta)+'</p>'+
  '<details class="study-reveal study-answer" data-answer-key="'+esc(meta.title+'|'+meta.text)+'"><summary>查看译文与字义</summary>'+
  '<p class="study-translation">'+esc(meta.translation)+'</p>'+
+ (mistakes?.sentenceHTML(meta.title,meta.text,annotation,{skipWords:true,omitLabels:wordNotes.map(n=>n.label)})||'')+
  '<p class="study-sense">'+desc+(isGrammar?'':'<small> · '+esc(meta.pos)+'</small>')+'</p>'+
+ (mistakes?.render(wordNotes)||'')+
  '</details>'+
  (grammarLinks?'<div class="study-actions">'+grammarLinks+'</div>':'')+'</article>';
 }
@@ -302,7 +308,7 @@ function renderPage(term,isGrammar,origin,push=true){
 
 let opening=0;
 async function openWord(word,context){
- const request=++opening,origin=termOrigin(word,context);
+ const request=++opening,resolved=termOrigin(word,context),origin={...resolved,offset:Number.isInteger(context?.offset)?context.offset:resolved.text?.indexOf(word)};
  // The lesson and its existing examples are available immediately. A cached,
  // small shard adds other works without downloading the full reference corpus.
  renderPage(word,false,origin);

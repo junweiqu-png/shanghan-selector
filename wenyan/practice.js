@@ -123,21 +123,24 @@ function showAnswer(q){
  const exact=q.kind==="reverse"&&normalize(typed)===normalize(q.answer);
  const choiceOk=examMC&&examChoice===q.answerIndex;
  let html='<h3>参考答案与核对</h3>';
+ const mistakes=window.WENYAN_TRANSLATION_MISTAKES,annotation={term:q.focus,meaning:q.answer,pos:"参考字义",code:"practice-answer"};
+ const offset=q.q?.indexOf(q.focus)===q.q?.lastIndexOf(q.focus)?q.q?.indexOf(q.focus):null;
+ const wordNotes=q.kind==="exam"&&!examMC?mistakes?.word(q.work||"",q.q||"",offset,annotation)||[]:[];
  if(q.kind==="reverse"){
-  html+='<div class="reference">'+withHighlights(q.answer,typed)+'</div>';
+  html+='<div class="reference">'+withHighlights(q.answer,typed)+'</div>'+(mistakes?.sentenceHTML(q.work,q.answer,null,{skipWords:true})||'');
   html+='<p>'+ (typed?(exact?'<span class="correct">文字与原文一致。</span>':'黄色标记为你写的文字中未能对应的原文字，供自己订正；异体字、合理替代表述可以自行判断。'):'还没写答案也可以先看原文，之后再练。')+'</p>';
   html+='<p>对应句式：<b>'+esc(q.topic)+'</b>。题干直接取自《'+esc(q.work)+'》这句已有的现代译文，未另编故事。</p>';
  }else if(examMC){
   html+='<div class="reference">正确选项：<b>'+String.fromCharCode(65+q.answerIndex)+'</b></div>';
   html+='<p class="'+(choiceOk?"correct":"wrong")+'">'+(examChoice===null?"本次未选择选项。":choiceOk?"你选择的选项与原题答案一致。":"你选择了 "+String.fromCharCode(65+examChoice)+"，与原题答案不同。")+'</p>';
  }else{
-  html+='<div class="reference">“'+esc(q.focus)+'”：'+esc(q.answer)+'</div>';
+  html+='<div class="reference">“'+esc(q.focus)+'”：'+esc(q.answer)+'</div>'+(mistakes?.render(wordNotes)||'');
   const matched=q.accept?.some(s=>normalize(s)===normalize(typed));
   html+='<p>'+(typed?(matched?'<span class="correct">与你填写的义项一致。</span>':'请对照原题答案：近义解释可根据语境自行判断。'):'未填写，可先看释义再重练。')+'</p>';
  }
  if(q.kind==="exam"){
   html+='<p><b>学习提示：</b>'+esc(q.tip)+'</p>'+
-   (q.isMock?'<p><b>课文现代译文：</b>'+esc(q.translation)+'</p><p>参考课文单字注释（'+esc(q.lessonLevel)+'），非考试命题。</p>':
+   (q.isMock?'<p><b>课文现代译文：</b>'+esc(q.translation)+'</p>'+(mistakes?.sentenceHTML(q.work,q.q,annotation,{skipWords:true,omitLabels:wordNotes.map(n=>n.label)})||'')+'<p>参考课文单字注释（'+esc(q.lessonLevel)+'），非考试命题。</p>':
    q.isAdapted?'<p>这是按原试卷考点拆成的单字练习，不是原卷题目；可打开来源查看完整考查方式。</p>':'')+
    '<p><a class="source-link" href="'+esc(q.sourceMeta.url)+'" target="_blank" rel="noopener noreferrer">'+
    (q.isMock?"查看课文原文来源":"查看试卷及答案出处")+'：'+esc(q.sourceMeta.label)+' ↗</a></p>';

@@ -85,8 +85,11 @@ function refreshRiskColors(){
    node.setAttribute("aria-label","查看“"+node.dataset.term+"”的字义和关联古文"+(risk?"（"+risk.label+"）":""));
   }
  }
+ if(whole){for(const para of $("wholeBody").querySelectorAll(".wholepara")){const row=w.lines[Number(para.dataset.i)];if(row)para.querySelector(".wholetranslation").innerHTML=translationMarkup(w,row);}}
+ else $("translation").innerHTML=translationMarkup(w,line());
 }
 window.WENYAN_READER_MARKS={refresh:refreshRiskColors};
+function translationMarkup(w,row){return escape(row[1])+(window.WENYAN_TRANSLATION_MISTAKES?.sentenceHTML(w.title,row[0])||"");}
 function setNav(active){document.querySelectorAll(".bottom button").forEach(b=>b.classList.remove("active"));$(active).classList.add("active");}
 function render(){
  const w=work(),row=line();visited.add(w.title);save();
@@ -98,7 +101,7 @@ function render(){
  $("title").textContent=w.title;$("source").textContent=w.source;$("level").textContent=w.level;
  $("progress").textContent="第 "+(si+1)+" / "+w.lines.length+" 句";
  $("sentence").dataset.plain=row[0];$("sentence").innerHTML=marked(row[0],w,si);
- $("translation").textContent=row[1];$("translation").hidden=!show;
+ $("translation").innerHTML=translationMarkup(w,row);$("translation").hidden=!show;
  $("tapHelp").textContent="点击汉字查义 · 点下方按钮看译文 · 上滑下一句";
  $("showTranslation").textContent=show?"▾ 收起这句译文":"▸ 查看这句译文";
  $("showTranslation").setAttribute("aria-expanded",String(show));
@@ -109,7 +112,7 @@ function render(){
  bindTokens($("sentence"),w);
  } else {
  $("wholeTitle").textContent=w.title;$("wholeLevel").textContent=w.level;$("wholeSource").textContent=w.source;
- $("wholeBody").innerHTML=w.lines.map((x,i)=>'<article class="wholepara" data-i="'+i+'"><div class="wholetext" data-plain="'+escape(x[0])+'">'+marked(x[0],w,i)+'</div><button class="reveal-line" type="button" aria-label="显示或隐藏本句译文" aria-expanded="false">▸ 查看译文</button><div class="wholetranslation" hidden>'+escape(x[1])+'</div></article>').join("");
+ $("wholeBody").innerHTML=w.lines.map((x,i)=>'<article class="wholepara" data-i="'+i+'"><div class="wholetext" data-plain="'+escape(x[0])+'">'+marked(x[0],w,i)+'</div><button class="reveal-line" type="button" aria-label="显示或隐藏本句译文" aria-expanded="false">▸ 查看译文</button><div class="wholetranslation" hidden>'+translationMarkup(w,x)+'</div></article>').join("");
  $("wholeBody").querySelectorAll(".wholepara").forEach(n=>n.onclick=()=>{const target=n.querySelector(".wholetranslation"),button=n.querySelector(".reveal-line");target.hidden=!target.hidden;button.textContent=target.hidden?"▸ 查看译文":"▾ 收起译文";button.setAttribute("aria-expanded",String(!target.hidden));});
  bindTokens($("wholeBody"),w);
  $("missionLaunchWhole").hidden=!(w.missions?.length);
@@ -142,7 +145,7 @@ function list(){
  });
 }
 function allEvidence(predicate){const out=[];for(let i=0;i<works().length;i++){const w=works()[i];w.lines.forEach((l,j)=>{if(predicate(l,w))out.push({w,i,j,l});});}return out;}
-function evidenceMarkup(matches,limit=60){return matches.slice(0,limit).map(x=>'<div class="evidence"><b>'+escape(x.w.title)+'</b><small>'+escape(x.w.source)+' · 第'+(x.j+1)+'句</small><p>'+escape(x.l[0])+'</p><details class="study-reveal study-answer"><summary>查看译文</summary><div class="meaning">'+escape(x.l[1])+'</div></details><button data-go="'+x.i+','+x.j+'">跳到此句 ↗</button></div>').join("")+(matches.length>limit?'<p class="notice">为保持流畅，先显示前 '+limit+' 条；请使用搜索缩小范围。</p>':"");}
+function evidenceMarkup(matches,limit=60){return matches.slice(0,limit).map(x=>'<div class="evidence"><b>'+escape(x.w.title)+'</b><small>'+escape(x.w.source)+' · 第'+(x.j+1)+'句</small><p>'+escape(x.l[0])+'</p><details class="study-reveal study-answer"><summary>查看译文</summary><div class="meaning">'+translationMarkup(x.w,x.l)+'</div></details><button data-go="'+x.i+','+x.j+'">跳到此句 ↗</button></div>').join("")+(matches.length>limit?'<p class="notice">为保持流畅，先显示前 '+limit+' 条；请使用搜索缩小范围。</p>':"");}
 function bindEvidence(root){root.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{const [i,j]=b.dataset.go.split(",").map(Number);wi=i;si=j;whole=false;show=false;close();render()});}
 // 不强迫刷题：每篇仅两道“故事推断 + 句式/字义”，答错有线索可重试。
 function openMission(n=0){

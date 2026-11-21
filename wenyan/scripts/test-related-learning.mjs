@@ -24,7 +24,7 @@ function closedAnswers(html){
   if(raw.startsWith("</")){const i=stack.findLastIndex(n=>n.tag===tag);if(i>=0)stack.splice(i);continue;}
   const answer=tag==="details"&&/class="[^"]*\bstudy-answer\b/.test(raw);
   if(answer){answers++;assert(!/\sopen(?:\s|=|>)/.test(raw),"answers must be collapsed on a newly opened card");}
-  if(/class="(?:study-origin-meaning|study-context-translation|study-translation|study-sense|study-compare)[ "-]/.test(raw)){
+  if(/class="(?:study-origin-meaning|study-context-translation|study-translation|study-sense|study-compare|translation-mistakes)[ "-]/.test(raw)){
    fields++;assert(stack.some(n=>n.answer),"a definition, translation or semantic comparison escaped its disclosure");
   }
   if(!["br","hr","input","img","meta","link"].includes(tag))stack.push({tag,answer});

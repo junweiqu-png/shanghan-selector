@@ -67,6 +67,8 @@ jobs:
           node --check wenyan/study-editor.js
           node --check wenyan/study-explorer.js
           node --check wenyan/translation-risks.js
+          node --check wenyan/translation-mistakes.js
+          node --check wenyan/scripts/test-translation-mistakes.mjs
           node --check wenyan/scripts/test-reading-marks.mjs
           node --check wenyan/study-crosslesson.js
           node --check wenyan/study-verified-extra.js
@@ -137,6 +139,7 @@ jobs:
           node wenyan/scripts/test-complete-translations.mjs
           node wenyan/scripts/test-related-learning.mjs
           node wenyan/scripts/test-reading-marks.mjs
+          node wenyan/scripts/test-translation-mistakes.mjs
       - name: Build local classical corpus
         env:
           CORPUS_MAX_BOOKS: 700
