@@ -1,0 +1,13 @@
+{
+  "version": "20261121-linked1",
+  "characters": 1378,
+  "translatedExamples": 17572,
+  "contextReviewedSupplement": 165,
+  "scannedPairedLines": 972467,
+  "sourceLevels": {
+    "classroom": "课文注释及教学参考优先",
+    "paired-reference": "古今对照语料；字义按句中译法与字典对齐，显示为参考字义",
+    "context-reviewed": "逐条核对原文、字义并补译"
+  },
+  "shards": 64
+}

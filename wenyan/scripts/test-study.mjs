@@ -95,7 +95,7 @@ assert(!keywordAudit.includes("term==='内集'")&&keywordAudit.includes("['筑',
  'keyword coverage audit must enforce single-character regressions, not obsolete compound keys');
 
 
-assert(expl.includes('if(r.title===origin.title)continue'),'source work must be excluded from associated list');
+assert(expl.includes('if(r.title===origin.title||text&&'),'source work and copies of its passage must be excluded from associated list');
 assert(expl.includes('function indexOrigin(term)'),'glossary must locate an actual sentence, not the current reading');
 assert(expl.includes('which.closest("#wordList")'),'glossary click needs its own origin context');
 assert(expl.includes('if(!text.includes(term))'),'never display an ancient quote that lacks its purported headword');
@@ -223,7 +223,7 @@ assert(zhi9.examples.every(x=>x[2].includes('智')&&x[3]&&x[8]),'智 examples ne
 assert(!zhi9.examples.some(x=>x[6]==='judge-clever'),'cannot count wisdom nouns as putative usage');
 assert(expl.includes('WENYAN_VERIFIED_BATCH10'),'explorer must read tenth verified store');
 assert(expl.includes('r.record.code==="proper-name"'),'translated name examples must be separated from ordinary meanings');
-assert(expl.indexOf('class="study-translation"')<expl.indexOf('class="study-reveal"'),'show translation before optional comparison');
+assert(expl.indexOf('class="study-reveal study-answer"')<expl.indexOf('class="study-translation"'),'translations must be inside closed answer disclosures');
 assert(app.includes("study-translated-classics.js"),"prepared classical translations must load");
 const cross7=extendedWindow.WENYAN_CROSSLESSON;
 assert(!(cross7.words['宁']?.sources||[]).some(x=>x[0]==='管宁割席'||x[0]==='诫子书'),'names and 宁静 must not be translated as 宁愿');

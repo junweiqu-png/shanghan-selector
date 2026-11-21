@@ -6,7 +6,7 @@ const base=[...(window.WENYAN_DATA_1||[]),...(window.WENYAN_DATA_2||[]),...(wind
 const KEY="wenyan-recall-v1", tryJSON=(v,f)=>{if(typeof v!=="string"||!v.trim())return f;try{const parsed=JSON.parse(v);return parsed&&typeof parsed==="object"&&!Array.isArray(parsed)?parsed:f}catch{return f}};
 const MARK_KEY="wenyan-highlight-v1",highlights=Object.assign(Object.create(null),tryJSON(localStorage.getItem(MARK_KEY),{}));
 let stored=tryJSON(localStorage.getItem(KEY),{}), custom=Array.isArray(stored.custom)?stored.custom:[];
-let works=()=>[...base,...custom], wi=Math.max(0,Math.min(Number(stored.wi)||0,works().length-1)),si=Number(stored.si)||0, whole=!!stored.whole,show=!!stored.show;
+let works=()=>[...base,...custom], wi=Math.max(0,Math.min(Number(stored.wi)||0,works().length-1)),si=Number(stored.si)||0, whole=!!stored.whole,show=false;
 let visited=new Set(stored.visited||[]), learned=new Set(stored.learned||[]), completions=new Set(stored.completions||[]), missionDone=new Set(stored.missionDone||[]);
 function save(){localStorage.setItem(KEY,JSON.stringify({custom,wi,si,whole,show,visited:[...visited],learned:[...learned],completions:[...completions],missionDone:[...missionDone]}));}
 function work(){return works()[wi]||works()[0];}
@@ -60,7 +60,8 @@ function render(){
  $("sentence").dataset.plain=row[0];$("sentence").innerHTML=marked(row[0],w);
  $("translation").textContent=row[1];$("translation").hidden=!show;
  $("tapHelp").textContent="点击汉字查义 · 点下方按钮看译文 · 上滑下一句";
- $("showTranslation").textContent=show?"收起译文 ↑":"👁 查看这句译文";
+ $("showTranslation").textContent=show?"▾ 收起这句译文":"▸ 查看这句译文";
+ $("showTranslation").setAttribute("aria-expanded",String(show));
  $("grammarRow").innerHTML=[...new Set([...(row[2]?[row[2]]:[]),...(window.WENYAN_STUDY_EDITOR?.grammarForText(row[0])||[])])].map(g=>'<button data-pattern="'+escape(g)+'">'+escape(g)+" · 学句式 ↗</button>").join("");
  $("grammarRow").querySelectorAll("button").forEach(b=>b.onclick=()=>openPattern(b.dataset.pattern));
  $("missionLaunch").hidden=!(w.missions?.length);
@@ -68,8 +69,8 @@ function render(){
  bindTokens($("sentence"),w);
  } else {
  $("wholeTitle").textContent=w.title;$("wholeLevel").textContent=w.level;$("wholeSource").textContent=w.source;
- $("wholeBody").innerHTML=w.lines.map((x,i)=>'<article class="wholepara" data-i="'+i+'"><div class="wholetext" data-plain="'+escape(x[0])+'">'+marked(x[0],w)+'</div><button class="reveal-line" type="button" aria-label="显示或隐藏本句译文">译文 ▾</button><div class="wholetranslation" hidden>'+escape(x[1])+'</div></article>').join("");
- $("wholeBody").querySelectorAll(".wholepara").forEach(n=>n.onclick=()=>{const target=n.querySelector(".wholetranslation");target.hidden=!target.hidden;});
+ $("wholeBody").innerHTML=w.lines.map((x,i)=>'<article class="wholepara" data-i="'+i+'"><div class="wholetext" data-plain="'+escape(x[0])+'">'+marked(x[0],w)+'</div><button class="reveal-line" type="button" aria-label="显示或隐藏本句译文" aria-expanded="false">▸ 查看译文</button><div class="wholetranslation" hidden>'+escape(x[1])+'</div></article>').join("");
+ $("wholeBody").querySelectorAll(".wholepara").forEach(n=>n.onclick=()=>{const target=n.querySelector(".wholetranslation"),button=n.querySelector(".reveal-line");target.hidden=!target.hidden;button.textContent=target.hidden?"▸ 查看译文":"▾ 收起译文";button.setAttribute("aria-expanded",String(!target.hidden));});
  bindTokens($("wholeBody"),w);
  $("missionLaunchWhole").hidden=!(w.missions?.length);
  }
@@ -101,7 +102,7 @@ function list(){
  });
 }
 function allEvidence(predicate){const out=[];for(let i=0;i<works().length;i++){const w=works()[i];w.lines.forEach((l,j)=>{if(predicate(l,w))out.push({w,i,j,l});});}return out;}
-function evidenceMarkup(matches,limit=60){return matches.slice(0,limit).map(x=>'<div class="evidence"><b>'+escape(x.w.title)+'</b><small>'+escape(x.w.source)+' · 第'+(x.j+1)+'句</small><p>'+escape(x.l[0])+'</p><div class="meaning">'+escape(x.l[1])+'</div><button data-go="'+x.i+','+x.j+'">跳到此句 ↗</button></div>').join("")+(matches.length>limit?'<p class="notice">为保持流畅，先显示前 '+limit+' 条；请使用搜索缩小范围。</p>':"");}
+function evidenceMarkup(matches,limit=60){return matches.slice(0,limit).map(x=>'<div class="evidence"><b>'+escape(x.w.title)+'</b><small>'+escape(x.w.source)+' · 第'+(x.j+1)+'句</small><p>'+escape(x.l[0])+'</p><details class="study-reveal study-answer"><summary>查看译文</summary><div class="meaning">'+escape(x.l[1])+'</div></details><button data-go="'+x.i+','+x.j+'">跳到此句 ↗</button></div>').join("")+(matches.length>limit?'<p class="notice">为保持流畅，先显示前 '+limit+' 条；请使用搜索缩小范围。</p>':"");}
 function bindEvidence(root){root.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{const [i,j]=b.dataset.go.split(",").map(Number);wi=i;si=j;whole=false;show=false;close();render()});}
 // 不强迫刷题：每篇仅两道“故事推断 + 句式/字义”，答错有线索可重试。
 function openMission(n=0){
@@ -136,10 +137,10 @@ function openTerm(term,w){
  const dict=(w.terms||[]).find(t=>t[0]===term);
  const examples=allEvidence(l=>l[0].includes(term));
  const definitions=works().flatMap(x=>(x.terms||[]).filter(t=>t[0]===term).map(t=>({w:x,t})));
- const html='<p><span class="pill">'+escape(dict?.[1]||"单字")+'</span> <strong style="font-size:27px">'+escape(term)+'</strong></p><p class="notice">本篇字义：'+escape(dict?.[2]||"本篇尚未校定此字的独立义项，请结合原句和关联例文学习")+'。同字在不同篇目的含义和语法作用可能不同，请结合上下文判断。</p>'+
+ const html='<p><strong style="font-size:27px">'+escape(term)+'</strong></p><details class="study-reveal study-answer"><summary>查看本篇字义</summary><p class="notice">本篇字义：'+escape(dict?.[2]||"请结合本句语境和字典释义辨析")+'</p></details>'+
  '<div class="row"><button id="markWord">'+(learned.has(term)?"✓ 已掌握":"标记为已掌握")+'</button></div>'+
  '<div class="sectionLabel">全站释义 · '+definitions.length+' 条</div>'+
- (definitions.map(x=>'<div class="evidence"><b>'+escape(x.w.title)+'</b>　'+escape(x.t[1])+'：'+escape(x.t[2])+'</div>').join("")||'<p class="help">暂无其他篇的校核释义。</p>')+
+ (definitions.map(x=>'<div class="evidence"><b>'+escape(x.w.title)+'</b><details class="study-reveal study-answer"><summary>查看字义</summary>'+escape(x.t[1])+'：'+escape(x.t[2])+'</details></div>').join("")||'')+
  '<div class="sectionLabel">跨篇原文应用 · '+examples.length+' 句</div>'+
  '<p class="help">以下是目前收录古文的原文命中，不代表每个例句中的字义都相同。例句不够时可以添加更多古文，不能自动虚构。</p>'+
  (examples.length?evidenceMarkup(examples):'<p>暂无命中。</p>');
@@ -204,7 +205,7 @@ $("prev").onclick=()=>move(-1);$("next").onclick=()=>move(1);
 $("choose").onclick=list;$("mode").onclick=()=>{whole=!whole;save();render();};$("more").onclick=settings;
 $("homeTab").onclick=()=>{close();render()};$("libraryTab").onclick=list;$("reviewTab").onclick=review;$("practiceTab").onclick=()=>{location.href="practice.html";};$("settingsTab").onclick=settings;
 $("close").onclick=close;$("overlay").onclick=e=>{if(e.target===$("overlay"))close();};
-$("hideAll").onclick=()=>{const nodes=$("wholeBody").querySelectorAll(".wholetranslation");let any=[...nodes].some(n=>!n.hidden);nodes.forEach(n=>n.hidden=any);$("hideAll").textContent=any?"显示译文":"隐藏译文";};
+$("hideAll").onclick=()=>{const nodes=$("wholeBody").querySelectorAll(".wholetranslation");let any=[...nodes].some(n=>!n.hidden);nodes.forEach(n=>{n.hidden=any;const button=n.closest(".wholepara").querySelector(".reveal-line");button.textContent=any?"▸ 查看译文":"▾ 收起译文";button.setAttribute("aria-expanded",String(!any));});$("hideAll").textContent=any?"显示译文":"隐藏译文";};
 $("chooseHighlights").onclick=()=>chooseHighlights();$("chooseHighlightsWhole").onclick=()=>chooseHighlights();
 window.addEventListener("error",e=>console.error("文言拾句运行错误",e.message));
 const requestedView=new URLSearchParams(location.search).get("view");

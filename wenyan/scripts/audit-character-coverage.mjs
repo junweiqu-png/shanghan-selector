@@ -5,6 +5,7 @@
 import fs from "node:fs";
 import vm from "node:vm";
 import path from "node:path";
+import {loadLinkedAudit,workCoverage} from "./load-linked-audit.mjs";
 const root=process.env.WENYAN_ROOT||"wenyan/",win={};
 const files=["data-basic.js","data-classic.js","data-extra.js","data-junior.js","data-junior-batch2a.js","data-junior-batch2b.js","data-junior-batch2c.js","data-chushi-full.js",
  "study-annotations.js","study-crosslesson.js","study-verified-extra.js",
@@ -12,11 +13,12 @@ const files=["data-basic.js","data-classic.js","data-extra.js","data-junior.js",
  "study-verified-batch4.js","study-verified-batch5.js","study-verified-batch6.js",
  "study-verified-batch7.js","study-verified-batch8.js","study-verified-batch9.js","study-verified-batch10.js","study-verified-batch11.js","study-verified-batch12.js","study-lesson-character-glosses.js","study-reference-dictionary.js","study-chushi-character-glosses.js","study-guanchao-reverse-glosses.js","study-verified-characters.js","study-junior-glosses.js","study-complete-glosses.js","study-translated-classics.js"];
 for(const f of files)vm.runInNewContext(fs.readFileSync(path.join(root,f),"utf8"),{window:win},{filename:f});
+const liveStudy=loadLinkedAudit(win,root);
 const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[]),...(win.WENYAN_DATA_4||[])];
 const stores=[win.WENYAN_ANNOTATIONS,win.WENYAN_CROSSLESSON,win.WENYAN_VERIFIED_EXTRA,
  win.WENYAN_VERIFIED_MORE2,win.WENYAN_VERIFIED_COMMON3,win.WENYAN_VERIFIED_CORPUS,
  win.WENYAN_VERIFIED_BATCH4,win.WENYAN_VERIFIED_BATCH5,win.WENYAN_VERIFIED_BATCH6,
- win.WENYAN_VERIFIED_BATCH7,win.WENYAN_VERIFIED_BATCH8,win.WENYAN_VERIFIED_BATCH9,win.WENYAN_VERIFIED_BATCH10,win.WENYAN_VERIFIED_BATCH11,win.WENYAN_VERIFIED_BATCH12,win.WENYAN_LESSON_CHARACTER_GLOSSES,win.WENYAN_VERIFIED_CHARACTERS,win.WENYAN_JUNIOR_GLOSSES];
+ win.WENYAN_VERIFIED_BATCH7,win.WENYAN_VERIFIED_BATCH8,win.WENYAN_VERIFIED_BATCH9,win.WENYAN_VERIFIED_BATCH10,win.WENYAN_VERIFIED_BATCH11,win.WENYAN_VERIFIED_BATCH12,win.WENYAN_LESSON_CHARACTER_GLOSSES,win.WENYAN_VERIFIED_CHARACTERS,win.WENYAN_JUNIOR_GLOSSES,win.WENYAN_LINKED_TRANSLATIONS];
 const han=c=>/\p{Script=Han}/u.test(c);
 const invalidEvidenceKeys=stores.flatMap((store,index)=>Object.keys(store?.words||{})
  .filter(c=>[...c].length!==1||!han(c)).map(key=>({store:index,key})));
@@ -65,9 +67,10 @@ for(const w of works){
   }
   const books=new Set(rows.map(x=>x[0]));
   const same=new Set(rows.filter(x=>anchors.some(a=>normalize(a[4])===normalize(x[6]))).map(x=>x[0]));
-  uses.push({work:w.title,char,priority:priority.has(char),originAnnotated:anchors.length>0,
-   originMeanings:[...new Set(anchors.map(x=>x[2]))],verifiedBooks:books.size,sameSenseBooks:same.size,
-   ready:anchors.length>0&&books.size>=5&&same.size>=2,missingBooks:Math.max(0,5-books.size),missingSame:Math.max(0,2-same.size)});
+  const actual=workCoverage(liveStudy,char,w);
+  uses.push({work:w.title,char,priority:priority.has(char),originAnnotated:actual.originAnnotated,
+   originMeanings:actual.originMeanings,verifiedBooks:actual.verifiedBooks,sameSenseBooks:actual.sameSenseBooks,nameOnly:actual.exempt,
+   ready:actual.complete,missingBooks:actual.exempt?0:Math.max(0,5-actual.verifiedBooks),missingSame:actual.exempt?0:Math.max(0,2-actual.sameSenseBooks)});
  }
 }
 const letters=[...bodyCount.keys()].sort((a,b)=>a.localeCompare(b,"zh-CN"));
@@ -77,8 +80,9 @@ const characters=letters.map(char=>{
   uses:items.length,workTitles:items.map(x=>x.work),
   ready:items.every(x=>x.ready),originAnnotated:items.every(x=>x.originAnnotated),
   anyOriginAnnotated:items.some(x=>x.originAnnotated),
-  minReviewedExamples:Math.min(...items.map(x=>x.verifiedBooks)),
-  minSameSense:Math.min(...items.map(x=>x.sameSenseBooks)),items};
+  nameOnly:items.every(x=>x.nameOnly),
+  minReviewedExamples:Math.min(...(items.some(x=>!x.nameOnly)?items.filter(x=>!x.nameOnly):items).map(x=>x.verifiedBooks)),
+  minSameSense:Math.min(...(items.some(x=>!x.nameOnly)?items.filter(x=>!x.nameOnly):items).map(x=>x.sameSenseBooks)),items};
 });
 const summary={
  generatedAt:new Date().toISOString(),standard:"义务教育语文课程标准（2022年版）第四学段",
@@ -96,10 +100,11 @@ const summary={
  charactersFullyOriginAnnotated:characters.filter(x=>x.originAnnotated).length,
  charactersMeetingRule:characters.filter(x=>x.ready).length,
  priorityCharactersMeetingRule:characters.filter(x=>x.priority&&x.ready).length,
- charactersStillWithoutFive:characters.filter(x=>x.minReviewedExamples<5).length,
+ charactersStillWithoutFive:characters.filter(x=>!x.nameOnly&&x.minReviewedExamples<5).length,
  charactersMissingOrigin:characters.filter(x=>!x.originAnnotated).length,
  annotatedOccurrences,annotationCoverageOfBody:Number((annotatedOccurrences/bodyOccurrences*100).toFixed(2)),
- strictRule:"分母只计已发布文章正文中的汉字；“重点字”是正文内人为注释子集。每个正文篇目至少一个原字义项来源、跨篇已校译五篇且同义两篇，方称达到本阶段规则。阅读水平与中考题型仍须单独评测。",
+ ordinaryUsesMissingFive:uses.filter(x=>!x.nameOnly&&x.verifiedBooks<5).length,
+ strictRule:"分母只计已发布文章正文中的汉字；“重点字”是正文内人为注释子集。每个正文篇目至少一个原字义项来源、跨篇有译注五篇且同义两篇，方称达到本阶段规则。阅读水平与中考题型仍须单独评测。",
  scopeNote:"非全国统一中考考纲，不能把新增10篇或本统计等同初中全部考试要求"
 };
 if(works.length!==51||letters.length<=231||!letters.includes("辩")||!letters.includes("斗"))throw Error("main-text-only coverage regression");

@@ -4,13 +4,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
+import {loadLinkedAudit,workCoverage} from './load-linked-audit.mjs';
 const root=process.env.WENYAN_ROOT||'wenyan/';
 const win={},ctx={window:win};
 for(const f of ['data-basic.js','data-classic.js','data-extra.js','data-junior.js','data-junior-batch2a.js','data-junior-batch2b.js','data-junior-batch2c.js','data-chushi-full.js','study-annotations.js','study-crosslesson.js','study-verified-extra.js','study-verified-more2.js','study-verified-common3.js','study-verified-corpus.js','study-verified-batch4.js','study-verified-batch5.js','study-verified-batch6.js','study-verified-batch7.js','study-verified-batch8.js','study-verified-batch9.js','study-verified-batch10.js','study-verified-batch11.js',"study-verified-batch12.js","study-lesson-character-glosses.js",'study-grammar-more.js','study-verified-characters.js','study-junior-glosses.js','study-reference-dictionary.js','study-chushi-character-glosses.js','study-guanchao-reverse-glosses.js','study-complete-glosses.js','study-translated-classics.js']){
  vm.runInNewContext(fs.readFileSync(path.join(root,f),'utf8'),ctx,{filename:f});
 }
+const liveStudy=loadLinkedAudit(win,root);
 const works=[...(win.WENYAN_DATA_1||[]),...(win.WENYAN_DATA_2||[]),...(win.WENYAN_DATA_3||[]),...(win.WENYAN_DATA_4||[])];
-const db=win.WENYAN_ANNOTATIONS,lists=[db,win.WENYAN_CROSSLESSON,win.WENYAN_VERIFIED_EXTRA,win.WENYAN_VERIFIED_MORE2,win.WENYAN_VERIFIED_COMMON3,win.WENYAN_VERIFIED_CORPUS,win.WENYAN_VERIFIED_BATCH4,win.WENYAN_VERIFIED_BATCH5,win.WENYAN_VERIFIED_BATCH6,win.WENYAN_VERIFIED_BATCH7,win.WENYAN_VERIFIED_BATCH8,win.WENYAN_VERIFIED_BATCH9,win.WENYAN_VERIFIED_BATCH10,win.WENYAN_VERIFIED_BATCH11,win.WENYAN_VERIFIED_BATCH12,win.WENYAN_LESSON_CHARACTER_GLOSSES];
+const db=win.WENYAN_ANNOTATIONS,lists=[db,win.WENYAN_CROSSLESSON,win.WENYAN_VERIFIED_EXTRA,win.WENYAN_VERIFIED_MORE2,win.WENYAN_VERIFIED_COMMON3,win.WENYAN_VERIFIED_CORPUS,win.WENYAN_VERIFIED_BATCH4,win.WENYAN_VERIFIED_BATCH5,win.WENYAN_VERIFIED_BATCH6,win.WENYAN_VERIFIED_BATCH7,win.WENYAN_VERIFIED_BATCH8,win.WENYAN_VERIFIED_BATCH9,win.WENYAN_VERIFIED_BATCH10,win.WENYAN_VERIFIED_BATCH11,win.WENYAN_VERIFIED_BATCH12,win.WENYAN_LESSON_CHARACTER_GLOSSES,win.WENYAN_LINKED_TRANSLATIONS];
 const merged={};
 const grammarMore=win.WENYAN_GRAMMAR_MORE?.grammar||{};
 const normalizeSense=code=>({look:'turn-look',lookback:'turn-look'}[code]||code);
@@ -53,6 +55,8 @@ for(const w of works){
    reviewedExamples:rows.length,sameSense:same.length,differentSense:different.length,
    fiveExamples:rows.length>=5,twoSame:firstTwoSame(rows,originCode),
    shortfall:Math.max(0,5-rows.length),sameShortfall:Math.max(0,2-same.length)});
+  const actual=workCoverage(liveStudy,term,w);
+  Object.assign(wordResults.at(-1),{part:actual.pos,sense:actual.originMeanings.join("；"),originAnnotated:actual.originAnnotated,nameOnly:actual.exempt,originCode:actual.originCode,reviewedExamples:actual.verifiedBooks,sameSense:actual.sameSenseBooks,fiveExamples:actual.exempt||actual.verifiedBooks>=5,twoSame:actual.exempt||actual.sameSenseBooks>=2,shortfall:actual.exempt?0:Math.max(0,5-actual.verifiedBooks),sameShortfall:actual.exempt?0:Math.max(0,2-actual.sameSenseBooks)});
  }
  for(const [text,translation,g] of w.lines||[]){
   if(!g)continue;

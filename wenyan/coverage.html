@@ -48,7 +48,7 @@ function card(t){
  const labels=(t.workTitles||t.items.map(x=>x.work));
  const named=[...new Set(labels)];
  d.textContent="正文出现 "+t.frequency+" 次 · 涉及 "+t.uses+" 篇 · "+(t.anyOriginAnnotated?"至少一处已有字义注释":"本字义项待核")+
- " · 最缺语境：已核关联 "+t.minReviewedExamples+"/5篇（缺"+Math.max(0,5-t.minReviewedExamples)+"篇），同义 "+t.minSameSense+"/2篇（缺"+Math.max(0,2-t.minSameSense)+"篇）"+
+ " · 关联情况：有译注关联 "+(t.nameOnly?"姓名用字，不按普通字义计同义数":t.minReviewedExamples+"/5篇，同义 "+t.minSameSense+"/2篇")+
  "｜"+named.slice(0,2).join("、")+(named.length>2?"等":"");
  box.append(d);row.append(box);
  const link=document.createElement("a");link.className="actions";link.href=a.href;link.textContent="学这个字 ↗";row.append(link);
